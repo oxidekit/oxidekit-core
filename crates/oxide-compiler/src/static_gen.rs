@@ -49,6 +49,121 @@ fn normalize_prop_name(name: &str) -> String {
     result
 }
 
+/// Resolve design tokens in string values
+/// Handles `token("color.primary")` syntax and returns the resolved CSS value
+fn resolve_tokens(value: &str) -> String {
+    // Check for token() syntax
+    if let Some(start) = value.find("token(") {
+        if let Some(end) = value[start..].find(')') {
+            let token_call = &value[start..start + end + 1];
+            // Extract the token path from token("path") or token('path')
+            let inner = &token_call[6..token_call.len() - 1].trim();
+            let token_path = inner.trim_matches(|c| c == '"' || c == '\'');
+
+            if let Some(resolved) = lookup_token(token_path) {
+                // Replace the token() call with the resolved value
+                let before = &value[..start];
+                let after = &value[start + end + 1..];
+                return format!("{}{}{}", before, resolved, resolve_tokens(after));
+            }
+        }
+    }
+    value.to_string()
+}
+
+/// Look up a design token by its path
+/// Returns the CSS value for the token, or None if not found
+fn lookup_token(path: &str) -> Option<&'static str> {
+    // Default dark theme token values
+    match path {
+        // Colors - primary semantic
+        "color.primary" => Some("#3B82F6"),
+        "color.primary.light" => Some("#60A5FA"),
+        "color.primary.dark" => Some("#2563EB"),
+        "color.secondary" => Some("#6B7280"),
+        "color.success" => Some("#22C55E"),
+        "color.warning" => Some("#F59E0B"),
+        "color.danger" => Some("#EF4444"),
+        "color.info" => Some("#06B6D4"),
+
+        // Colors - surfaces
+        "color.background" => Some("#0B0F14"),
+        "color.surface" => Some("#1F2937"),
+        "color.surface.variant" | "color.surface_variant" => Some("#374151"),
+
+        // Colors - text
+        "color.text" => Some("#E5E7EB"),
+        "color.text.primary" => Some("#E5E7EB"),
+        "color.text.secondary" => Some("#9CA3AF"),
+        "color.text.disabled" => Some("#6B7280"),
+        "color.text.inverse" => Some("#111827"),
+
+        // Colors - borders
+        "color.border" => Some("#374151"),
+        "color.border.strong" => Some("#4B5563"),
+        "color.divider" => Some("#374151"),
+
+        // Colors - states
+        "color.hover" => Some("rgba(255,255,255,0.05)"),
+        "color.focus" => Some("rgba(59,130,246,0.5)"),
+        "color.active" => Some("rgba(59,130,246,0.2)"),
+        "color.disabled" => Some("rgba(255,255,255,0.1)"),
+
+        // Spacing
+        "spacing.0" => Some("0"),
+        "spacing.1" => Some("4px"),
+        "spacing.2" => Some("8px"),
+        "spacing.3" => Some("12px"),
+        "spacing.4" => Some("16px"),
+        "spacing.5" => Some("20px"),
+        "spacing.6" => Some("24px"),
+        "spacing.8" => Some("32px"),
+        "spacing.10" => Some("40px"),
+        "spacing.12" => Some("48px"),
+        "spacing.16" => Some("64px"),
+        "spacing.20" => Some("80px"),
+        "spacing.24" => Some("96px"),
+
+        // Radius
+        "radius.none" => Some("0"),
+        "radius.sm" => Some("4px"),
+        "radius.md" => Some("8px"),
+        "radius.lg" => Some("12px"),
+        "radius.xl" => Some("16px"),
+        "radius.full" => Some("9999px"),
+
+        // Shadows
+        "shadow.none" => Some("none"),
+        "shadow.sm" => Some("0 1px 2px rgba(0,0,0,0.05)"),
+        "shadow.md" => Some("0 4px 6px rgba(0,0,0,0.1)"),
+        "shadow.lg" => Some("0 10px 15px rgba(0,0,0,0.1)"),
+        "shadow.xl" => Some("0 20px 25px rgba(0,0,0,0.15)"),
+
+        // Font sizes
+        "font.size.xs" => Some("12px"),
+        "font.size.sm" => Some("14px"),
+        "font.size.md" | "font.size.base" => Some("16px"),
+        "font.size.lg" => Some("18px"),
+        "font.size.xl" => Some("20px"),
+        "font.size.2xl" => Some("24px"),
+        "font.size.3xl" => Some("30px"),
+        "font.size.4xl" => Some("36px"),
+
+        // Font weights
+        "font.weight.normal" => Some("400"),
+        "font.weight.medium" => Some("500"),
+        "font.weight.semibold" => Some("600"),
+        "font.weight.bold" => Some("700"),
+
+        // Line heights
+        "line.height.tight" => Some("1.25"),
+        "line.height.normal" => Some("1.5"),
+        "line.height.relaxed" => Some("1.75"),
+
+        _ => None,
+    }
+}
+
 fn ir_to_html_recursive(ir: &ComponentIR, html: &mut String, indent: usize) {
     let indent_str = "    ".repeat(indent);
 
@@ -181,7 +296,7 @@ fn build_text_style(props: &[Property], style: &[Property]) -> String {
             }
             "color" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    css_parts.push(format!("color: {}", s));
+                    css_parts.push(format!("color: {}", resolve_tokens(s)));
                 }
             }
             "align" | "text_align" => {
@@ -462,11 +577,13 @@ fn build_container_style(kind: &str, props: &[Property], style: &[Property]) -> 
             }
             "background" => {
                 if let PropertyValue::String(s) = &prop.value {
+                    // Resolve any design tokens first
+                    let resolved = resolve_tokens(s);
                     // Check if it's a gradient or other CSS function
-                    if s.contains("gradient(") || s.contains("url(") || s.contains("linear-gradient") || s.contains("radial-gradient") {
-                        css_parts.push(format!("background: {}", s));
+                    if resolved.contains("gradient(") || resolved.contains("url(") || resolved.contains("linear-gradient") || resolved.contains("radial-gradient") {
+                        css_parts.push(format!("background: {}", resolved));
                     } else {
-                        css_parts.push(format!("background-color: {}", s));
+                        css_parts.push(format!("background-color: {}", resolved));
                     }
                 }
             }
@@ -509,7 +626,7 @@ fn build_container_style(kind: &str, props: &[Property], style: &[Property]) -> 
             }
             "border_color" | "bordercolor" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    css_parts.push(format!("border-color: {}", s));
+                    css_parts.push(format!("border-color: {}", resolve_tokens(s)));
                 }
             }
             "border_style" | "borderstyle" => {
@@ -644,7 +761,7 @@ fn build_button_style(props: &[Property], style: &[Property]) -> String {
             }
             "color" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    css_parts.push(format!("color: {}", s));
+                    css_parts.push(format!("color: {}", resolve_tokens(s)));
                 }
             }
             "size" | "font_size" | "fontsize" => {
@@ -742,7 +859,7 @@ fn build_button_style(props: &[Property], style: &[Property]) -> String {
             }
             "border_color" | "bordercolor" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    css_parts.push(format!("border-color: {}", s));
+                    css_parts.push(format!("border-color: {}", resolve_tokens(s)));
                 }
             }
             _ => {}
@@ -784,7 +901,7 @@ fn build_badge_style(props: &[Property], style: &[Property]) -> String {
             }
             "color" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    css_parts.push(format!("color: {}", s));
+                    css_parts.push(format!("color: {}", resolve_tokens(s)));
                 }
             }
             "size" | "font_size" | "fontsize" => {
@@ -848,7 +965,7 @@ fn build_badge_style(props: &[Property], style: &[Property]) -> String {
             }
             "border_color" | "bordercolor" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    css_parts.push(format!("border-color: {}", s));
+                    css_parts.push(format!("border-color: {}", resolve_tokens(s)));
                 }
             }
             _ => {}
@@ -1037,7 +1154,7 @@ fn prop_to_css(prop: &Property) -> Option<String> {
         }
         "border_color" | "bordercolor" => {
             if let PropertyValue::String(s) = &prop.value {
-                Some(format!("border-color: {}", s))
+                Some(format!("border-color: {}", resolve_tokens(s)))
             } else {
                 None
             }
@@ -1051,7 +1168,7 @@ fn prop_to_css(prop: &Property) -> Option<String> {
         }
         "color" => {
             if let PropertyValue::String(s) = &prop.value {
-                Some(format!("color: {}", s))
+                Some(format!("color: {}", resolve_tokens(s)))
             } else {
                 None
             }
@@ -1351,5 +1468,52 @@ mod tests {
         assert_eq!(parse_spacing_value("10px 20px"), "10px 20px");
         assert_eq!(parse_spacing_value("auto"), "auto");
         assert_eq!(parse_spacing_value("50%"), "50%");
+    }
+
+    #[test]
+    fn test_resolve_tokens() {
+        // Basic token resolution
+        assert_eq!(resolve_tokens(r#"token("color.primary")"#), "#3B82F6");
+        assert_eq!(resolve_tokens(r#"token("color.surface")"#), "#1F2937");
+        assert_eq!(resolve_tokens(r#"token("color.text.primary")"#), "#E5E7EB");
+
+        // Token in the middle of a value
+        assert_eq!(resolve_tokens(r#"1px solid token("color.border")"#), "1px solid #374151");
+
+        // Unknown tokens pass through
+        assert_eq!(resolve_tokens(r#"token("unknown.token")"#), r#"token("unknown.token")"#);
+
+        // Non-token values pass through
+        assert_eq!(resolve_tokens("#FF0000"), "#FF0000");
+        assert_eq!(resolve_tokens("16px"), "16px");
+
+        // Spacing tokens
+        assert_eq!(resolve_tokens(r#"token("spacing.4")"#), "16px");
+        assert_eq!(resolve_tokens(r#"token("radius.md")"#), "8px");
+    }
+
+    #[test]
+    fn test_token_in_html_output() {
+        let source = r##"
+            app Test {
+                Column {
+                    background: "token(\"color.surface\")"
+                    border_color: "token(\"color.border\")"
+
+                    Text {
+                        content: "Hello"
+                        color: "token(\"color.text.primary\")"
+                    }
+                }
+            }
+        "##;
+
+        let ir = compile(source).unwrap();
+        let html = generate_html(&ir, "Test");
+
+        // Tokens should be resolved to actual CSS values
+        assert!(html.contains("background-color: #1F2937"));
+        assert!(html.contains("border-color: #374151"));
+        assert!(html.contains("color: #E5E7EB"));
     }
 }
