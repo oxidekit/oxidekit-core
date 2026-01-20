@@ -1,0 +1,310 @@
+// Sidebar Components
+// Navigation components for the documentation site
+
+// Search bar component
+component SearchBar {
+    prop placeholder: String = "Search..."
+    prop value: String = ""
+    prop on_change: Callback
+    prop on_focus: Callback
+    prop shortcut: String = ""
+    prop theme: String = "dark"
+
+    let colors = {
+        bg: theme == "dark" ? "#1E293B" : "#F1F5F9",
+        text: theme == "dark" ? "#94A3B8" : "#64748B",
+        border: theme == "dark" ? "#334155" : "#E2E8F0"
+    }
+
+    Container {
+        width: fill
+        height: 40
+        padding_x: 12
+        radius: 8
+        cursor: pointer
+
+        style {
+            background: colors.bg
+            border: 1
+            border_color: colors.border
+        }
+
+        on click => on_focus
+
+        Row {
+            width: fill
+            align: center
+            gap: 8
+
+            Text {
+                content: "search"
+                size: 16
+                color: colors.text
+            }
+
+            Text {
+                content: placeholder
+                size: 14
+                color: colors.text
+                flex: 1
+            }
+
+            @if shortcut != "" {
+                Container {
+                    padding_x: 6
+                    padding_y: 2
+                    radius: 4
+
+                    style {
+                        background: theme == "dark" ? "#334155" : "#E2E8F0"
+                    }
+
+                    Text {
+                        content: shortcut
+                        size: 11
+                        color: colors.text
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Navigation section with title
+component NavSection {
+    prop title: String
+    prop theme: String = "dark"
+    prop collapsible: bool = false
+    prop default_open: bool = true
+
+    state {
+        is_open: bool = default_open
+    }
+
+    let colors = {
+        text: theme == "dark" ? "#64748B" : "#94A3B8"
+    }
+
+    Column {
+        gap: 4
+        width: fill
+
+        // Section header
+        @if collapsible {
+            Container {
+                padding_x: 8
+                padding_y: 6
+                cursor: pointer
+                width: fill
+
+                on click => state.is_open = !state.is_open
+
+                Row {
+                    justify: space_between
+                    align: center
+
+                    Text {
+                        content: title
+                        size: 11
+                        color: colors.text
+                        weight: semibold
+                        letter_spacing: 0.5
+                    }
+
+                    Text {
+                        content: state.is_open ? "chevron-down" : "chevron-right"
+                        size: 14
+                        color: colors.text
+                    }
+                }
+            }
+        } @else {
+            Container {
+                padding_x: 8
+                padding_y: 6
+
+                Text {
+                    content: title
+                    size: 11
+                    color: colors.text
+                    weight: semibold
+                    letter_spacing: 0.5
+                }
+            }
+        }
+
+        // Section items
+        @if !collapsible || state.is_open {
+            Column {
+                gap: 2
+                width: fill
+
+                @slot default
+            }
+        }
+    }
+}
+
+// Navigation item
+component NavItem {
+    prop label: String
+    prop icon: String = ""
+    prop active: bool = false
+    prop on_click: Callback
+    prop theme: String = "dark"
+    prop badge: String = ""
+
+    let colors = {
+        bg_active: theme == "dark" ? "rgba(59, 130, 246, 0.1)" : "rgba(59, 130, 246, 0.1)",
+        bg_hover: theme == "dark" ? "#1E293B" : "#F1F5F9",
+        text_active: "#3B82F6",
+        text_normal: theme == "dark" ? "#CBD5E1" : "#475569",
+        badge_bg: "#F59E0B",
+        badge_text: "#FFFFFF"
+    }
+
+    Container {
+        width: fill
+        padding_y: 8
+        padding_x: 10
+        radius: 6
+        cursor: pointer
+
+        style {
+            background: active ? colors.bg_active : "transparent"
+        }
+
+        on click => on_click
+        on hover {
+            background: active ? colors.bg_active : colors.bg_hover
+        }
+
+        Row {
+            gap: 10
+            align: center
+
+            @if icon != "" {
+                Text {
+                    content: icon
+                    size: 16
+                    color: active ? colors.text_active : colors.text_normal
+                }
+            }
+
+            Text {
+                content: label
+                size: 14
+                color: active ? colors.text_active : colors.text_normal
+                weight: active ? medium : normal
+                flex: 1
+            }
+
+            @if badge != "" {
+                Container {
+                    padding_x: 6
+                    padding_y: 2
+                    radius: 4
+
+                    style {
+                        background: colors.badge_bg
+                    }
+
+                    Text {
+                        content: badge
+                        size: 10
+                        color: colors.badge_text
+                        weight: medium
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Theme toggle component
+component ThemeToggle {
+    prop theme: String = "dark"
+    prop on_change: Callback
+
+    let colors = {
+        bg: theme == "dark" ? "#1E293B" : "#E2E8F0",
+        active_bg: "#3B82F6",
+        text: theme == "dark" ? "#94A3B8" : "#64748B",
+        active_text: "#FFFFFF"
+    }
+
+    Container {
+        padding: 4
+        radius: 8
+
+        style {
+            background: colors.bg
+        }
+
+        Row {
+            gap: 0
+
+            // Light mode button
+            Container {
+                padding_x: 10
+                padding_y: 6
+                radius: 6
+                cursor: pointer
+
+                style {
+                    background: theme == "light" ? colors.active_bg : "transparent"
+                }
+
+                on click => on_change("light")
+
+                Row {
+                    gap: 6
+                    align: center
+
+                    Text {
+                        content: "sun"
+                        size: 14
+                        color: theme == "light" ? colors.active_text : colors.text
+                    }
+
+                    Text {
+                        content: "Light"
+                        size: 12
+                        color: theme == "light" ? colors.active_text : colors.text
+                    }
+                }
+            }
+
+            // Dark mode button
+            Container {
+                padding_x: 10
+                padding_y: 6
+                radius: 6
+                cursor: pointer
+
+                style {
+                    background: theme == "dark" ? colors.active_bg : "transparent"
+                }
+
+                on click => on_change("dark")
+
+                Row {
+                    gap: 6
+                    align: center
+
+                    Text {
+                        content: "moon"
+                        size: 14
+                        color: theme == "dark" ? colors.active_text : colors.text
+                    }
+
+                    Text {
+                        content: "Dark"
+                        size: 12
+                        color: theme == "dark" ? colors.active_text : colors.text
+                    }
+                }
+            }
+        }
+    }
+}

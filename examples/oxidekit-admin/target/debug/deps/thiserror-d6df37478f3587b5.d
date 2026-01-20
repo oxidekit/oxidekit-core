@@ -1,0 +1,12 @@
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/deps/libthiserror-d6df37478f3587b5.rmeta: /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/build/thiserror-2245eb4c28db37a5/out/private.rs
+
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/deps/thiserror-d6df37478f3587b5.d: /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs /Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/build/thiserror-2245eb4c28db37a5/out/private.rs
+
+/Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/lib.rs:
+/Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/aserror.rs:
+/Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/display.rs:
+/Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/var.rs:
+/Users/nayiemwillems/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/thiserror-2.0.18/src/private.rs:
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/build/thiserror-2245eb4c28db37a5/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/build/thiserror-2245eb4c28db37a5/out

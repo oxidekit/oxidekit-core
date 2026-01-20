@@ -9,7 +9,7 @@ description = "OxideKit quality gates, linting, accessibility, and performance v
 [features]
 default = []
 # Full quality gates with all checks
-full = ["a11y", "perf", "security", "bundle"]
+full = ["a11y", "perf", "security", "bundle", "visual-regression"]
 # Accessibility validation
 a11y = []
 # Performance budget checking
@@ -22,6 +22,8 @@ bundle = []
 ci = []
 # Pre-commit hook generation
 hooks = []
+# Visual regression testing
+visual-regression = ["dep:image", "dep:sha2", "dep:base64"]
 
 [dependencies]
 oxide-compiler.workspace = true
@@ -53,6 +55,11 @@ bytesize = "1.3"
 
 # For timestamps
 chrono.workspace = true
+
+# For visual regression (optional)
+image = { workspace = true, optional = true }
+sha2 = { version = "0.10", optional = true }
+base64 = { workspace = true, optional = true }
 
 [dev-dependencies]
 tempfile = "3.0"

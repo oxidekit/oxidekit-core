@@ -1,0 +1,25 @@
+# OxideKit Landing Page Demo
+# A marketing website with hero, features, pricing, and footer
+
+[app]
+id = "dev.oxidekit.examples.landing-page"
+name = "Landing Page"
+version = "0.1.0"
+description = "Marketing landing page with hero, features, pricing, and footer"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "Landing Page - OxideKit Demo"
+width = 1280
+height = 900
+resizable = true
+decorations = true
+
+[build]
+target = ["static", "desktop"]
+
+[dev]
+hot_reload = true
+inspector = true

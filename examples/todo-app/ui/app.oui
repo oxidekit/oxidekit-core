@@ -1,0 +1,297 @@
+// Todo App - OxideKit Demo
+// Demonstrates forms, lists, and filtering
+
+app TodoApp {
+    // State declaration
+    state {
+        todos: List<Todo> = []
+        new_todo_text: String = ""
+        filter: String = "all"  // all, active, completed
+    }
+
+    Column {
+        width: fill
+        height: fill
+        background: "#0F172A"
+
+        // Header
+        Container {
+            width: fill
+            padding: 32
+            background: "#1E293B"
+
+            Column {
+                align: center
+                gap: 8
+
+                Text {
+                    content: "Todo List"
+                    size: 36
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: "Manage your tasks"
+                    size: 14
+                    color: "#64748B"
+                }
+            }
+        }
+
+        // Main content
+        Container {
+            padding: 24
+            flex: 1
+            max_width: 600
+            align_self: center
+            width: fill
+
+            Column {
+                gap: 24
+                width: fill
+
+                // Add todo input
+                Row {
+                    gap: 12
+                    width: fill
+
+                    // Input field
+                    Container {
+                        flex: 1
+                        padding: 16
+                        background: "#1E293B"
+                        radius: 8
+                        border: 1
+                        border_color: "#374151"
+
+                        TextInput {
+                            placeholder: "What needs to be done?"
+                            value: state.new_todo_text
+                            on_change: state.new_todo_text = value
+                            color: "#FFFFFF"
+                            size: 16
+                        }
+                    }
+
+                    // Add button
+                    Container {
+                        padding: 16
+                        background: "#3B82F6"
+                        radius: 8
+
+                        on click => app.add_todo
+
+                        Text {
+                            content: "Add"
+                            size: 16
+                            color: "#FFFFFF"
+                        }
+                    }
+                }
+
+                // Filter tabs
+                Row {
+                    gap: 8
+                    width: fill
+                    justify: center
+
+                    // All filter
+                    Container {
+                        padding: 12
+                        background: state.filter == "all" ? "#3B82F6" : "#1E293B"
+                        radius: 8
+
+                        on click => state.filter = "all"
+
+                        Text {
+                            content: "All"
+                            size: 14
+                            color: state.filter == "all" ? "#FFFFFF" : "#94A3B8"
+                        }
+                    }
+
+                    // Active filter
+                    Container {
+                        padding: 12
+                        background: state.filter == "active" ? "#3B82F6" : "#1E293B"
+                        radius: 8
+
+                        on click => state.filter = "active"
+
+                        Text {
+                            content: "Active"
+                            size: 14
+                            color: state.filter == "active" ? "#FFFFFF" : "#94A3B8"
+                        }
+                    }
+
+                    // Completed filter
+                    Container {
+                        padding: 12
+                        background: state.filter == "completed" ? "#3B82F6" : "#1E293B"
+                        radius: 8
+
+                        on click => state.filter = "completed"
+
+                        Text {
+                            content: "Completed"
+                            size: 14
+                            color: state.filter == "completed" ? "#FFFFFF" : "#94A3B8"
+                        }
+                    }
+                }
+
+                // Todo list
+                Scroll {
+                    flex: 1
+                    width: fill
+
+                    Column {
+                        gap: 8
+                        width: fill
+
+                        // Empty state
+                        @if state.filtered_todos.length == 0 {
+                            Container {
+                                padding: 48
+                                width: fill
+
+                                Column {
+                                    align: center
+                                    gap: 8
+
+                                    Text {
+                                        content: "No todos"
+                                        size: 18
+                                        color: "#64748B"
+                                    }
+
+                                    Text {
+                                        content: "Add a task to get started"
+                                        size: 14
+                                        color: "#475569"
+                                    }
+                                }
+                            }
+                        }
+
+                        // Todo items
+                        @for todo in state.filtered_todos {
+                            TodoItem {
+                                key: todo.id
+                                todo: todo
+                                on_toggle: app.toggle_todo(todo.id)
+                                on_delete: app.delete_todo(todo.id)
+                            }
+                        }
+                    }
+                }
+
+                // Footer stats
+                Container {
+                    padding: 16
+                    background: "#1E293B"
+                    radius: 8
+                    width: fill
+
+                    Row {
+                        justify: space_between
+                        width: fill
+
+                        Text {
+                            content: "{state.active_count} items left"
+                            size: 14
+                            color: "#64748B"
+                        }
+
+                        @if state.completed_count > 0 {
+                            Container {
+                                on click => app.clear_completed
+
+                                Text {
+                                    content: "Clear completed"
+                                    size: 14
+                                    color: "#EF4444"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Todo item component
+component TodoItem {
+    prop todo: Todo
+    prop on_toggle: Function
+    prop on_delete: Function
+
+    Container {
+        padding: 16
+        background: "#1E293B"
+        radius: 8
+        width: fill
+
+        Row {
+            justify: space_between
+            align: center
+            width: fill
+
+            Row {
+                gap: 16
+                align: center
+
+                // Checkbox
+                Container {
+                    width: 24
+                    height: 24
+                    radius: 12
+                    border: 2
+                    border_color: todo.completed ? "#10B981" : "#374151"
+                    background: todo.completed ? "#10B981" : "transparent"
+
+                    on click => on_toggle
+
+                    @if todo.completed {
+                        Column {
+                            align: center
+                            justify: center
+                            width: fill
+                            height: fill
+
+                            Text {
+                                content: "check"
+                                size: 14
+                                color: "#FFFFFF"
+                            }
+                        }
+                    }
+                }
+
+                // Todo text
+                Text {
+                    content: todo.text
+                    size: 16
+                    color: todo.completed ? "#64748B" : "#FFFFFF"
+                    strikethrough: todo.completed
+                }
+            }
+
+            // Delete button
+            Container {
+                padding: 8
+                radius: 4
+
+                on click => on_delete
+
+                Text {
+                    content: "X"
+                    size: 14
+                    color: "#EF4444"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,124 @@
+// Counter App - OxideKit Demo
+// Demonstrates basic state management with a simple +/- counter
+
+app CounterApp {
+    // State declaration
+    state {
+        count: i32 = 0
+    }
+
+    Column {
+        width: fill
+        height: fill
+        align: center
+        justify: center
+        gap: 32
+        background: "#0F172A"
+
+        // Title
+        Text {
+            content: "Counter Demo"
+            size: 28
+            color: "#FFFFFF"
+        }
+
+        // Counter display card
+        Container {
+            padding: 48
+            background: "#1E293B"
+            radius: 16
+
+            Column {
+                align: center
+                gap: 24
+
+                // Counter value
+                Text {
+                    content: "{state.count}"
+                    size: 72
+                    color: "#3B82F6"
+                }
+
+                // Description
+                Text {
+                    content: "Current Count"
+                    size: 14
+                    color: "#64748B"
+                }
+            }
+        }
+
+        // Control buttons
+        Row {
+            gap: 16
+
+            // Decrement button
+            Container {
+                padding: 16
+                background: "#EF4444"
+                radius: 12
+                min_width: 64
+
+                on click => state.count -= 1
+
+                Column {
+                    align: center
+
+                    Text {
+                        content: "-"
+                        size: 32
+                        color: "#FFFFFF"
+                    }
+                }
+            }
+
+            // Reset button
+            Container {
+                padding: 16
+                background: "#6B7280"
+                radius: 12
+                min_width: 80
+
+                on click => state.count = 0
+
+                Column {
+                    align: center
+
+                    Text {
+                        content: "Reset"
+                        size: 16
+                        color: "#FFFFFF"
+                    }
+                }
+            }
+
+            // Increment button
+            Container {
+                padding: 16
+                background: "#10B981"
+                radius: 12
+                min_width: 64
+
+                on click => state.count += 1
+
+                Column {
+                    align: center
+
+                    Text {
+                        content: "+"
+                        size: 32
+                        color: "#FFFFFF"
+                    }
+                }
+            }
+        }
+
+        // Footer
+        Text {
+            content: "Built with OxideKit"
+            size: 12
+            color: "#475569"
+            margin_top: 24
+        }
+    }
+}

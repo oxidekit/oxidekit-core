@@ -19,6 +19,7 @@
 //! - `bundle` - Bundle size analysis
 //! - `ci` - CI/CD integration helpers
 //! - `hooks` - Pre-commit hook generation
+//! - `visual-regression` - Visual regression testing with screenshot comparison
 //!
 //! # Quality Gates
 //!
@@ -27,6 +28,7 @@
 //! 3. **Performance** - Frame time, allocation, and memory budgets
 //! 4. **Security** - Dependency audit, unsafe code review
 //! 5. **Bundle** - Size limits and dependency analysis
+//! 6. **Visual Regression** - Screenshot comparison and diff generation
 
 mod error;
 pub mod lint;
@@ -50,6 +52,9 @@ pub mod ci;
 
 #[cfg(feature = "hooks")]
 pub mod hooks;
+
+#[cfg(feature = "visual-regression")]
+pub mod visual_regression;
 
 // Re-export types
 pub use error::*;
@@ -77,6 +82,13 @@ pub use ci::{CiGenerationResult, CiFile, generate_ci_config, generate_minimal_ci
 
 #[cfg(feature = "hooks")]
 pub use hooks::{HookConfig, generate_pre_commit_hook, generate_commit_msg_hook, generate_pre_push_hook, generate_husky_config, generate_lefthook_config, install_hook, uninstall_hook};
+
+#[cfg(feature = "visual-regression")]
+pub use visual_regression::{
+    VisualRegressionReport, VisualRegressionResult, ComparisonResult, DiffStats,
+    ScreenshotCapture, ImageComparison, BaselineManager, VisualReportGenerator,
+    run_visual_regression, update_baselines, generate_visual_report,
+};
 
 use std::path::Path;
 
@@ -147,6 +159,11 @@ pub mod prelude {
 
     #[cfg(feature = "hooks")]
     pub use crate::{generate_pre_commit_hook, HookConfig};
+
+    #[cfg(feature = "visual-regression")]
+    pub use crate::{
+        VisualRegressionConfig, VisualRegressionReport, run_visual_regression,
+    };
 }
 
 #[cfg(test)]

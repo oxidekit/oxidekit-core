@@ -1,0 +1,710 @@
+// Forms Showcase - OxideKit Demo
+// Demonstrates all form components, validation, sizes, and variants
+
+app FormsShowcaseApp {
+    // State
+    state {
+        // Form values
+        text_value: String = ""
+        email_value: String = ""
+        password_value: String = ""
+        textarea_value: String = ""
+        select_value: String = "option1"
+        checkbox_checked: bool = false
+        radio_value: String = "radio1"
+        switch_enabled: bool = true
+        slider_value: i32 = 50
+        date_value: String = ""
+
+        // Validation
+        email_error: String = ""
+        password_error: String = ""
+        form_submitted: bool = false
+    }
+
+    Column {
+        width: fill
+        height: fill
+        background: "#0F172A"
+
+        // Header
+        Container {
+            width: fill
+            padding: 32
+            background: "#1E293B"
+
+            Column {
+                align: center
+                gap: 8
+
+                Text {
+                    content: "Forms Showcase"
+                    size: 36
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: "All form components with validation and variants"
+                    size: 14
+                    color: "#64748B"
+                }
+            }
+        }
+
+        // Content
+        Scroll {
+            flex: 1
+            width: fill
+
+            Container {
+                padding: 32
+                max_width: 900
+                align_self: center
+                width: fill
+
+                Column {
+                    gap: 48
+
+                    // Text Inputs Section
+                    Section {
+                        title: "Text Inputs"
+
+                        Column {
+                            gap: 24
+
+                            // Standard text input
+                            FormField {
+                                label: "Full Name"
+                                helper: "Enter your full name"
+
+                                TextInput {
+                                    placeholder: "John Doe"
+                                    value: state.text_value
+                                    on_change: state.text_value = value
+                                    size: "medium"
+                                }
+                            }
+
+                            // Email with validation
+                            FormField {
+                                label: "Email Address"
+                                error: state.email_error
+                                required: true
+
+                                TextInput {
+                                    type: "email"
+                                    placeholder: "john@example.com"
+                                    value: state.email_value
+                                    on_change: app.validate_email
+                                    size: "medium"
+                                    error: state.email_error != ""
+                                }
+                            }
+
+                            // Password with validation
+                            FormField {
+                                label: "Password"
+                                error: state.password_error
+                                required: true
+
+                                TextInput {
+                                    type: "password"
+                                    placeholder: "Enter password"
+                                    value: state.password_value
+                                    on_change: app.validate_password
+                                    size: "medium"
+                                    error: state.password_error != ""
+                                }
+                            }
+
+                            // Input sizes
+                            Row {
+                                gap: 16
+                                width: fill
+
+                                Column {
+                                    gap: 8
+                                    flex: 1
+
+                                    Text { content: "Small" size: 12 color: "#64748B" }
+
+                                    TextInput {
+                                        placeholder: "Small input"
+                                        size: "small"
+                                    }
+                                }
+
+                                Column {
+                                    gap: 8
+                                    flex: 1
+
+                                    Text { content: "Medium" size: 12 color: "#64748B" }
+
+                                    TextInput {
+                                        placeholder: "Medium input"
+                                        size: "medium"
+                                    }
+                                }
+
+                                Column {
+                                    gap: 8
+                                    flex: 1
+
+                                    Text { content: "Large" size: 12 color: "#64748B" }
+
+                                    TextInput {
+                                        placeholder: "Large input"
+                                        size: "large"
+                                    }
+                                }
+                            }
+
+                            // Disabled input
+                            FormField {
+                                label: "Disabled Input"
+
+                                TextInput {
+                                    placeholder: "This input is disabled"
+                                    disabled: true
+                                    size: "medium"
+                                }
+                            }
+                        }
+                    }
+
+                    // Textarea Section
+                    Section {
+                        title: "Textarea"
+
+                        Column {
+                            gap: 24
+
+                            FormField {
+                                label: "Description"
+                                helper: "Enter a detailed description"
+
+                                Textarea {
+                                    placeholder: "Type your description here..."
+                                    value: state.textarea_value
+                                    on_change: state.textarea_value = value
+                                    rows: 4
+                                }
+                            }
+
+                            FormField {
+                                label: "Auto-resize Textarea"
+
+                                Textarea {
+                                    placeholder: "This textarea grows as you type..."
+                                    auto_resize: true
+                                    min_rows: 2
+                                    max_rows: 8
+                                }
+                            }
+                        }
+                    }
+
+                    // Select Section
+                    Section {
+                        title: "Select / Dropdown"
+
+                        Column {
+                            gap: 24
+
+                            FormField {
+                                label: "Country"
+
+                                Select {
+                                    value: state.select_value
+                                    on_change: state.select_value = value
+                                    placeholder: "Select a country"
+
+                                    Option { value: "us" label: "United States" }
+                                    Option { value: "uk" label: "United Kingdom" }
+                                    Option { value: "ca" label: "Canada" }
+                                    Option { value: "de" label: "Germany" }
+                                    Option { value: "fr" label: "France" }
+                                }
+                            }
+
+                            // Select sizes
+                            Row {
+                                gap: 16
+                                width: fill
+
+                                Column {
+                                    gap: 8
+                                    flex: 1
+
+                                    Text { content: "Small" size: 12 color: "#64748B" }
+
+                                    Select {
+                                        size: "small"
+                                        placeholder: "Select"
+
+                                        Option { value: "1" label: "Option 1" }
+                                        Option { value: "2" label: "Option 2" }
+                                    }
+                                }
+
+                                Column {
+                                    gap: 8
+                                    flex: 1
+
+                                    Text { content: "Medium" size: 12 color: "#64748B" }
+
+                                    Select {
+                                        size: "medium"
+                                        placeholder: "Select"
+
+                                        Option { value: "1" label: "Option 1" }
+                                        Option { value: "2" label: "Option 2" }
+                                    }
+                                }
+
+                                Column {
+                                    gap: 8
+                                    flex: 1
+
+                                    Text { content: "Large" size: 12 color: "#64748B" }
+
+                                    Select {
+                                        size: "large"
+                                        placeholder: "Select"
+
+                                        Option { value: "1" label: "Option 1" }
+                                        Option { value: "2" label: "Option 2" }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Checkboxes & Radio Section
+                    Section {
+                        title: "Checkboxes & Radio Buttons"
+
+                        Row {
+                            gap: 48
+                            width: fill
+
+                            // Checkboxes
+                            Column {
+                                gap: 16
+                                flex: 1
+
+                                Text { content: "Checkboxes" size: 14 color: "#94A3B8" }
+
+                                Checkbox {
+                                    label: "Accept terms and conditions"
+                                    checked: state.checkbox_checked
+                                    on_change: state.checkbox_checked = value
+                                }
+
+                                Checkbox {
+                                    label: "Subscribe to newsletter"
+                                    checked: false
+                                }
+
+                                Checkbox {
+                                    label: "Disabled checkbox"
+                                    checked: true
+                                    disabled: true
+                                }
+
+                                Checkbox {
+                                    label: "Indeterminate state"
+                                    indeterminate: true
+                                }
+                            }
+
+                            // Radio buttons
+                            Column {
+                                gap: 16
+                                flex: 1
+
+                                Text { content: "Radio Buttons" size: 14 color: "#94A3B8" }
+
+                                RadioGroup {
+                                    value: state.radio_value
+                                    on_change: state.radio_value = value
+
+                                    Radio { value: "radio1" label: "Option One" }
+                                    Radio { value: "radio2" label: "Option Two" }
+                                    Radio { value: "radio3" label: "Option Three" }
+                                    Radio { value: "radio4" label: "Disabled Option" disabled: true }
+                                }
+                            }
+                        }
+                    }
+
+                    // Toggle / Switch Section
+                    Section {
+                        title: "Toggle Switches"
+
+                        Column {
+                            gap: 16
+
+                            Row {
+                                justify: space_between
+                                align: center
+                                width: fill
+
+                                Column {
+                                    gap: 4
+
+                                    Text { content: "Enable notifications" size: 14 color: "#FFFFFF" }
+                                    Text { content: "Receive alerts when something happens" size: 12 color: "#64748B" }
+                                }
+
+                                Switch {
+                                    checked: state.switch_enabled
+                                    on_change: state.switch_enabled = value
+                                }
+                            }
+
+                            Row {
+                                justify: space_between
+                                align: center
+                                width: fill
+
+                                Column {
+                                    gap: 4
+
+                                    Text { content: "Dark mode" size: 14 color: "#FFFFFF" }
+                                    Text { content: "Toggle between light and dark theme" size: 12 color: "#64748B" }
+                                }
+
+                                Switch {
+                                    checked: true
+                                }
+                            }
+
+                            Row {
+                                justify: space_between
+                                align: center
+                                width: fill
+
+                                Column {
+                                    gap: 4
+
+                                    Text { content: "Disabled switch" size: 14 color: "#64748B" }
+                                    Text { content: "This switch is disabled" size: 12 color: "#64748B" }
+                                }
+
+                                Switch {
+                                    checked: false
+                                    disabled: true
+                                }
+                            }
+                        }
+                    }
+
+                    // Slider Section
+                    Section {
+                        title: "Sliders"
+
+                        Column {
+                            gap: 24
+
+                            FormField {
+                                label: "Volume"
+                                helper: "Adjust the volume level"
+
+                                Row {
+                                    gap: 16
+                                    align: center
+                                    width: fill
+
+                                    Slider {
+                                        value: state.slider_value
+                                        min: 0
+                                        max: 100
+                                        on_change: state.slider_value = value
+                                        flex: 1
+                                    }
+
+                                    Text {
+                                        content: "{state.slider_value}%"
+                                        size: 14
+                                        color: "#FFFFFF"
+                                        min_width: 48
+                                    }
+                                }
+                            }
+
+                            FormField {
+                                label: "Price Range"
+
+                                RangeSlider {
+                                    min: 0
+                                    max: 1000
+                                    start_value: 200
+                                    end_value: 800
+                                    step: 50
+                                }
+                            }
+
+                            FormField {
+                                label: "Discrete Slider"
+
+                                Slider {
+                                    value: 3
+                                    min: 1
+                                    max: 5
+                                    step: 1
+                                    show_marks: true
+                                    marks: ["Poor", "Fair", "Good", "Great", "Excellent"]
+                                }
+                            }
+                        }
+                    }
+
+                    // Buttons Section
+                    Section {
+                        title: "Buttons"
+
+                        Column {
+                            gap: 24
+
+                            // Button variants
+                            Text { content: "Variants" size: 14 color: "#94A3B8" }
+
+                            Row {
+                                gap: 12
+                                wrap: wrap
+
+                                Button { text: "Primary" variant: "primary" }
+                                Button { text: "Secondary" variant: "secondary" }
+                                Button { text: "Outline" variant: "outline" }
+                                Button { text: "Ghost" variant: "ghost" }
+                                Button { text: "Destructive" variant: "destructive" }
+                                Button { text: "Link" variant: "link" }
+                            }
+
+                            // Button sizes
+                            Text { content: "Sizes" size: 14 color: "#94A3B8" }
+
+                            Row {
+                                gap: 12
+                                align: center
+
+                                Button { text: "Small" size: "small" variant: "primary" }
+                                Button { text: "Medium" size: "medium" variant: "primary" }
+                                Button { text: "Large" size: "large" variant: "primary" }
+                            }
+
+                            // Button states
+                            Text { content: "States" size: 14 color: "#94A3B8" }
+
+                            Row {
+                                gap: 12
+
+                                Button { text: "Normal" variant: "primary" }
+                                Button { text: "Loading" variant: "primary" loading: true }
+                                Button { text: "Disabled" variant: "primary" disabled: true }
+                            }
+
+                            // Button with icons
+                            Text { content: "With Icons" size: 14 color: "#94A3B8" }
+
+                            Row {
+                                gap: 12
+
+                                Button { text: "Save" icon: "save" variant: "primary" }
+                                Button { text: "Download" icon: "download" icon_position: "right" variant: "secondary" }
+                                Button { icon: "plus" variant: "outline" icon_only: true }
+                                Button { icon: "trash" variant: "destructive" icon_only: true }
+                            }
+                        }
+                    }
+
+                    // Form Example Section
+                    Section {
+                        title: "Complete Form Example"
+
+                        Container {
+                            padding: 24
+                            background: "#1E293B"
+                            radius: 12
+                            width: fill
+
+                            Column {
+                                gap: 24
+
+                                Text {
+                                    content: "Contact Form"
+                                    size: 20
+                                    color: "#FFFFFF"
+                                }
+
+                                Row {
+                                    gap: 16
+                                    width: fill
+
+                                    FormField {
+                                        label: "First Name"
+                                        required: true
+                                        flex: 1
+
+                                        TextInput {
+                                            placeholder: "John"
+                                        }
+                                    }
+
+                                    FormField {
+                                        label: "Last Name"
+                                        required: true
+                                        flex: 1
+
+                                        TextInput {
+                                            placeholder: "Doe"
+                                        }
+                                    }
+                                }
+
+                                FormField {
+                                    label: "Email"
+                                    required: true
+
+                                    TextInput {
+                                        type: "email"
+                                        placeholder: "john@example.com"
+                                    }
+                                }
+
+                                FormField {
+                                    label: "Subject"
+
+                                    Select {
+                                        placeholder: "Select a subject"
+
+                                        Option { value: "general" label: "General Inquiry" }
+                                        Option { value: "support" label: "Technical Support" }
+                                        Option { value: "sales" label: "Sales Question" }
+                                        Option { value: "feedback" label: "Feedback" }
+                                    }
+                                }
+
+                                FormField {
+                                    label: "Message"
+                                    required: true
+
+                                    Textarea {
+                                        placeholder: "Your message..."
+                                        rows: 4
+                                    }
+                                }
+
+                                Checkbox {
+                                    label: "I agree to the terms and conditions"
+                                }
+
+                                Row {
+                                    gap: 12
+                                    justify: flex_end
+
+                                    Button { text: "Cancel" variant: "ghost" }
+                                    Button { text: "Submit" variant: "primary" icon: "send" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Section component
+component Section {
+    prop title: String
+
+    Container {
+        width: fill
+
+        Column {
+            gap: 16
+            width: fill
+
+            // Section header
+            Row {
+                gap: 12
+                align: center
+
+                Container {
+                    width: 4
+                    height: 24
+                    background: "#3B82F6"
+                    radius: 2
+                }
+
+                Text {
+                    content: title
+                    size: 20
+                    color: "#FFFFFF"
+                }
+            }
+
+            // Section content
+            Container {
+                padding: 24
+                background: "#1E293B"
+                radius: 12
+                width: fill
+
+                slot: "default"
+            }
+        }
+    }
+}
+
+// Form field component
+component FormField {
+    prop label: String
+    prop helper: String = ""
+    prop error: String = ""
+    prop required: bool = false
+
+    Column {
+        gap: 8
+        width: fill
+
+        // Label
+        Row {
+            gap: 4
+
+            Text {
+                content: label
+                size: 14
+                color: "#FFFFFF"
+            }
+
+            @if required {
+                Text {
+                    content: "*"
+                    size: 14
+                    color: "#EF4444"
+                }
+            }
+        }
+
+        // Input slot
+        slot: "default"
+
+        // Helper or error text
+        @if error != "" {
+            Text {
+                content: error
+                size: 12
+                color: "#EF4444"
+            }
+        } @else if helper != "" {
+            Text {
+                content: helper
+                size: 12
+                color: "#64748B"
+            }
+        }
+    }
+}

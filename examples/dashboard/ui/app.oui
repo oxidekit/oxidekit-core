@@ -1,0 +1,728 @@
+// Dashboard Demo - OxideKit
+// Demonstrates sidebar navigation, top bar, stat cards, data table, and charts
+
+app DashboardApp {
+    // State declaration
+    state {
+        current_page: String = "overview"
+        sidebar_collapsed: bool = false
+        user: User = { name: "John Doe", email: "john@example.com", avatar: null }
+        stats: Stats = {
+            total_users: 12847,
+            active_sessions: 2341,
+            revenue: 48250,
+            growth: 12.5
+        }
+        recent_orders: List<Order> = []
+    }
+
+    Row {
+        width: fill
+        height: fill
+
+        // Sidebar
+        Column {
+            width: state.sidebar_collapsed ? 64 : 240
+            height: fill
+            background: "#0F172A"
+
+            // Logo area
+            Container {
+                padding: 20
+                width: fill
+                height: 64
+
+                Row {
+                    align: center
+                    gap: 12
+
+                    // Logo icon
+                    Container {
+                        width: 32
+                        height: 32
+                        background: "#3B82F6"
+                        radius: 8
+
+                        Column {
+                            align: center
+                            justify: center
+                            width: fill
+                            height: fill
+
+                            Text {
+                                content: "O"
+                                size: 18
+                                color: "#FFFFFF"
+                            }
+                        }
+                    }
+
+                    @if !state.sidebar_collapsed {
+                        Text {
+                            content: "Dashboard"
+                            size: 18
+                            color: "#FFFFFF"
+                        }
+                    }
+                }
+            }
+
+            // Divider
+            Container {
+                height: 1
+                width: fill
+                background: "#1E293B"
+            }
+
+            // Navigation
+            Column {
+                padding: 16
+                gap: 4
+                flex: 1
+
+                // Overview
+                NavItem {
+                    icon: "home"
+                    label: "Overview"
+                    active: state.current_page == "overview"
+                    collapsed: state.sidebar_collapsed
+                    on_click: state.current_page = "overview"
+                }
+
+                // Analytics
+                NavItem {
+                    icon: "chart"
+                    label: "Analytics"
+                    active: state.current_page == "analytics"
+                    collapsed: state.sidebar_collapsed
+                    on_click: state.current_page = "analytics"
+                }
+
+                // Customers
+                NavItem {
+                    icon: "users"
+                    label: "Customers"
+                    active: state.current_page == "customers"
+                    collapsed: state.sidebar_collapsed
+                    on_click: state.current_page = "customers"
+                }
+
+                // Orders
+                NavItem {
+                    icon: "cart"
+                    label: "Orders"
+                    active: state.current_page == "orders"
+                    collapsed: state.sidebar_collapsed
+                    on_click: state.current_page = "orders"
+                }
+
+                // Products
+                NavItem {
+                    icon: "box"
+                    label: "Products"
+                    active: state.current_page == "products"
+                    collapsed: state.sidebar_collapsed
+                    on_click: state.current_page = "products"
+                }
+
+                // Spacer
+                Container { flex: 1 }
+
+                // Settings
+                NavItem {
+                    icon: "settings"
+                    label: "Settings"
+                    active: state.current_page == "settings"
+                    collapsed: state.sidebar_collapsed
+                    on_click: state.current_page = "settings"
+                }
+            }
+
+            // Collapse toggle
+            Container {
+                padding: 16
+
+                Container {
+                    padding: 12
+                    background: "#1E293B"
+                    radius: 8
+                    width: fill
+
+                    on click => state.sidebar_collapsed = !state.sidebar_collapsed
+
+                    Column {
+                        align: center
+
+                        Text {
+                            content: state.sidebar_collapsed ? ">>" : "<<"
+                            size: 14
+                            color: "#64748B"
+                        }
+                    }
+                }
+            }
+        }
+
+        // Main content area
+        Column {
+            flex: 1
+            height: fill
+            background: "#111827"
+
+            // Top bar
+            Row {
+                width: fill
+                height: 64
+                padding: 16
+                background: "#0F172A"
+                align: center
+                justify: space_between
+
+                // Page title
+                Text {
+                    content: "Overview"
+                    size: 20
+                    color: "#FFFFFF"
+                }
+
+                // User area
+                Row {
+                    gap: 16
+                    align: center
+
+                    // Notifications
+                    Container {
+                        padding: 8
+                        background: "#1E293B"
+                        radius: 8
+
+                        Text {
+                            content: "3"
+                            size: 14
+                            color: "#FFFFFF"
+                        }
+                    }
+
+                    // User menu
+                    Row {
+                        gap: 8
+                        align: center
+
+                        Container {
+                            width: 36
+                            height: 36
+                            background: "#3B82F6"
+                            radius: 18
+
+                            Column {
+                                align: center
+                                justify: center
+                                width: fill
+                                height: fill
+
+                                Text {
+                                    content: "JD"
+                                    size: 14
+                                    color: "#FFFFFF"
+                                }
+                            }
+                        }
+
+                        Column {
+                            gap: 2
+
+                            Text {
+                                content: state.user.name
+                                size: 14
+                                color: "#FFFFFF"
+                            }
+
+                            Text {
+                                content: "Admin"
+                                size: 12
+                                color: "#64748B"
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Content
+            Scroll {
+                flex: 1
+                width: fill
+
+                Column {
+                    padding: 24
+                    gap: 24
+                    width: fill
+
+                    // Stats row
+                    Row {
+                        gap: 16
+                        width: fill
+
+                        // Total Users
+                        StatCard {
+                            title: "Total Users"
+                            value: "12,847"
+                            change: "+12.5%"
+                            change_type: "positive"
+                            icon: "users"
+                            color: "#3B82F6"
+                        }
+
+                        // Active Sessions
+                        StatCard {
+                            title: "Active Sessions"
+                            value: "2,341"
+                            change: "+8.2%"
+                            change_type: "positive"
+                            icon: "activity"
+                            color: "#10B981"
+                        }
+
+                        // Revenue
+                        StatCard {
+                            title: "Revenue"
+                            value: "$48,250"
+                            change: "+23.1%"
+                            change_type: "positive"
+                            icon: "dollar"
+                            color: "#8B5CF6"
+                        }
+
+                        // Bounce Rate
+                        StatCard {
+                            title: "Bounce Rate"
+                            value: "24.5%"
+                            change: "-3.2%"
+                            change_type: "negative"
+                            icon: "trending"
+                            color: "#F59E0B"
+                        }
+                    }
+
+                    // Charts row
+                    Row {
+                        gap: 24
+                        width: fill
+
+                        // Revenue chart
+                        Container {
+                            flex: 2
+                            padding: 24
+                            background: "#1E293B"
+                            radius: 12
+
+                            Column {
+                                gap: 16
+
+                                Row {
+                                    justify: space_between
+                                    align: center
+
+                                    Text {
+                                        content: "Revenue Overview"
+                                        size: 18
+                                        color: "#FFFFFF"
+                                    }
+
+                                    Row {
+                                        gap: 8
+
+                                        Container {
+                                            padding: 8
+                                            background: "#374151"
+                                            radius: 6
+
+                                            Text {
+                                                content: "7 Days"
+                                                size: 12
+                                                color: "#94A3B8"
+                                            }
+                                        }
+
+                                        Container {
+                                            padding: 8
+                                            background: "#3B82F6"
+                                            radius: 6
+
+                                            Text {
+                                                content: "30 Days"
+                                                size: 12
+                                                color: "#FFFFFF"
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Chart placeholder
+                                Container {
+                                    height: 200
+                                    width: fill
+                                    background: "#0F172A"
+                                    radius: 8
+
+                                    Column {
+                                        align: center
+                                        justify: center
+                                        width: fill
+                                        height: fill
+
+                                        Text {
+                                            content: "[Line Chart - Revenue Data]"
+                                            size: 14
+                                            color: "#64748B"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Traffic sources
+                        Container {
+                            flex: 1
+                            padding: 24
+                            background: "#1E293B"
+                            radius: 12
+
+                            Column {
+                                gap: 16
+
+                                Text {
+                                    content: "Traffic Sources"
+                                    size: 18
+                                    color: "#FFFFFF"
+                                }
+
+                                // Chart placeholder
+                                Container {
+                                    height: 160
+                                    width: fill
+                                    background: "#0F172A"
+                                    radius: 8
+
+                                    Column {
+                                        align: center
+                                        justify: center
+                                        width: fill
+                                        height: fill
+
+                                        Text {
+                                            content: "[Pie Chart]"
+                                            size: 14
+                                            color: "#64748B"
+                                        }
+                                    }
+                                }
+
+                                // Legend
+                                Column {
+                                    gap: 8
+
+                                    LegendItem { color: "#3B82F6" label: "Direct" value: "45%" }
+                                    LegendItem { color: "#10B981" label: "Organic" value: "30%" }
+                                    LegendItem { color: "#F59E0B" label: "Referral" value: "25%" }
+                                }
+                            }
+                        }
+                    }
+
+                    // Data table
+                    Container {
+                        padding: 24
+                        background: "#1E293B"
+                        radius: 12
+                        width: fill
+
+                        Column {
+                            gap: 16
+
+                            Row {
+                                justify: space_between
+                                align: center
+
+                                Text {
+                                    content: "Recent Orders"
+                                    size: 18
+                                    color: "#FFFFFF"
+                                }
+
+                                Container {
+                                    padding: 8
+                                    background: "#3B82F6"
+                                    radius: 6
+
+                                    Text {
+                                        content: "View All"
+                                        size: 12
+                                        color: "#FFFFFF"
+                                    }
+                                }
+                            }
+
+                            // Table header
+                            Row {
+                                padding: 12
+                                background: "#0F172A"
+                                radius: 8
+                                width: fill
+
+                                Text { content: "Order ID" size: 12 color: "#64748B" flex: 1 }
+                                Text { content: "Customer" size: 12 color: "#64748B" flex: 2 }
+                                Text { content: "Product" size: 12 color: "#64748B" flex: 2 }
+                                Text { content: "Amount" size: 12 color: "#64748B" flex: 1 }
+                                Text { content: "Status" size: 12 color: "#64748B" flex: 1 }
+                            }
+
+                            // Table rows
+                            Column {
+                                gap: 4
+
+                                TableRow {
+                                    order_id: "#ORD-001"
+                                    customer: "Alice Johnson"
+                                    product: "Pro Subscription"
+                                    amount: "$99.00"
+                                    status: "completed"
+                                }
+
+                                TableRow {
+                                    order_id: "#ORD-002"
+                                    customer: "Bob Smith"
+                                    product: "Team License"
+                                    amount: "$299.00"
+                                    status: "pending"
+                                }
+
+                                TableRow {
+                                    order_id: "#ORD-003"
+                                    customer: "Carol Williams"
+                                    product: "Enterprise Plan"
+                                    amount: "$599.00"
+                                    status: "completed"
+                                }
+
+                                TableRow {
+                                    order_id: "#ORD-004"
+                                    customer: "David Brown"
+                                    product: "Basic Plan"
+                                    amount: "$29.00"
+                                    status: "processing"
+                                }
+
+                                TableRow {
+                                    order_id: "#ORD-005"
+                                    customer: "Eve Davis"
+                                    product: "Pro Subscription"
+                                    amount: "$99.00"
+                                    status: "completed"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Navigation item component
+component NavItem {
+    prop icon: String
+    prop label: String
+    prop active: bool = false
+    prop collapsed: bool = false
+    prop on_click: Function
+
+    Container {
+        padding: 12
+        background: active ? "#1E293B" : "transparent"
+        radius: 8
+        width: fill
+
+        on click => on_click
+
+        Row {
+            gap: 12
+            align: center
+
+            // Icon placeholder
+            Container {
+                width: 24
+                height: 24
+
+                Column {
+                    align: center
+                    justify: center
+                    width: fill
+                    height: fill
+
+                    Text {
+                        content: icon
+                        size: 14
+                        color: active ? "#3B82F6" : "#64748B"
+                    }
+                }
+            }
+
+            @if !collapsed {
+                Text {
+                    content: label
+                    size: 14
+                    color: active ? "#FFFFFF" : "#94A3B8"
+                }
+            }
+        }
+    }
+}
+
+// Stat card component
+component StatCard {
+    prop title: String
+    prop value: String
+    prop change: String
+    prop change_type: String = "neutral"
+    prop icon: String
+    prop color: String = "#3B82F6"
+
+    Container {
+        padding: 20
+        background: "#1E293B"
+        radius: 12
+        flex: 1
+
+        Column {
+            gap: 16
+
+            Row {
+                justify: space_between
+                align: flex_start
+
+                Column {
+                    gap: 8
+
+                    Text {
+                        content: title
+                        size: 14
+                        color: "#64748B"
+                    }
+
+                    Text {
+                        content: value
+                        size: 28
+                        color: "#FFFFFF"
+                    }
+                }
+
+                Container {
+                    width: 48
+                    height: 48
+                    background: color
+                    radius: 12
+                    opacity: 0.2
+
+                    Column {
+                        align: center
+                        justify: center
+                        width: fill
+                        height: fill
+
+                        Text {
+                            content: icon
+                            size: 20
+                            color: color
+                        }
+                    }
+                }
+            }
+
+            Row {
+                gap: 4
+                align: center
+
+                Text {
+                    content: change
+                    size: 14
+                    color: change_type == "positive" ? "#10B981" : change_type == "negative" ? "#EF4444" : "#64748B"
+                }
+
+                Text {
+                    content: "vs last month"
+                    size: 12
+                    color: "#64748B"
+                }
+            }
+        }
+    }
+}
+
+// Legend item component
+component LegendItem {
+    prop color: String
+    prop label: String
+    prop value: String
+
+    Row {
+        gap: 8
+        align: center
+
+        Container {
+            width: 12
+            height: 12
+            background: color
+            radius: 6
+        }
+
+        Text {
+            content: label
+            size: 14
+            color: "#94A3B8"
+            flex: 1
+        }
+
+        Text {
+            content: value
+            size: 14
+            color: "#FFFFFF"
+        }
+    }
+}
+
+// Table row component
+component TableRow {
+    prop order_id: String
+    prop customer: String
+    prop product: String
+    prop amount: String
+    prop status: String
+
+    Row {
+        padding: 12
+        width: fill
+        align: center
+
+        Text { content: order_id size: 14 color: "#FFFFFF" flex: 1 }
+        Text { content: customer size: 14 color: "#94A3B8" flex: 2 }
+        Text { content: product size: 14 color: "#94A3B8" flex: 2 }
+        Text { content: amount size: 14 color: "#FFFFFF" flex: 1 }
+
+        Container {
+            flex: 1
+
+            Container {
+                padding: 6
+                background: status == "completed" ? "#10B981" : status == "pending" ? "#F59E0B" : "#3B82F6"
+                radius: 4
+                opacity: 0.2
+
+                Text {
+                    content: status
+                    size: 12
+                    color: status == "completed" ? "#10B981" : status == "pending" ? "#F59E0B" : "#3B82F6"
+                }
+            }
+        }
+    }
+}

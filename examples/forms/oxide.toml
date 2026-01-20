@@ -1,0 +1,28 @@
+# OxideKit Forms Showcase
+# Demonstrates all form components with validation and variants
+
+[app]
+id = "dev.oxidekit.examples.forms"
+name = "Forms Showcase"
+version = "0.1.0"
+description = "All form components with validation and different sizes/variants"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "Forms Showcase - OxideKit Demo"
+width = 1000
+height = 800
+resizable = true
+decorations = true
+
+[extensions]
+"ui.forms" = "^0.1"
+
+[build]
+target = ["static", "desktop"]
+
+[dev]
+hot_reload = true
+inspector = true

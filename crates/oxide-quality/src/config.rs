@@ -33,6 +33,10 @@ pub struct QualityConfig {
     #[serde(default)]
     pub ci: CiConfig,
 
+    /// Visual regression testing configuration
+    #[serde(default)]
+    pub visual_regression: VisualRegressionConfig,
+
     /// Paths to exclude from checks
     #[serde(default)]
     pub exclude: Vec<String>,
@@ -51,6 +55,7 @@ impl Default for QualityConfig {
             security: SecurityConfig::default(),
             bundle: BundleConfig::default(),
             ci: CiConfig::default(),
+            visual_regression: VisualRegressionConfig::default(),
             exclude: vec![
                 "target/**".to_string(),
                 "node_modules/**".to_string(),
@@ -491,6 +496,321 @@ pub enum ReportFormat {
     Text,
 }
 
+/// Visual regression testing configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VisualRegressionConfig {
+    /// Enable visual regression testing
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+
+    /// Directory for baseline screenshots
+    #[serde(default = "default_baseline_dir")]
+    pub baseline_dir: String,
+
+    /// Directory for actual screenshots during tests
+    #[serde(default = "default_actual_dir")]
+    pub actual_dir: String,
+
+    /// Directory for diff output
+    #[serde(default = "default_diff_dir")]
+    pub diff_dir: String,
+
+    /// Directory for HTML reports
+    #[serde(default = "default_report_dir")]
+    pub report_dir: String,
+
+    /// Threshold configuration
+    #[serde(default)]
+    pub thresholds: VisualThresholds,
+
+    /// Comparison method
+    #[serde(default)]
+    pub comparison_method: ComparisonMethod,
+
+    /// Anti-aliasing tolerance (pixels)
+    #[serde(default = "default_aa_tolerance")]
+    pub anti_aliasing_tolerance: u32,
+
+    /// Ignore regions (CSS selector patterns)
+    #[serde(default)]
+    pub ignore_regions: Vec<IgnoreRegion>,
+
+    /// Update baselines automatically on failure (for development)
+    #[serde(default)]
+    pub auto_update_baselines: bool,
+
+    /// Screenshot capture settings
+    #[serde(default)]
+    pub capture: CaptureSettings,
+
+    /// File patterns to include for component screenshots
+    #[serde(default = "default_screenshot_patterns")]
+    pub include: Vec<String>,
+
+    /// File patterns to exclude
+    #[serde(default)]
+    pub exclude: Vec<String>,
+
+    /// Fail CI on visual regression
+    #[serde(default = "default_true")]
+    pub fail_on_regression: bool,
+
+    /// Generate HTML report
+    #[serde(default = "default_true")]
+    pub generate_report: bool,
+}
+
+impl Default for VisualRegressionConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            baseline_dir: default_baseline_dir(),
+            actual_dir: default_actual_dir(),
+            diff_dir: default_diff_dir(),
+            report_dir: default_report_dir(),
+            thresholds: VisualThresholds::default(),
+            comparison_method: ComparisonMethod::default(),
+            anti_aliasing_tolerance: 2,
+            ignore_regions: Vec::new(),
+            auto_update_baselines: false,
+            capture: CaptureSettings::default(),
+            include: default_screenshot_patterns(),
+            exclude: Vec::new(),
+            fail_on_regression: true,
+            generate_report: true,
+        }
+    }
+}
+
+/// Visual comparison thresholds
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VisualThresholds {
+    /// Maximum percentage of different pixels allowed (0.0 - 100.0)
+    #[serde(default = "default_pixel_threshold")]
+    pub pixel_threshold_percent: f64,
+
+    /// Maximum allowed pixel color difference (0 - 255)
+    #[serde(default = "default_color_threshold")]
+    pub color_threshold: u8,
+
+    /// Perceptual hash distance threshold (0 = identical, higher = more different)
+    #[serde(default = "default_hash_threshold")]
+    pub hash_distance_threshold: u32,
+
+    /// Structural similarity threshold (0.0 - 1.0, 1.0 = identical)
+    #[serde(default = "default_ssim_threshold")]
+    pub ssim_threshold: f64,
+
+    /// Warning threshold (percentage of pixel_threshold_percent)
+    #[serde(default = "default_warning_percent")]
+    pub warning_at_percent: f64,
+}
+
+impl Default for VisualThresholds {
+    fn default() -> Self {
+        Self {
+            pixel_threshold_percent: 0.1,     // 0.1% pixel difference allowed
+            color_threshold: 5,                // 5 units color difference tolerance
+            hash_distance_threshold: 5,        // Perceptual hash distance
+            ssim_threshold: 0.99,              // 99% structural similarity required
+            warning_at_percent: 50.0,          // Warn at 50% of threshold
+        }
+    }
+}
+
+/// Comparison method for visual regression
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ComparisonMethod {
+    /// Pixel-by-pixel comparison
+    #[default]
+    PixelDiff,
+    /// Perceptual hashing comparison
+    PerceptualHash,
+    /// Structural similarity index
+    Ssim,
+    /// Hybrid: uses multiple methods
+    Hybrid,
+}
+
+impl std::fmt::Display for ComparisonMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ComparisonMethod::PixelDiff => write!(f, "Pixel Diff"),
+            ComparisonMethod::PerceptualHash => write!(f, "Perceptual Hash"),
+            ComparisonMethod::Ssim => write!(f, "SSIM"),
+            ComparisonMethod::Hybrid => write!(f, "Hybrid"),
+        }
+    }
+}
+
+/// Region to ignore during comparison
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct IgnoreRegion {
+    /// Region name/description
+    pub name: String,
+    /// X coordinate (pixels or percentage)
+    pub x: RegionCoord,
+    /// Y coordinate (pixels or percentage)
+    pub y: RegionCoord,
+    /// Width (pixels or percentage)
+    pub width: RegionCoord,
+    /// Height (pixels or percentage)
+    pub height: RegionCoord,
+    /// CSS selector to auto-detect region (optional)
+    #[serde(default)]
+    pub selector: Option<String>,
+}
+
+/// Region coordinate value
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum RegionCoord {
+    Pixels(u32),
+    Percent(f64),
+}
+
+impl Default for RegionCoord {
+    fn default() -> Self {
+        RegionCoord::Pixels(0)
+    }
+}
+
+impl RegionCoord {
+    /// Convert to pixels given a dimension
+    pub fn to_pixels(&self, dimension: u32) -> u32 {
+        match self {
+            RegionCoord::Pixels(px) => *px,
+            RegionCoord::Percent(pct) => ((pct / 100.0) * dimension as f64) as u32,
+        }
+    }
+}
+
+/// Screenshot capture settings
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CaptureSettings {
+    /// Default viewport width
+    #[serde(default = "default_viewport_width")]
+    pub viewport_width: u32,
+    /// Default viewport height
+    #[serde(default = "default_viewport_height")]
+    pub viewport_height: u32,
+    /// Device pixel ratio (for retina displays)
+    #[serde(default = "default_pixel_ratio")]
+    pub device_pixel_ratio: f32,
+    /// Wait time before capture (milliseconds)
+    #[serde(default = "default_wait_ms")]
+    pub wait_before_capture_ms: u64,
+    /// Capture format
+    #[serde(default)]
+    pub format: ImageFormat,
+    /// PNG compression level (0-9)
+    #[serde(default = "default_compression")]
+    pub compression_level: u32,
+    /// Enable full-page screenshots
+    #[serde(default)]
+    pub full_page: bool,
+    /// Multiple viewport sizes to test
+    #[serde(default)]
+    pub viewports: Vec<Viewport>,
+}
+
+impl Default for CaptureSettings {
+    fn default() -> Self {
+        Self {
+            viewport_width: 1280,
+            viewport_height: 720,
+            device_pixel_ratio: 1.0,
+            wait_before_capture_ms: 100,
+            format: ImageFormat::Png,
+            compression_level: 6,
+            full_page: false,
+            viewports: vec![
+                Viewport::desktop(),
+                Viewport::tablet(),
+                Viewport::mobile(),
+            ],
+        }
+    }
+}
+
+/// Viewport configuration for responsive testing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Viewport {
+    /// Viewport name
+    pub name: String,
+    /// Width in pixels
+    pub width: u32,
+    /// Height in pixels
+    pub height: u32,
+    /// Device pixel ratio
+    #[serde(default = "default_pixel_ratio")]
+    pub device_pixel_ratio: f32,
+}
+
+impl Viewport {
+    /// Desktop viewport (1280x720)
+    pub fn desktop() -> Self {
+        Self {
+            name: "desktop".to_string(),
+            width: 1280,
+            height: 720,
+            device_pixel_ratio: 1.0,
+        }
+    }
+
+    /// Tablet viewport (768x1024)
+    pub fn tablet() -> Self {
+        Self {
+            name: "tablet".to_string(),
+            width: 768,
+            height: 1024,
+            device_pixel_ratio: 2.0,
+        }
+    }
+
+    /// Mobile viewport (375x667)
+    pub fn mobile() -> Self {
+        Self {
+            name: "mobile".to_string(),
+            width: 375,
+            height: 667,
+            device_pixel_ratio: 3.0,
+        }
+    }
+
+    /// Create a custom viewport
+    pub fn custom(name: &str, width: u32, height: u32) -> Self {
+        Self {
+            name: name.to_string(),
+            width,
+            height,
+            device_pixel_ratio: 1.0,
+        }
+    }
+}
+
+/// Image format for screenshots
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ImageFormat {
+    #[default]
+    Png,
+    Jpeg,
+    WebP,
+}
+
+impl ImageFormat {
+    /// Get file extension
+    pub fn extension(&self) -> &'static str {
+        match self {
+            ImageFormat::Png => "png",
+            ImageFormat::Jpeg => "jpg",
+            ImageFormat::WebP => "webp",
+        }
+    }
+}
+
 // Default value helpers
 fn default_true() -> bool { true }
 fn default_oui_patterns() -> Vec<String> { vec!["**/*.oui".to_string()] }
@@ -509,6 +829,22 @@ fn default_bundle_size() -> u64 { 10 * 1024 * 1024 }
 fn default_file_size() -> u64 { 1024 * 1024 }
 fn default_size_threshold() -> f64 { 5.0 }
 fn default_size_fail() -> f64 { 20.0 }
+fn default_baseline_dir() -> String { ".visual-regression/baseline".to_string() }
+fn default_actual_dir() -> String { ".visual-regression/actual".to_string() }
+fn default_diff_dir() -> String { ".visual-regression/diff".to_string() }
+fn default_report_dir() -> String { ".visual-regression/reports".to_string() }
+fn default_pixel_threshold() -> f64 { 0.1 }
+fn default_color_threshold() -> u8 { 5 }
+fn default_hash_threshold() -> u32 { 5 }
+fn default_ssim_threshold() -> f64 { 0.99 }
+fn default_warning_percent() -> f64 { 50.0 }
+fn default_aa_tolerance() -> u32 { 2 }
+fn default_viewport_width() -> u32 { 1280 }
+fn default_viewport_height() -> u32 { 720 }
+fn default_pixel_ratio() -> f32 { 1.0 }
+fn default_wait_ms() -> u64 { 100 }
+fn default_compression() -> u32 { 6 }
+fn default_screenshot_patterns() -> Vec<String> { vec!["**/*.oui".to_string(), "**/*.component.rs".to_string()] }
 
 #[cfg(test)]
 mod tests {

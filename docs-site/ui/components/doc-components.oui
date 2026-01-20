@@ -1,0 +1,672 @@
+// Documentation Components
+// Reusable components for documentation pages
+
+// Code block with syntax highlighting
+component CodeBlock {
+    prop language: String = "oui"
+    prop code: String
+    prop title: String = ""
+    prop show_line_numbers: bool = true
+    prop highlight_lines: Vec<i32> = []
+    prop theme: String = "dark"
+
+    let colors = {
+        bg: theme == "dark" ? "#0F172A" : "#F8FAFC",
+        border: theme == "dark" ? "#1E293B" : "#E2E8F0",
+        header_bg: theme == "dark" ? "#1E293B" : "#F1F5F9",
+        text: theme == "dark" ? "#E2E8F0" : "#1E293B",
+        line_number: theme == "dark" ? "#475569" : "#94A3B8",
+        keyword: "#93C5FD",
+        string: "#86EFAC",
+        number: "#FCD34D",
+        comment: "#6B7280"
+    }
+
+    Container {
+        width: fill
+        radius: 12
+        overflow: hidden
+
+        style {
+            border: 1
+            border_color: colors.border
+        }
+
+        Column {
+            // Header with title and copy button
+            @if title != "" {
+                Container {
+                    padding_x: 16
+                    padding_y: 10
+                    width: fill
+
+                    style {
+                        background: colors.header_bg
+                        border_bottom: 1
+                        border_color: colors.border
+                    }
+
+                    Row {
+                        justify: space_between
+                        align: center
+
+                        Text {
+                            content: title
+                            size: 13
+                            color: colors.text
+                            weight: medium
+                        }
+
+                        Container {
+                            padding: 6
+                            radius: 4
+                            cursor: pointer
+
+                            style {
+                                background: "transparent"
+                            }
+
+                            on hover {
+                                background: colors.bg
+                            }
+
+                            Text {
+                                content: "copy"
+                                size: 14
+                                color: colors.line_number
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Code content
+            Container {
+                padding: 16
+                width: fill
+
+                style {
+                    background: colors.bg
+                }
+
+                Scroll {
+                    direction: horizontal
+
+                    Row {
+                        gap: 16
+
+                        // Line numbers
+                        @if show_line_numbers {
+                            Column {
+                                gap: 0
+
+                                @for (i, _) in code.lines().enumerate() {
+                                    Text {
+                                        content: "{i + 1}"
+                                        size: 13
+                                        color: colors.line_number
+                                        font: "mono"
+                                        align: right
+                                        min_width: 24
+                                    }
+                                }
+                            }
+                        }
+
+                        // Code content
+                        Column {
+                            gap: 0
+
+                            @for line in code.lines() {
+                                Text {
+                                    content: line
+                                    size: 13
+                                    color: colors.text
+                                    font: "mono"
+                                    white_space: pre
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Props table for component documentation
+component PropsTable {
+    prop props: Vec<PropDefinition>
+    prop theme: String = "dark"
+
+    let colors = {
+        bg: theme == "dark" ? "#1E293B" : "#F8FAFC",
+        border: theme == "dark" ? "#334155" : "#E2E8F0",
+        header_bg: theme == "dark" ? "#0F172A" : "#F1F5F9",
+        text_primary: theme == "dark" ? "#F8FAFC" : "#0F172A",
+        text_secondary: theme == "dark" ? "#94A3B8" : "#64748B",
+        type_color: "#3B82F6",
+        required_color: "#EF4444"
+    }
+
+    Container {
+        width: fill
+        radius: 12
+        overflow: hidden
+
+        style {
+            border: 1
+            border_color: colors.border
+        }
+
+        Column {
+            // Header row
+            Container {
+                padding: 12
+                width: fill
+
+                style {
+                    background: colors.header_bg
+                    border_bottom: 1
+                    border_color: colors.border
+                }
+
+                Row {
+                    Row {
+                        width: 140
+
+                        Text {
+                            content: "Prop"
+                            size: 12
+                            color: colors.text_secondary
+                            weight: semibold
+                        }
+                    }
+
+                    Row {
+                        width: 120
+
+                        Text {
+                            content: "Type"
+                            size: 12
+                            color: colors.text_secondary
+                            weight: semibold
+                        }
+                    }
+
+                    Row {
+                        width: 100
+
+                        Text {
+                            content: "Default"
+                            size: 12
+                            color: colors.text_secondary
+                            weight: semibold
+                        }
+                    }
+
+                    Row {
+                        flex: 1
+
+                        Text {
+                            content: "Description"
+                            size: 12
+                            color: colors.text_secondary
+                            weight: semibold
+                        }
+                    }
+                }
+            }
+
+            // Data rows
+            @for (index, prop) in props.enumerate() {
+                Container {
+                    padding: 12
+                    width: fill
+
+                    style {
+                        background: index % 2 == 0 ? "transparent" : colors.bg
+                        border_bottom: index < props.len() - 1 ? 1 : 0
+                        border_color: colors.border
+                    }
+
+                    Row {
+                        align: start
+
+                        Row {
+                            width: 140
+                            gap: 4
+
+                            Text {
+                                content: prop.name
+                                size: 13
+                                color: colors.text_primary
+                                font: "mono"
+                            }
+
+                            @if prop.required {
+                                Text {
+                                    content: "*"
+                                    size: 13
+                                    color: colors.required_color
+                                }
+                            }
+                        }
+
+                        Row {
+                            width: 120
+
+                            Text {
+                                content: prop.prop_type
+                                size: 13
+                                color: colors.type_color
+                                font: "mono"
+                            }
+                        }
+
+                        Row {
+                            width: 100
+
+                            Text {
+                                content: prop.default
+                                size: 13
+                                color: colors.text_secondary
+                                font: "mono"
+                            }
+                        }
+
+                        Row {
+                            flex: 1
+
+                            Text {
+                                content: prop.description
+                                size: 13
+                                color: colors.text_secondary
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Live preview component
+component LivePreview {
+    prop title: String = "Preview"
+    prop theme: String = "dark"
+
+    let colors = {
+        bg: theme == "dark" ? "#1E293B" : "#F8FAFC",
+        border: theme == "dark" ? "#334155" : "#E2E8F0",
+        text: theme == "dark" ? "#94A3B8" : "#64748B"
+    }
+
+    Container {
+        width: fill
+        radius: 12
+        padding: 24
+        margin_bottom: 16
+
+        style {
+            background: colors.bg
+            border: 1
+            border_color: colors.border
+        }
+
+        Column {
+            gap: 16
+
+            Row {
+                justify: space_between
+                align: center
+
+                Text {
+                    content: title
+                    size: 12
+                    color: colors.text
+                    weight: medium
+                }
+
+                Row {
+                    gap: 8
+
+                    Container {
+                        width: 12
+                        height: 12
+                        radius: 6
+
+                        style {
+                            background: "#EF4444"
+                        }
+                    }
+
+                    Container {
+                        width: 12
+                        height: 12
+                        radius: 6
+
+                        style {
+                            background: "#F59E0B"
+                        }
+                    }
+
+                    Container {
+                        width: 12
+                        height: 12
+                        radius: 6
+
+                        style {
+                            background: "#22C55E"
+                        }
+                    }
+                }
+            }
+
+            // Preview content slot
+            Container {
+                width: fill
+                min_height: 100
+
+                @slot default
+            }
+        }
+    }
+}
+
+// Section component for documentation
+component Section {
+    prop title: String
+    prop theme: String = "dark"
+
+    let colors = {
+        text_primary: theme == "dark" ? "#F8FAFC" : "#0F172A",
+        border: theme == "dark" ? "#334155" : "#E2E8F0"
+    }
+
+    Column {
+        gap: 16
+        width: fill
+        margin_top: 32
+
+        Row {
+            gap: 12
+            align: center
+
+            Container {
+                width: 4
+                height: 24
+                radius: 2
+
+                style {
+                    background: "#3B82F6"
+                }
+            }
+
+            Text {
+                content: title
+                size: 20
+                color: colors.text_primary
+                weight: semibold
+            }
+        }
+
+        @slot default
+    }
+}
+
+// Subsection component
+component SubSection {
+    prop title: String
+    prop theme: String = "dark"
+
+    let colors = {
+        text: theme == "dark" ? "#E2E8F0" : "#1E293B"
+    }
+
+    Column {
+        gap: 12
+        width: fill
+        margin_top: 16
+
+        Text {
+            content: title
+            size: 16
+            color: colors.text
+            weight: medium
+        }
+
+        @slot default
+    }
+}
+
+// Callout/Alert component
+component Callout {
+    prop variant: String = "info"  // info, warning, danger, success, tip
+    prop title: String = ""
+    prop theme: String = "dark"
+
+    let variant_colors = {
+        info: { bg: "#1E3A5F", border: "#3B82F6", icon: "info", text: "#60A5FA" },
+        warning: { bg: "#422006", border: "#F59E0B", icon: "alert-triangle", text: "#FCD34D" },
+        danger: { bg: "#450A0A", border: "#EF4444", icon: "alert-circle", text: "#FCA5A5" },
+        success: { bg: "#052E16", border: "#22C55E", icon: "check-circle", text: "#86EFAC" },
+        tip: { bg: "#1E1B4B", border: "#8B5CF6", icon: "lightbulb", text: "#C4B5FD" }
+    }
+
+    let colors = variant_colors[variant]
+    let text_secondary = theme == "dark" ? "#CBD5E1" : "#475569"
+
+    Container {
+        width: fill
+        padding: 16
+        radius: 8
+
+        style {
+            background: theme == "dark" ? colors.bg : colors.bg
+            border_left: 4
+            border_color: colors.border
+        }
+
+        Row {
+            gap: 12
+            align: start
+
+            Text {
+                content: colors.icon
+                size: 20
+                color: colors.text
+                margin_top: 2
+            }
+
+            Column {
+                gap: 4
+                flex: 1
+
+                @if title != "" {
+                    Text {
+                        content: title
+                        size: 14
+                        color: colors.text
+                        weight: semibold
+                    }
+                }
+
+                @slot default
+            }
+        }
+    }
+}
+
+// Navigation footer for previous/next
+component NavFooter {
+    prop prev_title: String = ""
+    prop prev_link: String = ""
+    prop next_title: String = ""
+    prop next_link: String = ""
+    prop on_navigate: Callback
+    prop theme: String = "dark"
+
+    let colors = {
+        bg: theme == "dark" ? "#1E293B" : "#F8FAFC",
+        border: theme == "dark" ? "#334155" : "#E2E8F0",
+        text_primary: theme == "dark" ? "#F8FAFC" : "#0F172A",
+        text_secondary: theme == "dark" ? "#94A3B8" : "#64748B",
+        accent: "#3B82F6"
+    }
+
+    Row {
+        width: fill
+        gap: 16
+        margin_top: 48
+        padding_top: 24
+
+        style {
+            border_top: 1
+            border_color: colors.border
+        }
+
+        // Previous link
+        @if prev_title != "" {
+            Container {
+                flex: 1
+                padding: 16
+                radius: 8
+                cursor: pointer
+
+                style {
+                    background: colors.bg
+                    border: 1
+                    border_color: colors.border
+                }
+
+                on click => on_navigate(prev_link)
+
+                Row {
+                    gap: 12
+                    align: center
+
+                    Text {
+                        content: "arrow-left"
+                        size: 18
+                        color: colors.accent
+                    }
+
+                    Column {
+                        gap: 2
+
+                        Text {
+                            content: "Previous"
+                            size: 12
+                            color: colors.text_secondary
+                        }
+
+                        Text {
+                            content: prev_title
+                            size: 14
+                            color: colors.accent
+                            weight: medium
+                        }
+                    }
+                }
+            }
+        } @else {
+            Container { flex: 1 }
+        }
+
+        // Next link
+        @if next_title != "" {
+            Container {
+                flex: 1
+                padding: 16
+                radius: 8
+                cursor: pointer
+
+                style {
+                    background: colors.bg
+                    border: 1
+                    border_color: colors.border
+                }
+
+                on click => on_navigate(next_link)
+
+                Row {
+                    gap: 12
+                    align: center
+                    justify: end
+
+                    Column {
+                        gap: 2
+                        align: end
+
+                        Text {
+                            content: "Next"
+                            size: 12
+                            color: colors.text_secondary
+                        }
+
+                        Text {
+                            content: next_title
+                            size: 14
+                            color: colors.accent
+                            weight: medium
+                        }
+                    }
+
+                    Text {
+                        content: "arrow-right"
+                        size: 18
+                        color: colors.accent
+                    }
+                }
+            }
+        } @else {
+            Container { flex: 1 }
+        }
+    }
+}
+
+// Badge component
+component Badge {
+    prop label: String
+    prop variant: String = "default"  // default, primary, success, warning, danger
+    prop size: String = "md"  // sm, md
+
+    let variant_colors = {
+        default: { bg: "#334155", text: "#E2E8F0" },
+        primary: { bg: "#1D4ED8", text: "#DBEAFE" },
+        success: { bg: "#166534", text: "#DCFCE7" },
+        warning: { bg: "#854D0E", text: "#FEF9C3" },
+        danger: { bg: "#991B1B", text: "#FEE2E2" }
+    }
+
+    let colors = variant_colors[variant]
+    let padding = size == "sm" ? { x: 6, y: 2 } : { x: 8, y: 4 }
+    let font_size = size == "sm" ? 10 : 12
+
+    Container {
+        padding_x: padding.x
+        padding_y: padding.y
+        radius: 4
+
+        style {
+            background: colors.bg
+        }
+
+        Text {
+            content: label
+            size: font_size
+            color: colors.text
+            weight: medium
+        }
+    }
+}
+
+// Type definition for props
+struct PropDefinition {
+    name: String,
+    prop_type: String,
+    default: String,
+    description: String,
+    required: bool
+}

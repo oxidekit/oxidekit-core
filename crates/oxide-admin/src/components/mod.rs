@@ -3,9 +3,13 @@
 //! Production-ready UI components for the admin platform:
 //! - Layout components (sidebar, topbar, split panes)
 //! - Data display (cards, tables, charts)
-//! - Form controls (buttons, inputs, selects)
-//! - Feedback (alerts, toasts, modals)
+//! - Form controls (buttons, inputs, selects, checkboxes, radio, slider)
+//! - Feedback (alerts, toasts, modals, progress)
 //! - Navigation (breadcrumbs, tabs, command palette)
+//! - Utilities (tooltip, skeleton)
+
+// Design tokens module - must be first for other modules to use
+pub mod tokens;
 
 mod button;
 mod card;
@@ -25,6 +29,10 @@ mod chart;
 mod badge;
 mod avatar;
 mod icon;
+mod radio;
+mod slider;
+mod progress;
+mod tooltip;
 
 pub use button::*;
 pub use card::*;
@@ -44,3 +52,7 @@ pub use chart::*;
 pub use badge::*;
 pub use avatar::*;
 pub use icon::*;
+pub use radio::*;
+pub use slider::*;
+pub use progress::*;
+pub use tooltip::*;

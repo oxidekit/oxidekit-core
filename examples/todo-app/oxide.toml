@@ -1,0 +1,25 @@
+# OxideKit Todo App Demo
+# A todo list app demonstrating forms, lists, and filtering
+
+[app]
+id = "dev.oxidekit.examples.todo-app"
+name = "Todo App"
+version = "0.1.0"
+description = "A todo list app with add/remove, completion, and filtering"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "Todo App - OxideKit Demo"
+width = 600
+height = 700
+resizable = true
+decorations = true
+
+[build]
+target = ["static", "desktop"]
+
+[dev]
+hot_reload = true
+inspector = true

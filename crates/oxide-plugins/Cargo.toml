@@ -42,8 +42,8 @@ walkdir.workspace = true
 tokio = { workspace = true, optional = true }
 
 # WASM runtime (optional, for sandbox)
-wasmtime = { version = "27.0", optional = true }
-wasmtime-wasi = { version = "27.0", optional = true }
+wasmtime = { version = "36.0", optional = true }
+wasmtime-wasi = { version = "36.0", optional = true }
 
 # Cryptographic verification
 sha2 = "0.10"

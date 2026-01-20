@@ -1,0 +1,30 @@
+# OxideKit Dashboard Demo
+# A complete dashboard demonstrating navigation, cards, tables, and charts
+
+[app]
+id = "dev.oxidekit.examples.dashboard"
+name = "Dashboard"
+version = "0.1.0"
+description = "Admin dashboard with sidebar, stats, tables, and charts"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "Dashboard - OxideKit Demo"
+width = 1280
+height = 800
+resizable = true
+decorations = true
+
+[extensions]
+"ui.core" = "^0.1"
+"ui.data" = "^0.1"
+"ui.charts" = "^0.1"
+
+[build]
+target = ["static", "desktop"]
+
+[dev]
+hot_reload = true
+inspector = true

@@ -1,6 +1,10 @@
 //! OxideKit Runtime
 //!
-//! Window management, event handling, and application lifecycle.
+//! Window management, event handling, application lifecycle, and animation support.
+
+pub mod animation;
+
+pub use animation::{AnimationRuntime, Animatable, properties as anim_properties};
 
 use anyhow::Result;
 use oxide_compiler::{compile, ComponentIR, PropertyValue};

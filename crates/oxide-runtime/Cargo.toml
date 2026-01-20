@@ -8,6 +8,7 @@ description = "OxideKit runtime (windowing, input, lifecycle)"
 
 [dependencies]
 oxide-compiler.workspace = true
+oxide-components.workspace = true
 oxide-layout.workspace = true
 oxide-render.workspace = true
 oxide-text.workspace = true

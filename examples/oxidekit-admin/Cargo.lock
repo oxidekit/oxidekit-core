@@ -1238,6 +1238,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "oxide-components"
+version = "0.1.0"
+dependencies = [
+ "oxide-layout",
+ "oxide-render",
+ "oxide-text",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "toml",
+ "tracing",
+]
+
+[[package]]
 name = "oxide-layout"
 version = "0.1.0"
 dependencies = [
@@ -1259,6 +1273,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "oxide-compiler",
+ "oxide-components",
  "oxide-layout",
  "oxide-render",
  "oxide-text",

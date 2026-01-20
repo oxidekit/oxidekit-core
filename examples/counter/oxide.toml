@@ -1,0 +1,25 @@
+# OxideKit Counter Demo
+# A simple counter app demonstrating state management basics
+
+[app]
+id = "dev.oxidekit.examples.counter"
+name = "Counter"
+version = "0.1.0"
+description = "A simple +/- counter demonstrating state management"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "Counter - OxideKit Demo"
+width = 400
+height = 300
+resizable = true
+decorations = true
+
+[build]
+target = ["static", "desktop"]
+
+[dev]
+hot_reload = true
+inspector = true

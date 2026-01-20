@@ -14,7 +14,7 @@ use oxide_components::{
     ColorToken, ColorTokens, DesignTokens, DurationTokens, EasingTokens,
     FontFamilyTokens, FontSizeTokens, FontWeightTokens, LetterSpacingTokens,
     LineHeightTokens, MotionTokens, RadiusTokens, ShadowToken, ShadowTokens,
-    SpacingToken, SpacingTokens, Theme, ThemeMetadata, TypographyTokens,
+    SpacingToken, SpacingTokens, Theme, ThemeMetadata, TypographyRoles, TypographyTokens,
 };
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
@@ -850,6 +850,7 @@ impl TokenExtractor {
             font_weight: FontWeightTokens::default(),
             line_height: LineHeightTokens::default(),
             letter_spacing: LetterSpacingTokens::default(),
+            roles: TypographyRoles::default(),
         };
 
         // Build motion tokens

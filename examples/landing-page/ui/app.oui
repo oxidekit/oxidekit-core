@@ -1,0 +1,962 @@
+// Landing Page - OxideKit Demo
+// Demonstrates hero section, feature cards, pricing table, and footer
+
+app LandingPageApp {
+    // State
+    state {
+        current_plan: String = "pro"
+        is_annual: bool = true
+    }
+
+    Column {
+        width: fill
+        height: fill
+        background: "#030712"
+
+        Scroll {
+            width: fill
+            height: fill
+
+            Column {
+                width: fill
+
+                // Navigation
+                Row {
+                    width: fill
+                    height: 80
+                    padding: 24
+                    align: center
+                    justify: space_between
+                    max_width: 1200
+                    align_self: center
+
+                    // Logo
+                    Row {
+                        gap: 12
+                        align: center
+
+                        Container {
+                            width: 40
+                            height: 40
+                            background: "#3B82F6"
+                            radius: 10
+
+                            Column {
+                                align: center
+                                justify: center
+                                width: fill
+                                height: fill
+
+                                Text {
+                                    content: "A"
+                                    size: 20
+                                    color: "#FFFFFF"
+                                }
+                            }
+                        }
+
+                        Text {
+                            content: "Acme"
+                            size: 24
+                            color: "#FFFFFF"
+                        }
+                    }
+
+                    // Nav links
+                    Row {
+                        gap: 40
+
+                        NavLink { text: "Features" }
+                        NavLink { text: "Pricing" }
+                        NavLink { text: "About" }
+                        NavLink { text: "Blog" }
+                    }
+
+                    // CTA buttons
+                    Row {
+                        gap: 16
+
+                        Container {
+                            padding: 12
+
+                            Text {
+                                content: "Sign In"
+                                size: 14
+                                color: "#94A3B8"
+                            }
+                        }
+
+                        Container {
+                            padding: 12
+                            background: "#3B82F6"
+                            radius: 8
+
+                            Text {
+                                content: "Get Started"
+                                size: 14
+                                color: "#FFFFFF"
+                            }
+                        }
+                    }
+                }
+
+                // Hero Section
+                Container {
+                    width: fill
+                    padding: 80
+                    padding_top: 120
+
+                    Column {
+                        align: center
+                        gap: 32
+                        max_width: 900
+                        align_self: center
+
+                        // Badge
+                        Container {
+                            padding: 8
+                            padding_left: 16
+                            padding_right: 16
+                            background: "#1E293B"
+                            radius: 20
+                            border: 1
+                            border_color: "#334155"
+
+                            Row {
+                                gap: 8
+                                align: center
+
+                                Container {
+                                    padding: 4
+                                    background: "#10B981"
+                                    radius: 4
+
+                                    Text {
+                                        content: "New"
+                                        size: 10
+                                        color: "#FFFFFF"
+                                    }
+                                }
+
+                                Text {
+                                    content: "Introducing AI-powered features"
+                                    size: 12
+                                    color: "#94A3B8"
+                                }
+                            }
+                        }
+
+                        // Headline
+                        Column {
+                            gap: 16
+                            align: center
+
+                            Text {
+                                content: "Build Amazing Products"
+                                size: 64
+                                color: "#FFFFFF"
+                                align: center
+                            }
+
+                            Text {
+                                content: "Faster Than Ever"
+                                size: 64
+                                color: "#3B82F6"
+                                align: center
+                            }
+                        }
+
+                        // Subheadline
+                        Text {
+                            content: "The all-in-one platform for teams to build, ship, and scale their products. Trusted by over 10,000 companies worldwide."
+                            size: 20
+                            color: "#94A3B8"
+                            align: center
+                            max_width: 700
+                        }
+
+                        // CTA buttons
+                        Row {
+                            gap: 16
+                            margin_top: 16
+
+                            Container {
+                                padding: 16
+                                padding_left: 32
+                                padding_right: 32
+                                background: "#3B82F6"
+                                radius: 8
+
+                                Text {
+                                    content: "Start Free Trial"
+                                    size: 16
+                                    color: "#FFFFFF"
+                                }
+                            }
+
+                            Container {
+                                padding: 16
+                                padding_left: 32
+                                padding_right: 32
+                                background: "transparent"
+                                radius: 8
+                                border: 1
+                                border_color: "#334155"
+
+                                Row {
+                                    gap: 8
+                                    align: center
+
+                                    Text {
+                                        content: "Watch Demo"
+                                        size: 16
+                                        color: "#FFFFFF"
+                                    }
+                                }
+                            }
+                        }
+
+                        // Social proof
+                        Column {
+                            gap: 16
+                            align: center
+                            margin_top: 48
+
+                            Text {
+                                content: "Trusted by leading companies"
+                                size: 14
+                                color: "#64748B"
+                            }
+
+                            Row {
+                                gap: 48
+
+                                CompanyLogo { name: "Google" }
+                                CompanyLogo { name: "Microsoft" }
+                                CompanyLogo { name: "Amazon" }
+                                CompanyLogo { name: "Netflix" }
+                                CompanyLogo { name: "Spotify" }
+                            }
+                        }
+                    }
+                }
+
+                // Features Section
+                Container {
+                    width: fill
+                    padding: 80
+                    background: "#0F172A"
+
+                    Column {
+                        gap: 64
+                        max_width: 1200
+                        align_self: center
+                        width: fill
+
+                        // Section header
+                        Column {
+                            gap: 16
+                            align: center
+
+                            Text {
+                                content: "Everything you need"
+                                size: 14
+                                color: "#3B82F6"
+                            }
+
+                            Text {
+                                content: "Powerful Features"
+                                size: 40
+                                color: "#FFFFFF"
+                                align: center
+                            }
+
+                            Text {
+                                content: "Tools designed to help you build better products, faster."
+                                size: 18
+                                color: "#64748B"
+                                align: center
+                            }
+                        }
+
+                        // Feature cards
+                        Row {
+                            gap: 24
+                            width: fill
+
+                            FeatureCard {
+                                icon: "lightning"
+                                title: "Lightning Fast"
+                                description: "Built for speed. Our platform is optimized for performance at every level."
+                                color: "#F59E0B"
+                            }
+
+                            FeatureCard {
+                                icon: "shield"
+                                title: "Secure by Default"
+                                description: "Enterprise-grade security with end-to-end encryption and compliance."
+                                color: "#10B981"
+                            }
+
+                            FeatureCard {
+                                icon: "code"
+                                title: "Developer First"
+                                description: "Comprehensive APIs and SDKs to integrate with your existing tools."
+                                color: "#8B5CF6"
+                            }
+                        }
+
+                        Row {
+                            gap: 24
+                            width: fill
+
+                            FeatureCard {
+                                icon: "chart"
+                                title: "Analytics"
+                                description: "Real-time insights and analytics to track your growth and performance."
+                                color: "#EC4899"
+                            }
+
+                            FeatureCard {
+                                icon: "users"
+                                title: "Team Collaboration"
+                                description: "Work together seamlessly with real-time collaboration features."
+                                color: "#06B6D4"
+                            }
+
+                            FeatureCard {
+                                icon: "globe"
+                                title: "Global Scale"
+                                description: "Deploy worldwide with our global edge network infrastructure."
+                                color: "#3B82F6"
+                            }
+                        }
+                    }
+                }
+
+                // Pricing Section
+                Container {
+                    width: fill
+                    padding: 80
+                    background: "#030712"
+
+                    Column {
+                        gap: 48
+                        max_width: 1200
+                        align_self: center
+                        width: fill
+
+                        // Section header
+                        Column {
+                            gap: 16
+                            align: center
+
+                            Text {
+                                content: "Simple, transparent pricing"
+                                size: 14
+                                color: "#3B82F6"
+                            }
+
+                            Text {
+                                content: "Choose Your Plan"
+                                size: 40
+                                color: "#FFFFFF"
+                                align: center
+                            }
+
+                            Text {
+                                content: "Start free, upgrade when you're ready."
+                                size: 18
+                                color: "#64748B"
+                                align: center
+                            }
+
+                            // Billing toggle
+                            Container {
+                                margin_top: 16
+
+                                Row {
+                                    gap: 12
+                                    align: center
+                                    padding: 8
+                                    background: "#1E293B"
+                                    radius: 12
+
+                                    Container {
+                                        padding: 12
+                                        background: !state.is_annual ? "#3B82F6" : "transparent"
+                                        radius: 8
+
+                                        on click => state.is_annual = false
+
+                                        Text {
+                                            content: "Monthly"
+                                            size: 14
+                                            color: "#FFFFFF"
+                                        }
+                                    }
+
+                                    Container {
+                                        padding: 12
+                                        background: state.is_annual ? "#3B82F6" : "transparent"
+                                        radius: 8
+
+                                        on click => state.is_annual = true
+
+                                        Row {
+                                            gap: 8
+
+                                            Text {
+                                                content: "Annual"
+                                                size: 14
+                                                color: "#FFFFFF"
+                                            }
+
+                                            Container {
+                                                padding: 4
+                                                background: "#10B981"
+                                                radius: 4
+
+                                                Text {
+                                                    content: "Save 20%"
+                                                    size: 10
+                                                    color: "#FFFFFF"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Pricing cards
+                        Row {
+                            gap: 24
+                            width: fill
+                            justify: center
+
+                            // Starter plan
+                            PricingCard {
+                                name: "Starter"
+                                description: "For individuals and small projects"
+                                price: "0"
+                                period: "Free forever"
+                                features: [
+                                    "Up to 3 projects",
+                                    "Basic analytics",
+                                    "Community support",
+                                    "1GB storage"
+                                ]
+                                cta: "Get Started"
+                                popular: false
+                            }
+
+                            // Pro plan
+                            PricingCard {
+                                name: "Pro"
+                                description: "For growing teams and businesses"
+                                price: state.is_annual ? "29" : "39"
+                                period: state.is_annual ? "/month, billed annually" : "/month"
+                                features: [
+                                    "Unlimited projects",
+                                    "Advanced analytics",
+                                    "Priority support",
+                                    "100GB storage",
+                                    "Team collaboration",
+                                    "Custom integrations"
+                                ]
+                                cta: "Start Free Trial"
+                                popular: true
+                            }
+
+                            // Enterprise plan
+                            PricingCard {
+                                name: "Enterprise"
+                                description: "For large organizations"
+                                price: state.is_annual ? "99" : "129"
+                                period: state.is_annual ? "/month, billed annually" : "/month"
+                                features: [
+                                    "Everything in Pro",
+                                    "Unlimited storage",
+                                    "Dedicated support",
+                                    "SLA guarantee",
+                                    "Custom contracts",
+                                    "On-premise option"
+                                ]
+                                cta: "Contact Sales"
+                                popular: false
+                            }
+                        }
+                    }
+                }
+
+                // CTA Section
+                Container {
+                    width: fill
+                    padding: 80
+                    background: "#0F172A"
+
+                    Container {
+                        max_width: 800
+                        align_self: center
+                        padding: 64
+                        background: "#1E293B"
+                        radius: 24
+                        border: 1
+                        border_color: "#334155"
+
+                        Column {
+                            gap: 24
+                            align: center
+
+                            Text {
+                                content: "Ready to get started?"
+                                size: 36
+                                color: "#FFFFFF"
+                                align: center
+                            }
+
+                            Text {
+                                content: "Join thousands of teams already using Acme to build better products."
+                                size: 18
+                                color: "#94A3B8"
+                                align: center
+                            }
+
+                            Row {
+                                gap: 16
+                                margin_top: 16
+
+                                Container {
+                                    padding: 16
+                                    padding_left: 32
+                                    padding_right: 32
+                                    background: "#3B82F6"
+                                    radius: 8
+
+                                    Text {
+                                        content: "Start Free Trial"
+                                        size: 16
+                                        color: "#FFFFFF"
+                                    }
+                                }
+
+                                Container {
+                                    padding: 16
+                                    padding_left: 32
+                                    padding_right: 32
+                                    background: "transparent"
+                                    radius: 8
+                                    border: 1
+                                    border_color: "#334155"
+
+                                    Text {
+                                        content: "Schedule Demo"
+                                        size: 16
+                                        color: "#FFFFFF"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Footer
+                Container {
+                    width: fill
+                    padding: 64
+                    background: "#030712"
+                    border_top: 1
+                    border_color: "#1E293B"
+
+                    Column {
+                        gap: 48
+                        max_width: 1200
+                        align_self: center
+                        width: fill
+
+                        Row {
+                            gap: 64
+                            width: fill
+
+                            // Company info
+                            Column {
+                                gap: 24
+                                flex: 2
+
+                                Row {
+                                    gap: 12
+                                    align: center
+
+                                    Container {
+                                        width: 40
+                                        height: 40
+                                        background: "#3B82F6"
+                                        radius: 10
+
+                                        Column {
+                                            align: center
+                                            justify: center
+                                            width: fill
+                                            height: fill
+
+                                            Text {
+                                                content: "A"
+                                                size: 20
+                                                color: "#FFFFFF"
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        content: "Acme"
+                                        size: 24
+                                        color: "#FFFFFF"
+                                    }
+                                }
+
+                                Text {
+                                    content: "Building the future of product development. Empowering teams to create amazing things."
+                                    size: 14
+                                    color: "#64748B"
+                                    max_width: 300
+                                }
+
+                                Row {
+                                    gap: 16
+
+                                    SocialIcon { name: "twitter" }
+                                    SocialIcon { name: "github" }
+                                    SocialIcon { name: "linkedin" }
+                                    SocialIcon { name: "discord" }
+                                }
+                            }
+
+                            // Links columns
+                            FooterColumn {
+                                title: "Product"
+                                links: ["Features", "Pricing", "Integrations", "Changelog", "Roadmap"]
+                            }
+
+                            FooterColumn {
+                                title: "Company"
+                                links: ["About", "Blog", "Careers", "Press", "Partners"]
+                            }
+
+                            FooterColumn {
+                                title: "Resources"
+                                links: ["Documentation", "API Reference", "Guides", "Community", "Support"]
+                            }
+
+                            FooterColumn {
+                                title: "Legal"
+                                links: ["Privacy", "Terms", "Security", "Cookies"]
+                            }
+                        }
+
+                        // Bottom bar
+                        Container {
+                            padding_top: 24
+                            border_top: 1
+                            border_color: "#1E293B"
+                            width: fill
+
+                            Row {
+                                justify: space_between
+                                width: fill
+
+                                Text {
+                                    content: "2024 Acme Inc. All rights reserved."
+                                    size: 14
+                                    color: "#64748B"
+                                }
+
+                                Row {
+                                    gap: 24
+
+                                    Text { content: "Privacy Policy" size: 14 color: "#64748B" }
+                                    Text { content: "Terms of Service" size: 14 color: "#64748B" }
+                                    Text { content: "Cookie Settings" size: 14 color: "#64748B" }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Navigation link component
+component NavLink {
+    prop text: String
+
+    Container {
+        padding: 8
+
+        Text {
+            content: text
+            size: 14
+            color: "#94A3B8"
+        }
+    }
+}
+
+// Company logo placeholder
+component CompanyLogo {
+    prop name: String
+
+    Container {
+        padding: 8
+
+        Text {
+            content: name
+            size: 14
+            color: "#475569"
+        }
+    }
+}
+
+// Feature card component
+component FeatureCard {
+    prop icon: String
+    prop title: String
+    prop description: String
+    prop color: String = "#3B82F6"
+
+    Container {
+        padding: 32
+        background: "#1E293B"
+        radius: 16
+        flex: 1
+
+        Column {
+            gap: 16
+
+            // Icon
+            Container {
+                width: 48
+                height: 48
+                background: color
+                radius: 12
+                opacity: 0.2
+
+                Column {
+                    align: center
+                    justify: center
+                    width: fill
+                    height: fill
+
+                    Text {
+                        content: icon
+                        size: 20
+                        color: color
+                    }
+                }
+            }
+
+            Text {
+                content: title
+                size: 20
+                color: "#FFFFFF"
+            }
+
+            Text {
+                content: description
+                size: 14
+                color: "#94A3B8"
+            }
+        }
+    }
+}
+
+// Pricing card component
+component PricingCard {
+    prop name: String
+    prop description: String
+    prop price: String
+    prop period: String
+    prop features: List<String>
+    prop cta: String
+    prop popular: bool = false
+
+    Container {
+        padding: 32
+        background: popular ? "#1E293B" : "#0F172A"
+        radius: 16
+        border: popular ? 2 : 1
+        border_color: popular ? "#3B82F6" : "#1E293B"
+        width: 320
+
+        Column {
+            gap: 24
+
+            // Header
+            Column {
+                gap: 8
+
+                @if popular {
+                    Container {
+                        padding: 6
+                        background: "#3B82F6"
+                        radius: 4
+                        align_self: flex_start
+
+                        Text {
+                            content: "Most Popular"
+                            size: 12
+                            color: "#FFFFFF"
+                        }
+                    }
+                }
+
+                Text {
+                    content: name
+                    size: 24
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: description
+                    size: 14
+                    color: "#64748B"
+                }
+            }
+
+            // Price
+            Row {
+                align: baseline
+                gap: 4
+
+                Text {
+                    content: "$"
+                    size: 24
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: price
+                    size: 48
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: period
+                    size: 14
+                    color: "#64748B"
+                }
+            }
+
+            // CTA button
+            Container {
+                padding: 16
+                background: popular ? "#3B82F6" : "#1E293B"
+                radius: 8
+                width: fill
+
+                Column {
+                    align: center
+
+                    Text {
+                        content: cta
+                        size: 14
+                        color: "#FFFFFF"
+                    }
+                }
+            }
+
+            // Features
+            Column {
+                gap: 12
+
+                @for feature in features {
+                    Row {
+                        gap: 12
+                        align: center
+
+                        Container {
+                            width: 20
+                            height: 20
+                            background: "#10B981"
+                            radius: 10
+                            opacity: 0.2
+
+                            Column {
+                                align: center
+                                justify: center
+                                width: fill
+                                height: fill
+
+                                Text {
+                                    content: "check"
+                                    size: 12
+                                    color: "#10B981"
+                                }
+                            }
+                        }
+
+                        Text {
+                            content: feature
+                            size: 14
+                            color: "#94A3B8"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Social icon component
+component SocialIcon {
+    prop name: String
+
+    Container {
+        width: 40
+        height: 40
+        background: "#1E293B"
+        radius: 20
+
+        Column {
+            align: center
+            justify: center
+            width: fill
+            height: fill
+
+            Text {
+                content: name
+                size: 12
+                color: "#64748B"
+            }
+        }
+    }
+}
+
+// Footer column component
+component FooterColumn {
+    prop title: String
+    prop links: List<String>
+
+    Column {
+        gap: 16
+        flex: 1
+
+        Text {
+            content: title
+            size: 14
+            color: "#FFFFFF"
+        }
+
+        Column {
+            gap: 12
+
+            @for link in links {
+                Text {
+                    content: link
+                    size: 14
+                    color: "#64748B"
+                }
+            }
+        }
+    }
+}

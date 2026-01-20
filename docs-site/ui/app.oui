@@ -1,0 +1,848 @@
+// OxideKit Documentation Site
+// A comprehensive documentation application built with OxideKit
+// Demonstrates all core concepts: layout, theming, components, and state management
+
+import { Sidebar, NavSection, NavItem, SearchBar, ThemeToggle } from "./components/sidebar.oui"
+import { DocPage, CodeBlock, PropsTable, LivePreview } from "./components/doc-components.oui"
+
+app OxideKitDocs {
+    // Application state
+    state {
+        // Navigation
+        active_page: String = "getting-started"
+        active_section: String = "getting-started"
+        sidebar_collapsed: bool = false
+
+        // Search
+        search_query: String = ""
+        search_open: bool = false
+        search_results: Vec<SearchResult> = []
+
+        // Theme
+        theme: String = "dark"
+
+        // Mobile
+        mobile_menu_open: bool = false
+    }
+
+    // Theme-aware colors
+    let colors = {
+        bg_primary: theme == "dark" ? "#030712" : "#FFFFFF",
+        bg_secondary: theme == "dark" ? "#0F172A" : "#F8FAFC",
+        bg_tertiary: theme == "dark" ? "#1E293B" : "#F1F5F9",
+        text_primary: theme == "dark" ? "#F8FAFC" : "#0F172A",
+        text_secondary: theme == "dark" ? "#94A3B8" : "#64748B",
+        text_muted: theme == "dark" ? "#64748B" : "#94A3B8",
+        border: theme == "dark" ? "#1E293B" : "#E2E8F0",
+        accent: "#3B82F6",
+        accent_hover: "#2563EB",
+        success: "#22C55E",
+        warning: "#F59E0B",
+        danger: "#EF4444"
+    }
+
+    Row {
+        width: fill
+        height: fill
+        background: colors.bg_primary
+
+        // Sidebar Navigation
+        @if !state.sidebar_collapsed {
+            Column {
+                width: 280
+                height: fill
+                background: colors.bg_secondary
+
+                style {
+                    border_right: 1
+                    border_color: colors.border
+                }
+
+                // Header with logo
+                Row {
+                    padding: 20
+                    gap: 12
+                    align: center
+
+                    // Logo
+                    Container {
+                        width: 36
+                        height: 36
+                        radius: 8
+
+                        style {
+                            background: "linear-gradient(135deg, #3B82F6, #8B5CF6)"
+                        }
+
+                        Column {
+                            align: center
+                            justify: center
+                            width: fill
+                            height: fill
+
+                            Text {
+                                content: "O"
+                                size: 20
+                                color: "#FFFFFF"
+                                weight: bold
+                            }
+                        }
+                    }
+
+                    Column {
+                        gap: 2
+
+                        Text {
+                            content: "OxideKit"
+                            size: 18
+                            color: colors.text_primary
+                            weight: bold
+                        }
+
+                        Row {
+                            gap: 6
+                            align: center
+
+                            Text {
+                                content: "Documentation"
+                                size: 12
+                                color: colors.text_muted
+                            }
+
+                            Container {
+                                padding_x: 6
+                                padding_y: 2
+                                radius: 4
+
+                                style {
+                                    background: colors.success
+                                }
+
+                                Text {
+                                    content: "v0.3"
+                                    size: 10
+                                    color: "#FFFFFF"
+                                    weight: medium
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Search bar
+                Container {
+                    margin_x: 16
+                    margin_bottom: 16
+
+                    SearchBar {
+                        placeholder: "Search docs..."
+                        value: state.search_query
+                        on_change: state.search_query = value
+                        on_focus: state.search_open = true
+                        shortcut: "Cmd+K"
+                        theme: state.theme
+                    }
+                }
+
+                // Navigation sections
+                Scroll {
+                    flex: 1
+                    padding_x: 12
+
+                    Column {
+                        gap: 24
+                        padding_bottom: 24
+
+                        // Getting Started
+                        NavSection {
+                            title: "GETTING STARTED"
+                            theme: state.theme
+
+                            NavItem {
+                                label: "Introduction"
+                                icon: "book"
+                                active: state.active_page == "getting-started"
+                                on_click: state.active_page = "getting-started"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Installation"
+                                icon: "download"
+                                active: state.active_page == "installation"
+                                on_click: state.active_page = "installation"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Quick Start"
+                                icon: "rocket"
+                                active: state.active_page == "quick-start"
+                                on_click: state.active_page = "quick-start"
+                                theme: state.theme
+                            }
+                        }
+
+                        // Components
+                        NavSection {
+                            title: "COMPONENTS"
+                            theme: state.theme
+                            collapsible: true
+                            default_open: true
+
+                            NavItem {
+                                label: "Button"
+                                icon: "square"
+                                active: state.active_page == "button"
+                                on_click: state.active_page = "button"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Text"
+                                icon: "type"
+                                active: state.active_page == "text"
+                                on_click: state.active_page = "text"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Container"
+                                icon: "box"
+                                active: state.active_page == "container"
+                                on_click: state.active_page = "container"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Row & Column"
+                                icon: "layout"
+                                active: state.active_page == "row-column"
+                                on_click: state.active_page = "row-column"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Input"
+                                icon: "edit"
+                                active: state.active_page == "input"
+                                on_click: state.active_page = "input"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Card"
+                                icon: "credit-card"
+                                active: state.active_page == "card"
+                                on_click: state.active_page = "card"
+                                theme: state.theme
+                            }
+                        }
+
+                        // Theming
+                        NavSection {
+                            title: "THEMING"
+                            theme: state.theme
+                            collapsible: true
+
+                            NavItem {
+                                label: "Design Tokens"
+                                icon: "palette"
+                                active: state.active_page == "design-tokens"
+                                on_click: state.active_page = "design-tokens"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Typography"
+                                icon: "type"
+                                active: state.active_page == "typography"
+                                on_click: state.active_page = "typography"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Colors"
+                                icon: "droplet"
+                                active: state.active_page == "colors"
+                                on_click: state.active_page = "colors"
+                                theme: state.theme
+                            }
+                        }
+
+                        // Building
+                        NavSection {
+                            title: "BUILDING"
+                            theme: state.theme
+                            collapsible: true
+
+                            NavItem {
+                                label: "Static HTML"
+                                icon: "globe"
+                                active: state.active_page == "static-html"
+                                on_click: state.active_page = "static-html"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Native Desktop"
+                                icon: "monitor"
+                                active: state.active_page == "native"
+                                on_click: state.active_page = "native"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Mobile (Beta)"
+                                icon: "smartphone"
+                                active: state.active_page == "mobile"
+                                on_click: state.active_page = "mobile"
+                                theme: state.theme
+                                badge: "Beta"
+                            }
+                        }
+
+                        // Examples
+                        NavSection {
+                            title: "EXAMPLES"
+                            theme: state.theme
+                            collapsible: true
+
+                            NavItem {
+                                label: "Navbar"
+                                icon: "menu"
+                                active: state.active_page == "example-navbar"
+                                on_click: state.active_page = "example-navbar"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Forms"
+                                icon: "file-text"
+                                active: state.active_page == "example-forms"
+                                on_click: state.active_page = "example-forms"
+                                theme: state.theme
+                            }
+
+                            NavItem {
+                                label: "Landing Page"
+                                icon: "layout"
+                                active: state.active_page == "example-landing"
+                                on_click: state.active_page = "example-landing"
+                                theme: state.theme
+                            }
+                        }
+                    }
+                }
+
+                // Footer with theme toggle
+                Container {
+                    padding: 16
+                    border_top: 1
+                    border_color: colors.border
+
+                    Row {
+                        justify: space_between
+                        align: center
+
+                        ThemeToggle {
+                            theme: state.theme
+                            on_change: state.theme = value
+                        }
+
+                        Row {
+                            gap: 12
+
+                            Container {
+                                padding: 8
+                                radius: 6
+                                cursor: pointer
+
+                                style {
+                                    background: "transparent"
+                                }
+
+                                on hover {
+                                    background: colors.bg_tertiary
+                                }
+
+                                Text {
+                                    content: "GitHub"
+                                    size: 13
+                                    color: colors.text_secondary
+                                }
+                            }
+
+                            Container {
+                                padding: 8
+                                radius: 6
+                                cursor: pointer
+
+                                Text {
+                                    content: "Discord"
+                                    size: 13
+                                    color: colors.text_secondary
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Main content area
+        Column {
+            flex: 1
+            height: fill
+
+            // Top bar
+            Row {
+                width: fill
+                height: 56
+                padding_x: 24
+                align: center
+                justify: space_between
+                background: colors.bg_secondary
+
+                style {
+                    border_bottom: 1
+                    border_color: colors.border
+                }
+
+                // Sidebar toggle + Breadcrumb
+                Row {
+                    gap: 16
+                    align: center
+
+                    // Sidebar toggle
+                    Container {
+                        width: 32
+                        height: 32
+                        radius: 6
+                        cursor: pointer
+
+                        style {
+                            background: "transparent"
+                        }
+
+                        on click => state.sidebar_collapsed = !state.sidebar_collapsed
+                        on hover {
+                            background: colors.bg_tertiary
+                        }
+
+                        Column {
+                            align: center
+                            justify: center
+                            width: fill
+                            height: fill
+
+                            Text {
+                                content: state.sidebar_collapsed ? "menu" : "sidebar"
+                                size: 18
+                                color: colors.text_secondary
+                            }
+                        }
+                    }
+
+                    // Breadcrumb
+                    Row {
+                        gap: 8
+                        align: center
+
+                        Text {
+                            content: "Docs"
+                            size: 14
+                            color: colors.text_muted
+                        }
+
+                        Text {
+                            content: "/"
+                            size: 14
+                            color: colors.text_muted
+                        }
+
+                        Text {
+                            content: get_section_name(state.active_page)
+                            size: 14
+                            color: colors.text_muted
+                        }
+
+                        Text {
+                            content: "/"
+                            size: 14
+                            color: colors.text_muted
+                        }
+
+                        Text {
+                            content: get_page_name(state.active_page)
+                            size: 14
+                            color: colors.text_primary
+                        }
+                    }
+                }
+
+                // Right actions
+                Row {
+                    gap: 12
+
+                    // Edit on GitHub
+                    Container {
+                        padding_x: 12
+                        padding_y: 8
+                        radius: 6
+
+                        style {
+                            border: 1
+                            border_color: colors.border
+                            cursor: pointer
+                        }
+
+                        Row {
+                            gap: 6
+                            align: center
+
+                            Text {
+                                content: "Edit"
+                                size: 13
+                                color: colors.text_secondary
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Page content with scroll
+            Scroll {
+                flex: 1
+
+                Container {
+                    padding: 48
+                    max_width: 900
+                    align_self: center
+                    width: fill
+
+                    // Dynamic page content based on active_page
+                    @match state.active_page {
+                        "getting-started" => include "./pages/getting-started.oui"
+                        "button" => include "./pages/components/button.oui"
+                        "text" => include "./pages/components/text.oui"
+                        "container" => include "./pages/components/container.oui"
+                        "row-column" => include "./pages/components/row-column.oui"
+                        "design-tokens" => include "./pages/theming/design-tokens.oui"
+                        "typography" => include "./pages/theming/typography.oui"
+                        "static-html" => include "./pages/building/static-html.oui"
+                        "native" => include "./pages/building/native.oui"
+                        "example-navbar" => include "./pages/examples/navbar.oui"
+                        "example-forms" => include "./pages/examples/forms.oui"
+                        "example-landing" => include "./pages/examples/landing-page.oui"
+                        _ => include "./pages/getting-started.oui"
+                    }
+                }
+            }
+        }
+    }
+
+    // Search modal overlay
+    @if state.search_open {
+        Container {
+            position: fixed
+            top: 0
+            left: 0
+            width: 100vw
+            height: 100vh
+            z_index: 1000
+
+            style {
+                background: "rgba(0, 0, 0, 0.6)"
+            }
+
+            on click => state.search_open = false
+
+            Container {
+                position: absolute
+                top: 100
+                left: 50%
+                transform: "translateX(-50%)"
+                width: 600
+                max_height: 500
+                radius: 16
+                background: colors.bg_secondary
+
+                style {
+                    shadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)"
+                    border: 1
+                    border_color: colors.border
+                }
+
+                on click => stop_propagation
+
+                Column {
+                    // Search input
+                    Container {
+                        padding: 16
+                        border_bottom: 1
+                        border_color: colors.border
+
+                        Row {
+                            gap: 12
+                            align: center
+
+                            Text {
+                                content: "search"
+                                size: 20
+                                color: colors.text_muted
+                            }
+
+                            Input {
+                                placeholder: "Search documentation..."
+                                value: state.search_query
+                                on_change: state.search_query = value
+                                autofocus: true
+                                width: fill
+
+                                style {
+                                    background: "transparent"
+                                    border: none
+                                    font_size: 16
+                                    color: colors.text_primary
+                                }
+                            }
+
+                            Container {
+                                padding_x: 8
+                                padding_y: 4
+                                radius: 4
+                                background: colors.bg_tertiary
+
+                                Text {
+                                    content: "Esc"
+                                    size: 11
+                                    color: colors.text_muted
+                                }
+                            }
+                        }
+                    }
+
+                    // Search results
+                    Scroll {
+                        max_height: 380
+                        padding: 8
+
+                        Column {
+                            gap: 4
+
+                            @if state.search_query == "" {
+                                Container {
+                                    padding: 32
+
+                                    Column {
+                                        align: center
+                                        gap: 8
+
+                                        Text {
+                                            content: "Type to search"
+                                            size: 14
+                                            color: colors.text_muted
+                                        }
+
+                                        Text {
+                                            content: "Search components, guides, and examples"
+                                            size: 12
+                                            color: colors.text_muted
+                                        }
+                                    }
+                                }
+                            } @else {
+                                // Search results would be populated here
+                                SearchResult {
+                                    title: "Button Component"
+                                    description: "A clickable button for triggering actions"
+                                    section: "Components"
+                                    on_click: {
+                                        state.active_page = "button"
+                                        state.search_open = false
+                                    }
+                                    theme: state.theme
+                                }
+
+                                SearchResult {
+                                    title: "Design Tokens"
+                                    description: "Use tokens for consistent styling"
+                                    section: "Theming"
+                                    on_click: {
+                                        state.active_page = "design-tokens"
+                                        state.search_open = false
+                                    }
+                                    theme: state.theme
+                                }
+                            }
+                        }
+                    }
+
+                    // Footer
+                    Container {
+                        padding: 12
+                        border_top: 1
+                        border_color: colors.border
+
+                        Row {
+                            gap: 16
+
+                            Row {
+                                gap: 4
+                                align: center
+
+                                Text {
+                                    content: "Enter"
+                                    size: 11
+                                    color: colors.text_muted
+                                }
+
+                                Text {
+                                    content: "to select"
+                                    size: 11
+                                    color: colors.text_muted
+                                }
+                            }
+
+                            Row {
+                                gap: 4
+                                align: center
+
+                                Text {
+                                    content: "Arrow keys"
+                                    size: 11
+                                    color: colors.text_muted
+                                }
+
+                                Text {
+                                    content: "to navigate"
+                                    size: 11
+                                    color: colors.text_muted
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Keyboard shortcuts
+    on keydown {
+        @if event.key == "k" && event.meta {
+            state.search_open = true
+            event.prevent_default()
+        }
+        @if event.key == "Escape" && state.search_open {
+            state.search_open = false
+        }
+    }
+}
+
+// Helper functions
+fn get_section_name(page: String) -> String {
+    match page {
+        "getting-started" | "installation" | "quick-start" => "Getting Started"
+        "button" | "text" | "container" | "row-column" | "input" | "card" => "Components"
+        "design-tokens" | "typography" | "colors" => "Theming"
+        "static-html" | "native" | "mobile" => "Building"
+        "example-navbar" | "example-forms" | "example-landing" => "Examples"
+        _ => "Docs"
+    }
+}
+
+fn get_page_name(page: String) -> String {
+    match page {
+        "getting-started" => "Introduction"
+        "installation" => "Installation"
+        "quick-start" => "Quick Start"
+        "button" => "Button"
+        "text" => "Text"
+        "container" => "Container"
+        "row-column" => "Row & Column"
+        "input" => "Input"
+        "card" => "Card"
+        "design-tokens" => "Design Tokens"
+        "typography" => "Typography"
+        "colors" => "Colors"
+        "static-html" => "Static HTML"
+        "native" => "Native Desktop"
+        "mobile" => "Mobile"
+        "example-navbar" => "Navbar"
+        "example-forms" => "Forms"
+        "example-landing" => "Landing Page"
+        _ => "Documentation"
+    }
+}
+
+// Search result component
+component SearchResult {
+    prop title: String
+    prop description: String
+    prop section: String
+    prop on_click: Callback
+    prop theme: String = "dark"
+
+    let colors = {
+        bg: theme == "dark" ? "#1E293B" : "#F1F5F9",
+        text_primary: theme == "dark" ? "#F8FAFC" : "#0F172A",
+        text_secondary: theme == "dark" ? "#94A3B8" : "#64748B",
+        accent: "#3B82F6"
+    }
+
+    Container {
+        padding: 12
+        radius: 8
+        cursor: pointer
+        width: fill
+
+        style {
+            background: "transparent"
+        }
+
+        on click => on_click
+        on hover {
+            background: colors.bg
+        }
+
+        Row {
+            gap: 12
+            align: center
+
+            Column {
+                flex: 1
+                gap: 4
+
+                Text {
+                    content: title
+                    size: 14
+                    color: colors.text_primary
+                    weight: medium
+                }
+
+                Text {
+                    content: description
+                    size: 12
+                    color: colors.text_secondary
+                }
+            }
+
+            Container {
+                padding_x: 8
+                padding_y: 4
+                radius: 4
+
+                style {
+                    background: colors.bg
+                }
+
+                Text {
+                    content: section
+                    size: 11
+                    color: colors.text_secondary
+                }
+            }
+        }
+    }
+}

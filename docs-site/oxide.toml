@@ -1,0 +1,51 @@
+# OxideKit Documentation Site
+# Comprehensive documentation built with OxideKit (dogfooding)
+
+[app]
+id = "com.oxidekit.docs-site"
+name = "OxideKit Documentation"
+version = "1.0.0"
+description = "Official OxideKit documentation and component reference"
+authors = ["OxideKit Team"]
+license = "MIT"
+
+[core]
+requires = ">=0.3.0"
+
+[window]
+title = "OxideKit Documentation"
+width = 1400
+height = 900
+min_width = 800
+min_height = 600
+resizable = true
+decorations = true
+
+[build]
+target = ["static", "desktop"]
+
+[build.static]
+out_dir = "dist"
+base_path = "/docs"
+minify = true
+source_maps = false
+
+[build.static.seo]
+title = "OxideKit Documentation - Build Native Apps with Rust"
+description = "Learn how to build native desktop and mobile applications with OxideKit, the Rust-native UI platform."
+keywords = ["rust", "desktop", "native", "ui", "framework", "oxidekit"]
+open_graph = true
+
+[dev]
+hot_reload = true
+inspector = true
+port = 3000
+
+[theme]
+default = "dark"
+support = ["light", "dark"]
+
+[features]
+search = true
+syntax_highlighting = true
+copy_code = true

@@ -443,7 +443,962 @@ impl ComponentRegistry {
 
         let _ = self.register(text);
 
-        tracing::debug!("Registered ui.core pack with {} components", 7);
+        // Input/TextField component
+        let input = ComponentSpec::builder("ui.Input", "ui.core")
+            .name("Input")
+            .description("A text input field for single-line user input")
+            .prop(PropSpec::string("value", "Current input value"))
+            .prop(PropSpec::string("placeholder", "Placeholder text when empty"))
+            .prop(PropSpec::string("label", "Label text above the input"))
+            .prop(
+                PropSpec::enum_type(
+                    "type",
+                    "Input type",
+                    vec![
+                        "text".into(),
+                        "password".into(),
+                        "email".into(),
+                        "number".into(),
+                        "tel".into(),
+                        "url".into(),
+                        "search".into(),
+                    ],
+                )
+                .with_default(serde_json::json!("text")),
+            )
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Input size",
+                    vec!["sm".into(), "md".into(), "lg".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::bool("disabled", "Whether the input is disabled"))
+            .prop(PropSpec::bool("readonly", "Whether the input is read-only"))
+            .prop(PropSpec::bool("required", "Whether the input is required"))
+            .prop(PropSpec::string("error", "Error message to display"))
+            .prop(PropSpec::string("helper", "Helper text below the input"))
+            .prop(PropSpec::string("prefix", "Prefix content (icon or text)"))
+            .prop(PropSpec::string("suffix", "Suffix content (icon or text)"))
+            .prop(PropSpec::number("min", "Minimum value (for number type)"))
+            .prop(PropSpec::number("max", "Maximum value (for number type)"))
+            .prop(PropSpec::number("step", "Step increment (for number type)"))
+            .prop(PropSpec::number("maxlength", "Maximum character length"))
+            .event(EventSpec::new("on_change", "Fired when value changes"))
+            .event(EventSpec::new("on_input", "Fired on every keystroke"))
+            .event(EventSpec::new("on_focus", "Fired when input receives focus"))
+            .event(EventSpec::new("on_blur", "Fired when input loses focus"))
+            .event(EventSpec::new("on_enter", "Fired when Enter key is pressed"))
+            .style_token("color.input.background")
+            .style_token("color.input.border")
+            .style_token("color.input.text")
+            .style_token("color.error")
+            .accessibility(AccessibilitySpec {
+                role: Some("textbox".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Tab".into(),
+                        action: "Move focus to next element".into(),
+                    },
+                ],
+                required_aria: vec!["aria-label".into()],
+            })
+            .example(UsageExample {
+                title: "Basic Input".into(),
+                description: Some("A simple text input".into()),
+                code: r#"Input { placeholder: "Enter your name" on_change: handle_change }"#.into(),
+            })
+            .build();
+
+        let _ = self.register(input);
+
+        // TextArea component
+        let textarea = ComponentSpec::builder("ui.TextArea", "ui.core")
+            .name("TextArea")
+            .description("A multi-line text input field")
+            .prop(PropSpec::string("value", "Current textarea value"))
+            .prop(PropSpec::string("placeholder", "Placeholder text when empty"))
+            .prop(PropSpec::string("label", "Label text above the textarea"))
+            .prop(PropSpec::number("rows", "Number of visible text rows").with_default(serde_json::json!(4)))
+            .prop(PropSpec::bool("resize", "Whether the textarea is resizable").with_default(serde_json::json!(true)))
+            .prop(PropSpec::bool("disabled", "Whether the textarea is disabled"))
+            .prop(PropSpec::bool("readonly", "Whether the textarea is read-only"))
+            .prop(PropSpec::string("error", "Error message to display"))
+            .prop(PropSpec::number("maxlength", "Maximum character length"))
+            .prop(PropSpec::bool("show_count", "Show character count"))
+            .event(EventSpec::new("on_change", "Fired when value changes"))
+            .event(EventSpec::new("on_input", "Fired on every keystroke"))
+            .accessibility(AccessibilitySpec {
+                role: Some("textbox".into()),
+                focusable: true,
+                keyboard: vec![],
+                required_aria: vec!["aria-label".into(), "aria-multiline".into()],
+            })
+            .build();
+
+        let _ = self.register(textarea);
+
+        // Select component
+        let select = ComponentSpec::builder("ui.Select", "ui.core")
+            .name("Select")
+            .description("A dropdown selection component")
+            .prop(PropSpec::string("value", "Currently selected value"))
+            .prop(PropSpec::string("placeholder", "Placeholder text when nothing selected"))
+            .prop(PropSpec::string("label", "Label text above the select"))
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Select size",
+                    vec!["sm".into(), "md".into(), "lg".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::bool("disabled", "Whether the select is disabled"))
+            .prop(PropSpec::bool("searchable", "Whether options can be searched"))
+            .prop(PropSpec::bool("clearable", "Whether selection can be cleared"))
+            .prop(PropSpec::bool("multiple", "Whether multiple selections are allowed"))
+            .prop(PropSpec::string("error", "Error message to display"))
+            .slot(SlotSpec::default_slot().allow("ui.Option"))
+            .event(EventSpec::new("on_change", "Fired when selection changes"))
+            .event(EventSpec::new("on_open", "Fired when dropdown opens"))
+            .event(EventSpec::new("on_close", "Fired when dropdown closes"))
+            .accessibility(AccessibilitySpec {
+                role: Some("combobox".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "ArrowDown".into(),
+                        action: "Open dropdown / Move to next option".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "ArrowUp".into(),
+                        action: "Move to previous option".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Enter".into(),
+                        action: "Select highlighted option".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Escape".into(),
+                        action: "Close dropdown".into(),
+                    },
+                ],
+                required_aria: vec!["aria-expanded".into(), "aria-haspopup".into()],
+            })
+            .build();
+
+        let _ = self.register(select);
+
+        // Checkbox component
+        let checkbox = ComponentSpec::builder("ui.Checkbox", "ui.core")
+            .name("Checkbox")
+            .description("A checkbox input for boolean values")
+            .prop(PropSpec::bool("checked", "Whether the checkbox is checked"))
+            .prop(PropSpec::bool("indeterminate", "Whether the checkbox is in indeterminate state"))
+            .prop(PropSpec::string("label", "Label text next to the checkbox"))
+            .prop(PropSpec::bool("disabled", "Whether the checkbox is disabled"))
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Checkbox size",
+                    vec!["sm".into(), "md".into(), "lg".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .event(EventSpec::new("on_change", "Fired when checked state changes"))
+            .style_token("color.primary")
+            .style_token("color.checkbox.border")
+            .accessibility(AccessibilitySpec {
+                role: Some("checkbox".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Space".into(),
+                        action: "Toggle checkbox".into(),
+                    },
+                ],
+                required_aria: vec!["aria-checked".into()],
+            })
+            .build();
+
+        let _ = self.register(checkbox);
+
+        // Radio component
+        let radio = ComponentSpec::builder("ui.Radio", "ui.core")
+            .name("Radio")
+            .description("A radio button for single selection from a group")
+            .prop(PropSpec::string("value", "Value of this radio option"))
+            .prop(PropSpec::string("name", "Group name for radio buttons"))
+            .prop(PropSpec::bool("checked", "Whether the radio is selected"))
+            .prop(PropSpec::string("label", "Label text next to the radio"))
+            .prop(PropSpec::bool("disabled", "Whether the radio is disabled"))
+            .event(EventSpec::new("on_change", "Fired when selection changes"))
+            .accessibility(AccessibilitySpec {
+                role: Some("radio".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Space".into(),
+                        action: "Select radio".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "ArrowDown/ArrowRight".into(),
+                        action: "Move to next radio in group".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "ArrowUp/ArrowLeft".into(),
+                        action: "Move to previous radio in group".into(),
+                    },
+                ],
+                required_aria: vec!["aria-checked".into()],
+            })
+            .build();
+
+        let _ = self.register(radio);
+
+        // Switch/Toggle component
+        let switch = ComponentSpec::builder("ui.Switch", "ui.core")
+            .name("Switch")
+            .description("A toggle switch for boolean values")
+            .prop(PropSpec::bool("checked", "Whether the switch is on"))
+            .prop(PropSpec::string("label", "Label text next to the switch"))
+            .prop(PropSpec::bool("disabled", "Whether the switch is disabled"))
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Switch size",
+                    vec!["sm".into(), "md".into(), "lg".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::string("on_label", "Label for on state"))
+            .prop(PropSpec::string("off_label", "Label for off state"))
+            .event(EventSpec::new("on_change", "Fired when switch state changes"))
+            .style_token("color.primary")
+            .style_token("color.switch.track")
+            .accessibility(AccessibilitySpec {
+                role: Some("switch".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Space".into(),
+                        action: "Toggle switch".into(),
+                    },
+                ],
+                required_aria: vec!["aria-checked".into()],
+            })
+            .build();
+
+        let _ = self.register(switch);
+
+        // Slider component
+        let slider = ComponentSpec::builder("ui.Slider", "ui.core")
+            .name("Slider")
+            .description("A slider input for selecting numeric values within a range")
+            .prop(PropSpec::number("value", "Current slider value"))
+            .prop(PropSpec::number("min", "Minimum value").with_default(serde_json::json!(0)))
+            .prop(PropSpec::number("max", "Maximum value").with_default(serde_json::json!(100)))
+            .prop(PropSpec::number("step", "Step increment").with_default(serde_json::json!(1)))
+            .prop(PropSpec::bool("disabled", "Whether the slider is disabled"))
+            .prop(PropSpec::bool("show_value", "Show current value label"))
+            .prop(PropSpec::bool("show_ticks", "Show tick marks"))
+            .prop(
+                PropSpec::enum_type(
+                    "orientation",
+                    "Slider orientation",
+                    vec!["horizontal".into(), "vertical".into()],
+                )
+                .with_default(serde_json::json!("horizontal")),
+            )
+            .event(EventSpec::new("on_change", "Fired when value changes"))
+            .event(EventSpec::new("on_change_end", "Fired when dragging ends"))
+            .accessibility(AccessibilitySpec {
+                role: Some("slider".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "ArrowRight/ArrowUp".into(),
+                        action: "Increase value".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "ArrowLeft/ArrowDown".into(),
+                        action: "Decrease value".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Home".into(),
+                        action: "Set to minimum".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "End".into(),
+                        action: "Set to maximum".into(),
+                    },
+                ],
+                required_aria: vec!["aria-valuemin".into(), "aria-valuemax".into(), "aria-valuenow".into()],
+            })
+            .build();
+
+        let _ = self.register(slider);
+
+        // Progress component
+        let progress = ComponentSpec::builder("ui.Progress", "ui.core")
+            .name("Progress")
+            .description("A progress indicator showing completion status")
+            .prop(PropSpec::number("value", "Current progress value (0-100)"))
+            .prop(PropSpec::bool("indeterminate", "Show indeterminate animation"))
+            .prop(
+                PropSpec::enum_type(
+                    "variant",
+                    "Progress style",
+                    vec!["linear".into(), "circular".into()],
+                )
+                .with_default(serde_json::json!("linear")),
+            )
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Progress size",
+                    vec!["sm".into(), "md".into(), "lg".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::color("color", "Progress bar color"))
+            .prop(PropSpec::bool("show_value", "Show percentage label"))
+            .style_token("color.primary")
+            .style_token("color.progress.track")
+            .accessibility(AccessibilitySpec {
+                role: Some("progressbar".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-valuemin".into(), "aria-valuemax".into(), "aria-valuenow".into()],
+            })
+            .build();
+
+        let _ = self.register(progress);
+
+        // Spinner component
+        let spinner = ComponentSpec::builder("ui.Spinner", "ui.core")
+            .name("Spinner")
+            .description("A loading spinner indicator")
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Spinner size",
+                    vec!["xs".into(), "sm".into(), "md".into(), "lg".into(), "xl".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::color("color", "Spinner color"))
+            .prop(PropSpec::string("label", "Accessible label for screen readers"))
+            .style_token("color.primary")
+            .accessibility(AccessibilitySpec {
+                role: Some("status".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-label".into()],
+            })
+            .build();
+
+        let _ = self.register(spinner);
+
+        // Modal/Dialog component
+        let modal = ComponentSpec::builder("ui.Modal", "ui.core")
+            .name("Modal")
+            .description("A modal dialog overlay")
+            .prop(PropSpec::bool("open", "Whether the modal is open").required())
+            .prop(PropSpec::string("title", "Modal title"))
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Modal size",
+                    vec!["sm".into(), "md".into(), "lg".into(), "xl".into(), "full".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::bool("closable", "Whether the modal can be closed by user").with_default(serde_json::json!(true)))
+            .prop(PropSpec::bool("close_on_overlay", "Close when clicking outside").with_default(serde_json::json!(true)))
+            .prop(PropSpec::bool("close_on_escape", "Close when pressing Escape").with_default(serde_json::json!(true)))
+            .slot(SlotSpec::default_slot())
+            .slot(SlotSpec::named("header", "Custom header content"))
+            .slot(SlotSpec::named("footer", "Footer content (usually buttons)"))
+            .event(EventSpec::new("on_close", "Fired when modal is closed"))
+            .event(EventSpec::new("on_open", "Fired when modal is opened"))
+            .style_token("color.surface")
+            .style_token("color.overlay")
+            .style_token("radius.modal")
+            .style_token("shadow.modal")
+            .accessibility(AccessibilitySpec {
+                role: Some("dialog".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Escape".into(),
+                        action: "Close modal".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Tab".into(),
+                        action: "Cycle focus within modal".into(),
+                    },
+                ],
+                required_aria: vec!["aria-modal".into(), "aria-labelledby".into()],
+            })
+            .build();
+
+        let _ = self.register(modal);
+
+        // Toast/Snackbar component
+        let toast = ComponentSpec::builder("ui.Toast", "ui.core")
+            .name("Toast")
+            .description("A temporary notification message")
+            .prop(PropSpec::string("message", "Toast message").required())
+            .prop(PropSpec::string("title", "Optional toast title"))
+            .prop(
+                PropSpec::enum_type(
+                    "variant",
+                    "Toast type",
+                    vec!["info".into(), "success".into(), "warning".into(), "error".into()],
+                )
+                .with_default(serde_json::json!("info")),
+            )
+            .prop(PropSpec::number("duration", "Auto-dismiss duration in ms (0 = manual)").with_default(serde_json::json!(5000)))
+            .prop(PropSpec::bool("dismissible", "Whether toast can be manually dismissed").with_default(serde_json::json!(true)))
+            .prop(
+                PropSpec::enum_type(
+                    "position",
+                    "Toast position on screen",
+                    vec![
+                        "top-left".into(),
+                        "top-center".into(),
+                        "top-right".into(),
+                        "bottom-left".into(),
+                        "bottom-center".into(),
+                        "bottom-right".into(),
+                    ],
+                )
+                .with_default(serde_json::json!("bottom-center")),
+            )
+            .prop(PropSpec::string("action_label", "Optional action button label"))
+            .event(EventSpec::new("on_dismiss", "Fired when toast is dismissed"))
+            .event(EventSpec::new("on_action", "Fired when action button is clicked"))
+            .accessibility(AccessibilitySpec {
+                role: Some("alert".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-live".into()],
+            })
+            .build();
+
+        let _ = self.register(toast);
+
+        // Tabs component
+        let tabs = ComponentSpec::builder("ui.Tabs", "ui.core")
+            .name("Tabs")
+            .description("A tabbed navigation component")
+            .prop(PropSpec::string("value", "Currently active tab value"))
+            .prop(PropSpec::string("default_value", "Default active tab"))
+            .prop(
+                PropSpec::enum_type(
+                    "variant",
+                    "Tab style variant",
+                    vec!["line".into(), "enclosed".into(), "pills".into()],
+                )
+                .with_default(serde_json::json!("line")),
+            )
+            .prop(
+                PropSpec::enum_type(
+                    "orientation",
+                    "Tabs orientation",
+                    vec!["horizontal".into(), "vertical".into()],
+                )
+                .with_default(serde_json::json!("horizontal")),
+            )
+            .prop(PropSpec::bool("fitted", "Whether tabs should fill available space"))
+            .slot(SlotSpec::default_slot().allow("ui.Tab"))
+            .event(EventSpec::new("on_change", "Fired when active tab changes"))
+            .accessibility(AccessibilitySpec {
+                role: Some("tablist".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "ArrowLeft/ArrowRight".into(),
+                        action: "Navigate between tabs".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Home".into(),
+                        action: "Go to first tab".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "End".into(),
+                        action: "Go to last tab".into(),
+                    },
+                ],
+                required_aria: vec![],
+            })
+            .build();
+
+        let _ = self.register(tabs);
+
+        // Tab component
+        let tab = ComponentSpec::builder("ui.Tab", "ui.core")
+            .name("Tab")
+            .description("A single tab within a Tabs component")
+            .prop(PropSpec::string("value", "Tab identifier value").required())
+            .prop(PropSpec::string("label", "Tab label text").required())
+            .prop(PropSpec::string("icon", "Optional tab icon"))
+            .prop(PropSpec::bool("disabled", "Whether the tab is disabled"))
+            .slot(SlotSpec::default_slot())
+            .accessibility(AccessibilitySpec {
+                role: Some("tab".into()),
+                focusable: true,
+                keyboard: vec![],
+                required_aria: vec!["aria-selected".into(), "aria-controls".into()],
+            })
+            .build();
+
+        let _ = self.register(tab);
+
+        // Accordion component
+        let accordion = ComponentSpec::builder("ui.Accordion", "ui.core")
+            .name("Accordion")
+            .description("A collapsible accordion component")
+            .prop(PropSpec::string("value", "Currently expanded item(s)"))
+            .prop(PropSpec::bool("multiple", "Allow multiple items to be expanded").with_default(serde_json::json!(false)))
+            .prop(PropSpec::bool("collapsible", "Allow all items to be collapsed").with_default(serde_json::json!(true)))
+            .slot(SlotSpec::default_slot().allow("ui.AccordionItem"))
+            .event(EventSpec::new("on_change", "Fired when expanded items change"))
+            .accessibility(AccessibilitySpec {
+                role: Some("group".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec![],
+            })
+            .build();
+
+        let _ = self.register(accordion);
+
+        // AccordionItem component
+        let accordion_item = ComponentSpec::builder("ui.AccordionItem", "ui.core")
+            .name("AccordionItem")
+            .description("A single item within an Accordion")
+            .prop(PropSpec::string("value", "Item identifier value").required())
+            .prop(PropSpec::string("title", "Item header title").required())
+            .prop(PropSpec::string("subtitle", "Optional subtitle"))
+            .prop(PropSpec::bool("disabled", "Whether the item is disabled"))
+            .slot(SlotSpec::default_slot())
+            .accessibility(AccessibilitySpec {
+                role: Some("region".into()),
+                focusable: false,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Enter/Space".into(),
+                        action: "Toggle accordion item".into(),
+                    },
+                ],
+                required_aria: vec!["aria-expanded".into()],
+            })
+            .build();
+
+        let _ = self.register(accordion_item);
+
+        // Tooltip component
+        let tooltip = ComponentSpec::builder("ui.Tooltip", "ui.core")
+            .name("Tooltip")
+            .description("A tooltip that appears on hover/focus")
+            .prop(PropSpec::string("content", "Tooltip content text").required())
+            .prop(
+                PropSpec::enum_type(
+                    "placement",
+                    "Tooltip position relative to trigger",
+                    vec![
+                        "top".into(),
+                        "top-start".into(),
+                        "top-end".into(),
+                        "bottom".into(),
+                        "bottom-start".into(),
+                        "bottom-end".into(),
+                        "left".into(),
+                        "right".into(),
+                    ],
+                )
+                .with_default(serde_json::json!("top")),
+            )
+            .prop(PropSpec::number("delay", "Delay before showing (ms)").with_default(serde_json::json!(200)))
+            .prop(PropSpec::bool("arrow", "Show arrow pointing to trigger").with_default(serde_json::json!(true)))
+            .slot(SlotSpec::default_slot())
+            .style_token("color.tooltip.background")
+            .style_token("color.tooltip.text")
+            .accessibility(AccessibilitySpec {
+                role: Some("tooltip".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-describedby".into()],
+            })
+            .build();
+
+        let _ = self.register(tooltip);
+
+        // Menu component
+        let menu = ComponentSpec::builder("ui.Menu", "ui.core")
+            .name("Menu")
+            .description("A dropdown menu component")
+            .prop(PropSpec::bool("open", "Whether the menu is open"))
+            .prop(
+                PropSpec::enum_type(
+                    "placement",
+                    "Menu placement relative to trigger",
+                    vec![
+                        "bottom-start".into(),
+                        "bottom-end".into(),
+                        "top-start".into(),
+                        "top-end".into(),
+                    ],
+                )
+                .with_default(serde_json::json!("bottom-start")),
+            )
+            .slot(SlotSpec::named("trigger", "Element that triggers the menu").required())
+            .slot(SlotSpec::default_slot().allow("ui.MenuItem").allow("ui.MenuDivider"))
+            .event(EventSpec::new("on_open", "Fired when menu opens"))
+            .event(EventSpec::new("on_close", "Fired when menu closes"))
+            .accessibility(AccessibilitySpec {
+                role: Some("menu".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "ArrowDown".into(),
+                        action: "Move to next item".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "ArrowUp".into(),
+                        action: "Move to previous item".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Enter/Space".into(),
+                        action: "Select item".into(),
+                    },
+                    KeyboardBehavior {
+                        key: "Escape".into(),
+                        action: "Close menu".into(),
+                    },
+                ],
+                required_aria: vec!["aria-expanded".into()],
+            })
+            .build();
+
+        let _ = self.register(menu);
+
+        // MenuItem component
+        let menu_item = ComponentSpec::builder("ui.MenuItem", "ui.core")
+            .name("MenuItem")
+            .description("A single item within a Menu")
+            .prop(PropSpec::string("label", "Item label text").required())
+            .prop(PropSpec::string("icon", "Optional item icon"))
+            .prop(PropSpec::string("shortcut", "Keyboard shortcut hint"))
+            .prop(PropSpec::bool("disabled", "Whether the item is disabled"))
+            .prop(PropSpec::bool("destructive", "Whether this is a destructive action"))
+            .event(EventSpec::new("on_click", "Fired when item is clicked"))
+            .accessibility(AccessibilitySpec {
+                role: Some("menuitem".into()),
+                focusable: true,
+                keyboard: vec![],
+                required_aria: vec![],
+            })
+            .build();
+
+        let _ = self.register(menu_item);
+
+        // Table component
+        let table = ComponentSpec::builder("ui.Table", "ui.core")
+            .name("Table")
+            .description("A data table component")
+            .prop(PropSpec::bool("striped", "Alternate row colors"))
+            .prop(PropSpec::bool("hoverable", "Highlight row on hover"))
+            .prop(PropSpec::bool("bordered", "Show cell borders"))
+            .prop(PropSpec::bool("compact", "Reduce cell padding"))
+            .prop(PropSpec::bool("sticky_header", "Keep header visible when scrolling"))
+            .slot(SlotSpec::named("header", "Table header row"))
+            .slot(SlotSpec::default_slot())
+            .style_token("color.table.background")
+            .style_token("color.table.border")
+            .style_token("color.table.stripe")
+            .accessibility(AccessibilitySpec {
+                role: Some("table".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec![],
+            })
+            .build();
+
+        let _ = self.register(table);
+
+        // Pagination component
+        let pagination = ComponentSpec::builder("ui.Pagination", "ui.core")
+            .name("Pagination")
+            .description("A pagination control for navigating pages")
+            .prop(PropSpec::number("page", "Current page number").required())
+            .prop(PropSpec::number("total", "Total number of items").required())
+            .prop(PropSpec::number("per_page", "Items per page").with_default(serde_json::json!(10)))
+            .prop(PropSpec::number("siblings", "Number of sibling pages to show").with_default(serde_json::json!(1)))
+            .prop(PropSpec::bool("show_first_last", "Show first/last page buttons").with_default(serde_json::json!(true)))
+            .prop(PropSpec::bool("show_prev_next", "Show prev/next buttons").with_default(serde_json::json!(true)))
+            .event(EventSpec::new("on_change", "Fired when page changes"))
+            .accessibility(AccessibilitySpec {
+                role: Some("navigation".into()),
+                focusable: true,
+                keyboard: vec![],
+                required_aria: vec!["aria-label".into()],
+            })
+            .build();
+
+        let _ = self.register(pagination);
+
+        // Sidebar component
+        let sidebar = ComponentSpec::builder("ui.Sidebar", "ui.core")
+            .name("Sidebar")
+            .description("A collapsible sidebar navigation component")
+            .prop(PropSpec::bool("collapsed", "Whether the sidebar is collapsed"))
+            .prop(PropSpec::number("width", "Sidebar width when expanded").with_default(serde_json::json!(240)))
+            .prop(PropSpec::number("collapsed_width", "Sidebar width when collapsed").with_default(serde_json::json!(64)))
+            .prop(
+                PropSpec::enum_type(
+                    "position",
+                    "Sidebar position",
+                    vec!["left".into(), "right".into()],
+                )
+                .with_default(serde_json::json!("left")),
+            )
+            .prop(PropSpec::bool("resizable", "Allow user to resize"))
+            .slot(SlotSpec::default_slot())
+            .slot(SlotSpec::named("header", "Sidebar header (logo area)"))
+            .slot(SlotSpec::named("footer", "Sidebar footer"))
+            .event(EventSpec::new("on_collapse", "Fired when collapse state changes"))
+            .event(EventSpec::new("on_resize", "Fired when sidebar is resized"))
+            .style_token("color.sidebar.background")
+            .accessibility(AccessibilitySpec {
+                role: Some("complementary".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-label".into()],
+            })
+            .build();
+
+        let _ = self.register(sidebar);
+
+        // AppBar/Navbar component
+        let app_bar = ComponentSpec::builder("ui.AppBar", "ui.core")
+            .name("AppBar")
+            .description("A top application bar/header")
+            .prop(
+                PropSpec::enum_type(
+                    "position",
+                    "AppBar position behavior",
+                    vec!["static".into(), "fixed".into(), "sticky".into()],
+                )
+                .with_default(serde_json::json!("static")),
+            )
+            .prop(PropSpec::bool("elevated", "Show elevation shadow"))
+            .prop(PropSpec::color("background", "Background color override"))
+            .slot(SlotSpec::named("start", "Left section content"))
+            .slot(SlotSpec::default_slot())
+            .slot(SlotSpec::named("end", "Right section content"))
+            .style_token("color.appbar.background")
+            .style_token("shadow.appbar")
+            .accessibility(AccessibilitySpec {
+                role: Some("banner".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec![],
+            })
+            .build();
+
+        let _ = self.register(app_bar);
+
+        // Container component
+        let container = ComponentSpec::builder("ui.Container", "ui.core")
+            .name("Container")
+            .description("A container that centers content and applies max-width")
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Container max-width",
+                    vec!["sm".into(), "md".into(), "lg".into(), "xl".into(), "full".into()],
+                )
+                .with_default(serde_json::json!("lg")),
+            )
+            .prop(PropSpec::bool("center", "Center children horizontally").with_default(serde_json::json!(true)))
+            .prop(PropSpec::number("padding", "Container padding"))
+            .slot(SlotSpec::default_slot())
+            .style_token("spacing.container")
+            .build();
+
+        let _ = self.register(container);
+
+        // Row component
+        let row = ComponentSpec::builder("ui.Row", "ui.core")
+            .name("Row")
+            .description("A horizontal flex container")
+            .prop(PropSpec::number("gap", "Gap between children"))
+            .prop(
+                PropSpec::enum_type(
+                    "align",
+                    "Vertical alignment",
+                    vec!["start".into(), "center".into(), "end".into(), "stretch".into(), "baseline".into()],
+                )
+                .with_default(serde_json::json!("stretch")),
+            )
+            .prop(
+                PropSpec::enum_type(
+                    "justify",
+                    "Horizontal distribution",
+                    vec!["start".into(), "center".into(), "end".into(), "space-between".into(), "space-around".into(), "space-evenly".into()],
+                )
+                .with_default(serde_json::json!("start")),
+            )
+            .prop(PropSpec::bool("wrap", "Allow wrapping to next line"))
+            .prop(PropSpec::bool("reverse", "Reverse child order"))
+            .slot(SlotSpec::default_slot())
+            .build();
+
+        let _ = self.register(row);
+
+        // Column component
+        let column = ComponentSpec::builder("ui.Column", "ui.core")
+            .name("Column")
+            .description("A vertical flex container")
+            .prop(PropSpec::number("gap", "Gap between children"))
+            .prop(
+                PropSpec::enum_type(
+                    "align",
+                    "Horizontal alignment",
+                    vec!["start".into(), "center".into(), "end".into(), "stretch".into()],
+                )
+                .with_default(serde_json::json!("stretch")),
+            )
+            .prop(
+                PropSpec::enum_type(
+                    "justify",
+                    "Vertical distribution",
+                    vec!["start".into(), "center".into(), "end".into(), "space-between".into(), "space-around".into(), "space-evenly".into()],
+                )
+                .with_default(serde_json::json!("start")),
+            )
+            .prop(PropSpec::bool("reverse", "Reverse child order"))
+            .slot(SlotSpec::default_slot())
+            .build();
+
+        let _ = self.register(column);
+
+        // Icon component
+        let icon = ComponentSpec::builder("ui.Icon", "ui.core")
+            .name("Icon")
+            .description("An icon component supporting multiple icon sets")
+            .prop(PropSpec::string("name", "Icon name").required())
+            .prop(
+                PropSpec::enum_type(
+                    "size",
+                    "Icon size",
+                    vec!["xs".into(), "sm".into(), "md".into(), "lg".into(), "xl".into()],
+                )
+                .with_default(serde_json::json!("md")),
+            )
+            .prop(PropSpec::color("color", "Icon color"))
+            .prop(PropSpec::bool("spin", "Apply spinning animation"))
+            .style_token("color.icon")
+            .accessibility(AccessibilitySpec {
+                role: Some("img".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-hidden".into()],
+            })
+            .build();
+
+        let _ = self.register(icon);
+
+        // Image component
+        let image = ComponentSpec::builder("ui.Image", "ui.core")
+            .name("Image")
+            .description("An image component with loading states")
+            .prop(PropSpec::string("src", "Image source URL").required())
+            .prop(PropSpec::string("alt", "Alt text for accessibility").required())
+            .prop(PropSpec::number("width", "Image width"))
+            .prop(PropSpec::number("height", "Image height"))
+            .prop(
+                PropSpec::enum_type(
+                    "fit",
+                    "Object fit behavior",
+                    vec!["cover".into(), "contain".into(), "fill".into(), "none".into(), "scale-down".into()],
+                )
+                .with_default(serde_json::json!("cover")),
+            )
+            .prop(PropSpec::number("radius", "Border radius"))
+            .prop(PropSpec::string("fallback", "Fallback image or element on error"))
+            .prop(PropSpec::bool("lazy", "Enable lazy loading").with_default(serde_json::json!(true)))
+            .event(EventSpec::new("on_load", "Fired when image loads"))
+            .event(EventSpec::new("on_error", "Fired when image fails to load"))
+            .accessibility(AccessibilitySpec {
+                role: Some("img".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-label".into()],
+            })
+            .build();
+
+        let _ = self.register(image);
+
+        // Link component
+        let link = ComponentSpec::builder("ui.Link", "ui.core")
+            .name("Link")
+            .description("A hyperlink component")
+            .prop(PropSpec::string("href", "Link destination URL").required())
+            .prop(PropSpec::string("label", "Link text"))
+            .prop(PropSpec::bool("external", "Open in new tab"))
+            .prop(PropSpec::bool("underline", "Show underline").with_default(serde_json::json!(true)))
+            .prop(PropSpec::color("color", "Link color"))
+            .event(EventSpec::new("on_click", "Fired when link is clicked"))
+            .style_token("color.link")
+            .style_token("color.link.hover")
+            .accessibility(AccessibilitySpec {
+                role: Some("link".into()),
+                focusable: true,
+                keyboard: vec![
+                    KeyboardBehavior {
+                        key: "Enter".into(),
+                        action: "Navigate to link".into(),
+                    },
+                ],
+                required_aria: vec![],
+            })
+            .build();
+
+        let _ = self.register(link);
+
+        // Skeleton component (loading placeholder)
+        let skeleton = ComponentSpec::builder("ui.Skeleton", "ui.core")
+            .name("Skeleton")
+            .description("A loading placeholder component")
+            .prop(
+                PropSpec::enum_type(
+                    "variant",
+                    "Skeleton shape",
+                    vec!["text".into(), "circular".into(), "rectangular".into()],
+                )
+                .with_default(serde_json::json!("text")),
+            )
+            .prop(PropSpec::number("width", "Skeleton width"))
+            .prop(PropSpec::number("height", "Skeleton height"))
+            .prop(PropSpec::bool("animate", "Enable shimmer animation").with_default(serde_json::json!(true)))
+            .style_token("color.skeleton")
+            .accessibility(AccessibilitySpec {
+                role: Some("status".into()),
+                focusable: false,
+                keyboard: vec![],
+                required_aria: vec!["aria-busy".into()],
+            })
+            .build();
+
+        let _ = self.register(skeleton);
+
+        tracing::debug!("Registered ui.core pack with {} components", 32);
     }
 }
 
