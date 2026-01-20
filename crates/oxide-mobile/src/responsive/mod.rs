@@ -9,9 +9,9 @@
 //! - [`safe_area`]: Safe area insets for notches and system UI
 //! - [`density`]: Screen density handling for proper scaling
 
-mod breakpoint;
-mod safe_area;
-mod density;
+pub mod breakpoint;
+pub mod safe_area;
+pub mod density;
 
 pub use breakpoint::{Breakpoint, BreakpointConfig, BreakpointRange};
 pub use safe_area::{SafeAreaInsets, SafeAreaEdge, SafeAreaProvider};
