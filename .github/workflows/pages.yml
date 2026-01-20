@@ -1,0 +1,283 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev
+
+      - name: Build Rust Documentation
+        run: cargo doc --workspace --no-deps --document-private-items
+        env:
+          RUSTDOCFLAGS: --enable-index-page -Zunstable-options
+
+      - name: Create landing page
+        run: |
+          cat > target/doc/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>OxideKit Documentation</title>
+            <style>
+              :root {
+                --bg: #0f172a;
+                --surface: #1e293b;
+                --text: #f1f5f9;
+                --text-secondary: #94a3b8;
+                --primary: #3b82f6;
+                --primary-hover: #2563eb;
+                --border: #334155;
+              }
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+              }
+              .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                padding: 0 24px;
+                width: 100%;
+              }
+              header {
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                padding: 16px 0;
+              }
+              header .container {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+              }
+              .logo {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                text-decoration: none;
+                color: var(--text);
+              }
+              .logo-icon {
+                width: 32px;
+                height: 32px;
+                background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 18px;
+              }
+              .logo-text { font-size: 20px; font-weight: 700; }
+              nav { display: flex; gap: 24px; }
+              nav a {
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 14px;
+              }
+              nav a:hover { color: var(--text); }
+              main {
+                flex: 1;
+                padding: 80px 0;
+              }
+              .hero {
+                text-align: center;
+                max-width: 800px;
+                margin: 0 auto;
+              }
+              h1 {
+                font-size: 48px;
+                font-weight: 700;
+                margin-bottom: 24px;
+                background: linear-gradient(135deg, #fff, #94a3b8);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+              }
+              .subtitle {
+                font-size: 20px;
+                color: var(--text-secondary);
+                line-height: 1.6;
+                margin-bottom: 48px;
+              }
+              .crates {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 16px;
+                margin-top: 64px;
+              }
+              .crate {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 24px;
+                text-decoration: none;
+                color: var(--text);
+                transition: border-color 0.2s, transform 0.2s;
+              }
+              .crate:hover {
+                border-color: var(--primary);
+                transform: translateY(-2px);
+              }
+              .crate h3 {
+                font-size: 18px;
+                margin-bottom: 8px;
+                color: var(--primary);
+              }
+              .crate p {
+                font-size: 14px;
+                color: var(--text-secondary);
+                line-height: 1.5;
+              }
+              .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 12px 24px;
+                background: var(--primary);
+                color: white;
+                text-decoration: none;
+                border-radius: 8px;
+                font-weight: 500;
+                transition: background 0.2s;
+              }
+              .btn:hover { background: var(--primary-hover); }
+              .btn-outline {
+                background: transparent;
+                border: 1px solid var(--border);
+                color: var(--text);
+              }
+              .btn-outline:hover {
+                background: var(--surface);
+                border-color: var(--text-secondary);
+              }
+              .buttons { display: flex; gap: 16px; justify-content: center; }
+              footer {
+                background: var(--surface);
+                border-top: 1px solid var(--border);
+                padding: 24px 0;
+                text-align: center;
+                color: var(--text-secondary);
+                font-size: 14px;
+              }
+            </style>
+          </head>
+          <body>
+            <header>
+              <div class="container">
+                <a href="/" class="logo">
+                  <div class="logo-icon">O</div>
+                  <span class="logo-text">OxideKit</span>
+                </a>
+                <nav>
+                  <a href="https://github.com/oxidekit/oxidekit-core">GitHub</a>
+                </nav>
+              </div>
+            </header>
+            <main>
+              <div class="container">
+                <div class="hero">
+                  <h1>OxideKit Documentation</h1>
+                  <p class="subtitle">
+                    A Rust-native application platform for building fast, secure, and portable desktop and mobile applications.
+                  </p>
+                  <div class="buttons">
+                    <a href="./oxide_components/index.html" class="btn">Browse API Docs</a>
+                    <a href="https://github.com/oxidekit/oxidekit-core" class="btn btn-outline">View on GitHub</a>
+                  </div>
+                </div>
+                <div class="crates">
+                  <a href="./oxide_components/index.html" class="crate">
+                    <h3>oxide-components</h3>
+                    <p>Core UI components, design tokens, typography, animations, and accessibility.</p>
+                  </a>
+                  <a href="./oxide_compiler/index.html" class="crate">
+                    <h3>oxide-compiler</h3>
+                    <p>OUI DSL parser and compiler for type-safe UI definitions.</p>
+                  </a>
+                  <a href="./oxide_layout/index.html" class="crate">
+                    <h3>oxide-layout</h3>
+                    <p>Flexbox layout engine powered by Taffy.</p>
+                  </a>
+                  <a href="./oxide_render/index.html" class="crate">
+                    <h3>oxide-render</h3>
+                    <p>GPU-accelerated rendering with wgpu.</p>
+                  </a>
+                  <a href="./oxide_text/index.html" class="crate">
+                    <h3>oxide-text</h3>
+                    <p>Text rendering and shaping with cosmic-text.</p>
+                  </a>
+                  <a href="./oxide_runtime/index.html" class="crate">
+                    <h3>oxide-runtime</h3>
+                    <p>Application runtime and window management.</p>
+                  </a>
+                  <a href="./oxide_quality/index.html" class="crate">
+                    <h3>oxide-quality</h3>
+                    <p>Testing utilities including visual regression testing.</p>
+                  </a>
+                  <a href="./oxide_version/index.html" class="crate">
+                    <h3>oxide-version</h3>
+                    <p>Semantic versioning and compatibility checking.</p>
+                  </a>
+                </div>
+              </div>
+            </main>
+            <footer>
+              <div class="container">
+                <p>OxideKit is licensed under BSL 1.1 (converts to Apache-2.0 in 2030)</p>
+              </div>
+            </footer>
+          </body>
+          </html>
+          EOF
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+  deploy:
+    name: Deploy
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

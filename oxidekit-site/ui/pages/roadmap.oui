@@ -1,0 +1,438 @@
+// Roadmap Page
+// Public roadmap and version history
+
+Component {
+    id: "RoadmapPage"
+
+    render: Column {
+        width: fill
+
+        // Hero
+        Container {
+            width: fill
+            padding: "80px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "Roadmap"
+                        size: responsive(36, 48, 56)
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Text {
+                        content: "Our public roadmap shows where OxideKit is headed. We ship regularly and transparently."
+                        size: 20
+                        color: token("color.text.secondary")
+                        line_height: 1.6
+                    }
+                }
+            }
+        }
+
+        // Current Version
+        Container {
+            width: fill
+            padding: "48px 24px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Container {
+                    padding: 24
+                    background: token("color.primary.subtle")
+                    border: "2px solid"
+                    border_color: token("color.primary")
+                    radius: 12
+
+                    Row {
+                        gap: 24
+                        align: center
+
+                        Container {
+                            padding: "8px 16px"
+                            background: token("color.primary")
+                            radius: 8
+
+                            Text {
+                                content: "Current"
+                                size: 14
+                                weight: "semibold"
+                                color: "#FFFFFF"
+                            }
+                        }
+
+                        Column {
+                            gap: 4
+                            flex: 1
+
+                            Text {
+                                content: "v0.3.0 - UI Polish & Parity"
+                                size: 20
+                                weight: "bold"
+                                color: token("color.text.primary")
+                            }
+
+                            Text {
+                                content: "Animations, responsive design, accessibility, visual regression testing, and comprehensive documentation."
+                                size: 14
+                                color: token("color.text.secondary")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Roadmap Timeline
+        Container {
+            width: fill
+            padding: "24px 24px 80px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 0
+
+                    RoadmapMilestone {
+                        version: "v0.4.0"
+                        title: "Event Handling & Input"
+                        status: "next"
+                        items: [
+                            "Complete keyboard event handling",
+                            "Touch and gesture support",
+                            "Text input fields with IME support",
+                            "Focus management and tab navigation",
+                            "Clipboard operations"
+                        ]
+                    }
+
+                    RoadmapMilestone {
+                        version: "v0.5.0"
+                        title: "Native Integration"
+                        status: "planned"
+                        items: [
+                            "System tray support",
+                            "Native menus",
+                            "File dialogs",
+                            "Notifications",
+                            "Inter-process communication (IPC)"
+                        ]
+                    }
+
+                    RoadmapMilestone {
+                        version: "v0.6.0"
+                        title: "Mobile Platforms"
+                        status: "planned"
+                        items: [
+                            "iOS support",
+                            "Android support",
+                            "Mobile-specific components",
+                            "Touch-optimized gestures",
+                            "Platform-specific styling"
+                        ]
+                    }
+
+                    RoadmapMilestone {
+                        version: "v0.7.0"
+                        title: "Advanced Features"
+                        status: "planned"
+                        items: [
+                            "WebGPU compute shaders",
+                            "3D rendering primitives",
+                            "Video playback",
+                            "Audio integration",
+                            "Camera access"
+                        ]
+                    }
+
+                    RoadmapMilestone {
+                        version: "v1.0.0"
+                        title: "Stable Release"
+                        status: "future"
+                        items: [
+                            "API stability guarantee",
+                            "Long-term support (LTS)",
+                            "Enterprise features",
+                            "Marketplace launch",
+                            "Comprehensive documentation"
+                        ]
+                    }
+                }
+            }
+        }
+
+        // Completed Versions
+        Container {
+            width: fill
+            padding: "64px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 32
+
+                    Text {
+                        content: "Completed"
+                        size: 24
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    CompletedVersion {
+                        version: "v0.3.0"
+                        date: "January 2025"
+                        highlights: [
+                            "Animation system with springs and keyframes",
+                            "Responsive design with breakpoints",
+                            "Accessibility system (WCAG 2.1 AA)",
+                            "Visual regression testing",
+                            "Documentation website",
+                            "5 demo applications"
+                        ]
+                    }
+
+                    CompletedVersion {
+                        version: "v0.2.0"
+                        date: "December 2024"
+                        highlights: [
+                            "32 core UI components",
+                            "Design tokens system",
+                            "Typography scale",
+                            "Color palette with variants",
+                            "Spacing tokens"
+                        ]
+                    }
+
+                    CompletedVersion {
+                        version: "v0.1.0"
+                        date: "November 2024"
+                        highlights: [
+                            "Core runtime and compiler",
+                            "Layout engine (Taffy-based)",
+                            "Text rendering (cosmic-text)",
+                            "GPU rendering (wgpu)",
+                            "Basic components"
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
+
+// RoadmapMilestone Component
+Component {
+    id: "RoadmapMilestone"
+
+    props: {
+        version: { type: "string", required: true }
+        title: { type: "string", required: true }
+        status: { type: "enum", values: ["next", "planned", "future"], required: true }
+        items: { type: "array", item_type: "string", required: true }
+    }
+
+    render: Row {
+        gap: 24
+
+        // Timeline indicator
+        Column {
+            width: 24
+            align: center
+
+            Container {
+                width: 12
+                height: 12
+                radius: 6
+                background: status_color(props.status)
+            }
+
+            Container {
+                width: 2
+                flex: 1
+                background: token("color.border")
+            }
+        }
+
+        // Content
+        Container {
+            flex: 1
+            padding_bottom: 48
+
+            Column {
+                gap: 12
+
+                Row {
+                    gap: 12
+                    align: center
+
+                    Text {
+                        content: props.version
+                        size: 14
+                        weight: "semibold"
+                        color: status_color(props.status)
+                        font: "monospace"
+                    }
+
+                    Container {
+                        padding: "4px 8px"
+                        background: status_bg(props.status)
+                        radius: 4
+
+                        Text {
+                            content: status_label(props.status)
+                            size: 12
+                            color: status_color(props.status)
+                        }
+                    }
+                }
+
+                Text {
+                    content: props.title
+                    size: 20
+                    weight: "semibold"
+                    color: token("color.text.primary")
+                }
+
+                Column {
+                    gap: 8
+                    margin_top: 8
+
+                    @for item in props.items {
+                        Row {
+                            gap: 8
+                            align: flex_start
+
+                            Icon {
+                                name: "circle"
+                                size: 6
+                                color: token("color.text.tertiary")
+                                margin_top: 6
+                            }
+
+                            Text {
+                                content: item
+                                size: 14
+                                color: token("color.text.secondary")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// CompletedVersion Component
+Component {
+    id: "CompletedVersion"
+
+    props: {
+        version: { type: "string", required: true }
+        date: { type: "string", required: true }
+        highlights: { type: "array", item_type: "string", required: true }
+    }
+
+    render: Container {
+        padding: 20
+        background: token("color.background")
+        border: "1px solid"
+        border_color: token("color.border")
+        radius: 8
+
+        Column {
+            gap: 12
+
+            Row {
+                justify: space_between
+                align: center
+
+                Row {
+                    gap: 8
+                    align: center
+
+                    Icon {
+                        name: "check-circle"
+                        size: 16
+                        color: token("color.success")
+                    }
+
+                    Text {
+                        content: props.version
+                        size: 16
+                        weight: "semibold"
+                        color: token("color.text.primary")
+                        font: "monospace"
+                    }
+                }
+
+                Text {
+                    content: props.date
+                    size: 14
+                    color: token("color.text.tertiary")
+                }
+            }
+
+            Row {
+                gap: 8
+                wrap: "wrap"
+
+                @for highlight in props.highlights {
+                    Container {
+                        padding: "4px 8px"
+                        background: token("color.surface")
+                        radius: 4
+
+                        Text {
+                            content: highlight
+                            size: 12
+                            color: token("color.text.secondary")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Helper functions
+fn status_color(status) {
+    match status {
+        "next" => token("color.warning")
+        "planned" => token("color.primary")
+        "future" => token("color.text.tertiary")
+    }
+}
+
+fn status_bg(status) {
+    match status {
+        "next" => token("color.warning.subtle")
+        "planned" => token("color.primary.subtle")
+        "future" => token("color.surface")
+    }
+}
+
+fn status_label(status) {
+    match status {
+        "next" => "Up Next"
+        "planned" => "Planned"
+        "future" => "Future"
+    }
+}

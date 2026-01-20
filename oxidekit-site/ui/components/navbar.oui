@@ -1,0 +1,200 @@
+// Navbar Component
+// Responsive navigation with mobile menu
+
+Component {
+    id: "Navbar"
+
+    props: {
+        current_page: { type: "string", required: true }
+        theme: { type: "string", default: "dark" }
+    }
+
+    events: {
+        on_navigate: { page: "string" }
+        on_toggle_menu: {}
+        on_toggle_theme: {}
+    }
+
+    render: Container {
+        width: fill
+        height: 64
+        background: token("color.surface")
+        border_bottom: "1px solid"
+        border_color: token("color.border")
+        position: "sticky"
+        top: 0
+        z_index: 100
+
+        Container {
+            max_width: 1200
+            width: fill
+            height: fill
+            margin: "0 auto"
+            padding: "0 24px"
+
+            Row {
+                justify: space_between
+                align: center
+                height: fill
+
+                // Logo
+                Row {
+                    gap: 12
+                    align: center
+                    cursor: "pointer"
+                    on_click: emit("on_navigate", { page: "home" })
+
+                    Container {
+                        width: 32
+                        height: 32
+                        background: "linear-gradient(135deg, #3B82F6, #8B5CF6)"
+                        radius: 8
+
+                        Column {
+                            align: center
+                            justify: center
+                            width: fill
+                            height: fill
+
+                            Text {
+                                content: "O"
+                                size: 18
+                                weight: "bold"
+                                color: "#FFFFFF"
+                            }
+                        }
+                    }
+
+                    Text {
+                        content: "OxideKit"
+                        size: 20
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+                }
+
+                // Desktop navigation
+                Row {
+                    gap: 32
+                    align: center
+                    visible: viewport.width >= 768
+
+                    NavLink {
+                        label: "Home"
+                        active: props.current_page == "home"
+                        on_click: emit("on_navigate", { page: "home" })
+                    }
+
+                    NavLink {
+                        label: "Why OxideKit"
+                        active: props.current_page == "why-oxidekit"
+                        on_click: emit("on_navigate", { page: "why-oxidekit" })
+                    }
+
+                    NavLink {
+                        label: "Docs"
+                        href: "/docs/"
+                        external: true
+                    }
+
+                    NavLink {
+                        label: "Roadmap"
+                        active: props.current_page == "roadmap"
+                        on_click: emit("on_navigate", { page: "roadmap" })
+                    }
+                }
+
+                // Right side actions
+                Row {
+                    gap: 16
+                    align: center
+
+                    // Theme toggle
+                    Button {
+                        icon: props.theme == "dark" ? "sun" : "moon"
+                        variant: "ghost"
+                        size: "sm"
+                        on_click: emit("on_toggle_theme")
+                        aria_label: "Toggle theme"
+                    }
+
+                    // GitHub link
+                    Link {
+                        href: "https://github.com/oxidekit/oxidekit"
+                        target: "_blank"
+                        visible: viewport.width >= 768
+
+                        Button {
+                            icon: "github"
+                            variant: "ghost"
+                            size: "sm"
+                            aria_label: "GitHub"
+                        }
+                    }
+
+                    // Get Started button (desktop)
+                    Button {
+                        text: "Get Started"
+                        variant: "primary"
+                        size: "sm"
+                        visible: viewport.width >= 768
+                        on_click: emit("on_navigate", { page: "download" })
+                    }
+
+                    // Mobile menu button
+                    Button {
+                        icon: "menu"
+                        variant: "ghost"
+                        visible: viewport.width < 768
+                        on_click: emit("on_toggle_menu")
+                        aria_label: "Open menu"
+                    }
+                }
+            }
+        }
+    }
+}
+
+// NavLink Component
+Component {
+    id: "NavLink"
+
+    props: {
+        label: { type: "string", required: true }
+        active: { type: "boolean", default: false }
+        href: { type: "string", optional: true }
+        external: { type: "boolean", default: false }
+    }
+
+    events: {
+        on_click: {}
+    }
+
+    render: Container {
+        cursor: "pointer"
+        on_click: props.href ? null : emit("on_click")
+
+        @if props.href {
+            Link {
+                href: props.href
+                target: props.external ? "_blank" : "_self"
+
+                Text {
+                    content: props.label
+                    size: 14
+                    weight: props.active ? "medium" : "normal"
+                    color: props.active ? token("color.primary") : token("color.text.secondary")
+                }
+            }
+        }
+
+        @if !props.href {
+            Text {
+                content: props.label
+                size: 14
+                weight: props.active ? "medium" : "normal"
+                color: props.active ? token("color.primary") : token("color.text.secondary")
+            }
+        }
+    }
+}

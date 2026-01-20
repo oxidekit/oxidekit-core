@@ -1,0 +1,402 @@
+// Home Page
+// Landing page for oxidekit.com
+
+Component {
+    id: "HomePage"
+
+    render: Column {
+        width: fill
+
+        // Hero Section
+        Container {
+            width: fill
+            padding: "80px 24px"
+            background: "linear-gradient(180deg, transparent 0%, rgba(59, 130, 246, 0.05) 100%)"
+
+            Container {
+                max_width: 1200
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    align: center
+                    gap: 24
+
+                    // Badge
+                    Container {
+                        padding: "8px 16px"
+                        background: token("color.primary.subtle")
+                        radius: 9999
+
+                        Row {
+                            gap: 8
+                            align: center
+
+                            Text {
+                                content: "Now in Beta"
+                                size: 14
+                                weight: "medium"
+                                color: token("color.primary")
+                            }
+
+                            Icon {
+                                name: "arrow-right"
+                                size: 14
+                                color: token("color.primary")
+                            }
+                        }
+                    }
+
+                    // Headline
+                    Text {
+                        content: "Build Native Apps with Rust"
+                        size: responsive(36, 48, 64)
+                        weight: "bold"
+                        color: token("color.text.primary")
+                        align: center
+                        max_width: 800
+                    }
+
+                    // Subheadline
+                    Text {
+                        content: "OxideKit is a Rust-native application platform that replaces Electron and Tauri with native performance, compile-time safety, and modular design."
+                        size: responsive(16, 18, 20)
+                        color: token("color.text.secondary")
+                        align: center
+                        max_width: 700
+                    }
+
+                    // CTA buttons
+                    Row {
+                        gap: 16
+                        margin_top: 16
+                        wrap: "wrap"
+                        justify: center
+
+                        Button {
+                            text: "Get Started"
+                            variant: "primary"
+                            size: "lg"
+                            icon_right: "arrow-right"
+                            on_click: navigate("download")
+                        }
+
+                        Button {
+                            text: "Read the Docs"
+                            variant: "outline"
+                            size: "lg"
+                            href: "/docs/"
+                        }
+                    }
+
+                    // Install command
+                    Container {
+                        margin_top: 32
+                        padding: "16px 24px"
+                        background: token("color.surface")
+                        border: "1px solid"
+                        border_color: token("color.border")
+                        radius: 12
+
+                        Row {
+                            gap: 16
+                            align: center
+
+                            Text {
+                                content: "$"
+                                size: 14
+                                color: token("color.text.tertiary")
+                                font: "monospace"
+                            }
+
+                            Text {
+                                content: "curl -sSf https://oxidekit.com/install.sh | sh"
+                                size: 14
+                                color: token("color.text.primary")
+                                font: "monospace"
+                            }
+
+                            Button {
+                                icon: "copy"
+                                variant: "ghost"
+                                size: "sm"
+                                on_click: copy_to_clipboard("curl -sSf https://oxidekit.com/install.sh | sh")
+                                aria_label: "Copy install command"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Features Section
+        Container {
+            id: "features"
+            width: fill
+            padding: "80px 24px"
+
+            Container {
+                max_width: 1200
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 48
+
+                    // Section header
+                    Column {
+                        align: center
+                        gap: 16
+
+                        Text {
+                            content: "Why OxideKit?"
+                            size: responsive(28, 36, 42)
+                            weight: "bold"
+                            color: token("color.text.primary")
+                            align: center
+                        }
+
+                        Text {
+                            content: "Built from the ground up for the problems Electron and web-based frameworks can't solve."
+                            size: 18
+                            color: token("color.text.secondary")
+                            align: center
+                            max_width: 600
+                        }
+                    }
+
+                    // Feature grid
+                    Row {
+                        gap: 24
+                        wrap: "wrap"
+
+                        FeatureCard {
+                            icon: "zap"
+                            title: "Native Performance"
+                            description: "No JavaScript runtime, no webview. Pure Rust compiled to native code with GPU-accelerated rendering."
+                        }
+
+                        FeatureCard {
+                            icon: "shield"
+                            title: "Compile-Time Safety"
+                            description: "Catch UI errors before runtime. Strong typing, exhaustive pattern matching, and memory safety by default."
+                        }
+
+                        FeatureCard {
+                            icon: "package"
+                            title: "Modular by Design"
+                            description: "Only ship what you use. Tree-shakeable components with explicit dependencies and versioning."
+                        }
+
+                        FeatureCard {
+                            icon: "lock"
+                            title: "Security First"
+                            description: "Fine-grained permissions, allowlisted APIs, and attestation-ready builds. No surprises."
+                        }
+
+                        FeatureCard {
+                            icon: "layers"
+                            title: "Design Tokens"
+                            description: "Built-in theming with tokens, not CSS variables. Consistent typography, spacing, and colors."
+                        }
+
+                        FeatureCard {
+                            icon: "code"
+                            title: "Developer Experience"
+                            description: "Hot reload, inspector, type-safe API clients, and AI-ready component specs. Ship faster."
+                        }
+                    }
+                }
+            }
+        }
+
+        // Comparison Section
+        Container {
+            width: fill
+            padding: "80px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 1200
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 48
+
+                    Column {
+                        align: center
+                        gap: 16
+
+                        Text {
+                            content: "How OxideKit Compares"
+                            size: responsive(28, 36, 42)
+                            weight: "bold"
+                            color: token("color.text.primary")
+                            align: center
+                        }
+                    }
+
+                    // Comparison table
+                    Container {
+                        width: fill
+                        overflow_x: "auto"
+
+                        ComparisonTable {}
+                    }
+                }
+            }
+        }
+
+        // Get Started Section
+        Container {
+            width: fill
+            padding: "80px 24px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    align: center
+                    gap: 32
+
+                    Text {
+                        content: "Ready to Build?"
+                        size: responsive(28, 36, 42)
+                        weight: "bold"
+                        color: token("color.text.primary")
+                        align: center
+                    }
+
+                    Text {
+                        content: "Get started in minutes. OxideKit works on macOS, Windows, and Linux."
+                        size: 18
+                        color: token("color.text.secondary")
+                        align: center
+                    }
+
+                    // Code example
+                    Container {
+                        width: fill
+                        padding: 24
+                        background: "#1E1E1E"
+                        radius: 12
+                        overflow: "hidden"
+
+                        Column {
+                            gap: 16
+
+                            Row {
+                                gap: 8
+
+                                Container { width: 12 height: 12 radius: 6 background: "#FF5F56" }
+                                Container { width: 12 height: 12 radius: 6 background: "#FFBD2E" }
+                                Container { width: 12 height: 12 radius: 6 background: "#27CA40" }
+                            }
+
+                            Code {
+                                language: "bash"
+                                content: "# Install OxideKit\ncurl -sSf https://oxidekit.com/install.sh | sh\n\n# Create a new project\noxide new my-app --starter admin-panel\n\n# Run in development mode\ncd my-app && oxide dev"
+                            }
+                        }
+                    }
+
+                    Button {
+                        text: "View Installation Guide"
+                        variant: "primary"
+                        size: "lg"
+                        on_click: navigate("download")
+                    }
+                }
+            }
+        }
+    }
+}
+
+// FeatureCard Component
+Component {
+    id: "FeatureCard"
+
+    props: {
+        icon: { type: "string", required: true }
+        title: { type: "string", required: true }
+        description: { type: "string", required: true }
+    }
+
+    render: Container {
+        flex: 1
+        min_width: 300
+        max_width: 380
+        padding: 24
+        background: token("color.surface")
+        border: "1px solid"
+        border_color: token("color.border")
+        radius: 12
+
+        Column {
+            gap: 16
+
+            Container {
+                width: 48
+                height: 48
+                background: token("color.primary.subtle")
+                radius: 12
+
+                Column {
+                    align: center
+                    justify: center
+                    width: fill
+                    height: fill
+
+                    Icon {
+                        name: props.icon
+                        size: 24
+                        color: token("color.primary")
+                    }
+                }
+            }
+
+            Text {
+                content: props.title
+                size: 18
+                weight: "semibold"
+                color: token("color.text.primary")
+            }
+
+            Text {
+                content: props.description
+                size: 14
+                color: token("color.text.secondary")
+                line_height: 1.6
+            }
+        }
+    }
+}
+
+// ComparisonTable Component
+Component {
+    id: "ComparisonTable"
+
+    render: Table {
+        columns: [
+            { key: "feature", label: "Feature", width: "200px" },
+            { key: "oxidekit", label: "OxideKit", width: "120px" },
+            { key: "electron", label: "Electron", width: "120px" },
+            { key: "tauri", label: "Tauri", width: "120px" },
+            { key: "flutter", label: "Flutter", width: "120px" }
+        ]
+
+        rows: [
+            { feature: "Bundle Size", oxidekit: "~5MB", electron: "~150MB", tauri: "~3MB", flutter: "~15MB" },
+            { feature: "Memory Usage", oxidekit: "Low", electron: "High", tauri: "Medium", flutter: "Medium" },
+            { feature: "Startup Time", oxidekit: "Fast", electron: "Slow", tauri: "Fast", flutter: "Medium" },
+            { feature: "Language", oxidekit: "Rust", electron: "JS/TS", tauri: "Rust + JS", flutter: "Dart" },
+            { feature: "UI Rendering", oxidekit: "Native GPU", electron: "Chromium", tauri: "WebView", flutter: "Skia" },
+            { feature: "Compile-time Safety", oxidekit: "Yes", electron: "No", tauri: "Partial", flutter: "Yes" },
+            { feature: "Permission System", oxidekit: "Built-in", electron: "Limited", tauri: "Built-in", flutter: "Platform" },
+            { feature: "Hot Reload", oxidekit: "Yes", electron: "Yes", tauri: "Yes", flutter: "Yes" }
+        ]
+    }
+}

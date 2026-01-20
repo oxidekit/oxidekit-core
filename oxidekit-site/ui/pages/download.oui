@@ -1,0 +1,551 @@
+// Download Page
+// Installation instructions for all platforms
+
+Component {
+    id: "DownloadPage"
+
+    state {
+        selected_platform: String = detect_platform()
+    }
+
+    render: Column {
+        width: fill
+
+        // Hero
+        Container {
+            width: fill
+            padding: "80px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "Get Started"
+                        size: responsive(36, 48, 56)
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Text {
+                        content: "Install OxideKit and create your first app in minutes."
+                        size: 20
+                        color: token("color.text.secondary")
+                        line_height: 1.6
+                    }
+                }
+            }
+        }
+
+        // Platform selector
+        Container {
+            width: fill
+            padding: "48px 24px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "Select Your Platform"
+                        size: 18
+                        weight: "semibold"
+                        color: token("color.text.primary")
+                    }
+
+                    Row {
+                        gap: 16
+                        wrap: "wrap"
+
+                        PlatformButton {
+                            platform: "macos"
+                            label: "macOS"
+                            icon: "apple"
+                            selected: state.selected_platform == "macos"
+                            on_click: state.selected_platform = "macos"
+                        }
+
+                        PlatformButton {
+                            platform: "linux"
+                            label: "Linux"
+                            icon: "terminal"
+                            selected: state.selected_platform == "linux"
+                            on_click: state.selected_platform = "linux"
+                        }
+
+                        PlatformButton {
+                            platform: "windows"
+                            label: "Windows"
+                            icon: "monitor"
+                            selected: state.selected_platform == "windows"
+                            on_click: state.selected_platform = "windows"
+                        }
+                    }
+                }
+            }
+        }
+
+        // Installation instructions
+        Container {
+            width: fill
+            padding: "24px 24px 64px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                // macOS instructions
+                @if state.selected_platform == "macos" {
+                    InstallSection {
+                        title: "Install on macOS"
+                        methods: [
+                            {
+                                name: "Homebrew (Recommended)",
+                                commands: ["brew install oxidekit"],
+                                description: "The easiest way to install on macOS."
+                            },
+                            {
+                                name: "Shell Script",
+                                commands: ["curl -sSf https://oxidekit.com/install.sh | sh"],
+                                description: "Universal installer script."
+                            },
+                            {
+                                name: "Download Binary",
+                                commands: [],
+                                description: "Download the binary directly.",
+                                download_url: "https://github.com/oxidekit/oxide/releases/latest/download/oxide-macos-arm64.tar.gz"
+                            }
+                        ]
+                    }
+                }
+
+                // Linux instructions
+                @if state.selected_platform == "linux" {
+                    InstallSection {
+                        title: "Install on Linux"
+                        methods: [
+                            {
+                                name: "Shell Script (Recommended)",
+                                commands: ["curl -sSf https://oxidekit.com/install.sh | sh"],
+                                description: "Works on most Linux distributions."
+                            },
+                            {
+                                name: "Debian/Ubuntu (apt)",
+                                commands: [
+                                    "curl -fsSL https://oxidekit.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/oxidekit.gpg",
+                                    "echo 'deb [signed-by=/usr/share/keyrings/oxidekit.gpg] https://apt.oxidekit.com stable main' | sudo tee /etc/apt/sources.list.d/oxidekit.list",
+                                    "sudo apt update && sudo apt install oxidekit"
+                                ],
+                                description: "Native package manager installation."
+                            },
+                            {
+                                name: "Download Binary",
+                                commands: [],
+                                description: "Download the binary directly.",
+                                download_url: "https://github.com/oxidekit/oxide/releases/latest/download/oxide-linux-x86_64.tar.gz"
+                            }
+                        ]
+                    }
+                }
+
+                // Windows instructions
+                @if state.selected_platform == "windows" {
+                    InstallSection {
+                        title: "Install on Windows"
+                        methods: [
+                            {
+                                name: "MSI Installer (Recommended)",
+                                commands: [],
+                                description: "Download and run the installer.",
+                                download_url: "https://github.com/oxidekit/oxide/releases/latest/download/oxide-windows-x64.msi"
+                            },
+                            {
+                                name: "PowerShell",
+                                commands: ["irm https://oxidekit.com/install.ps1 | iex"],
+                                description: "Install via PowerShell script."
+                            },
+                            {
+                                name: "Winget",
+                                commands: ["winget install OxideKit.oxide"],
+                                description: "Install via Windows Package Manager."
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+
+        // Verify installation
+        Container {
+            width: fill
+            padding: "64px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "Verify Installation"
+                        size: 24
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Text {
+                        content: "After installation, verify that OxideKit is working correctly:"
+                        size: 16
+                        color: token("color.text.secondary")
+                    }
+
+                    CodeBlock {
+                        content: "oxide --version\n# Output: oxide 0.3.0"
+                    }
+                }
+            }
+        }
+
+        // Create first project
+        Container {
+            width: fill
+            padding: "64px 24px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "Create Your First Project"
+                        size: 24
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Text {
+                        content: "Use the CLI to scaffold a new project with a starter template:"
+                        size: 16
+                        color: token("color.text.secondary")
+                    }
+
+                    CodeBlock {
+                        content: "# Create a new project\noxide new my-app\n\n# Or use a starter template\noxide new my-admin --starter admin-panel\noxide new my-site --starter landing-page\n\n# Navigate and run\ncd my-app\noxide dev"
+                    }
+
+                    Row {
+                        gap: 16
+                        margin_top: 16
+
+                        Button {
+                            text: "View Documentation"
+                            variant: "primary"
+                            href: "/docs/"
+                        }
+
+                        Button {
+                            text: "Browse Starters"
+                            variant: "outline"
+                            href: "/docs/starters"
+                        }
+                    }
+                }
+            }
+        }
+
+        // Requirements
+        Container {
+            width: fill
+            padding: "64px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "System Requirements"
+                        size: 24
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Row {
+                        gap: 24
+                        wrap: "wrap"
+
+                        RequirementCard {
+                            platform: "macOS"
+                            requirements: [
+                                "macOS 11.0 (Big Sur) or later",
+                                "Apple Silicon or Intel processor",
+                                "Xcode Command Line Tools"
+                            ]
+                        }
+
+                        RequirementCard {
+                            platform: "Linux"
+                            requirements: [
+                                "Ubuntu 20.04+, Fedora 35+, or similar",
+                                "x86_64 or aarch64 processor",
+                                "Vulkan-capable GPU (optional)"
+                            ]
+                        }
+
+                        RequirementCard {
+                            platform: "Windows"
+                            requirements: [
+                                "Windows 10 version 1809 or later",
+                                "x64 processor",
+                                "Visual C++ Redistributable 2019+"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// PlatformButton Component
+Component {
+    id: "PlatformButton"
+
+    props: {
+        platform: { type: "string", required: true }
+        label: { type: "string", required: true }
+        icon: { type: "string", required: true }
+        selected: { type: "boolean", default: false }
+    }
+
+    events: {
+        on_click: {}
+    }
+
+    render: Container {
+        padding: "16px 24px"
+        background: props.selected ? token("color.primary.subtle") : token("color.surface")
+        border: props.selected ? "2px solid" : "1px solid"
+        border_color: props.selected ? token("color.primary") : token("color.border")
+        radius: 8
+        cursor: "pointer"
+        on_click: emit("on_click")
+
+        Row {
+            gap: 12
+            align: center
+
+            Icon {
+                name: props.icon
+                size: 20
+                color: props.selected ? token("color.primary") : token("color.text.secondary")
+            }
+
+            Text {
+                content: props.label
+                size: 16
+                weight: props.selected ? "semibold" : "normal"
+                color: props.selected ? token("color.primary") : token("color.text.primary")
+            }
+        }
+    }
+}
+
+// InstallSection Component
+Component {
+    id: "InstallSection"
+
+    props: {
+        title: { type: "string", required: true }
+        methods: { type: "array", required: true }
+    }
+
+    render: Column {
+        gap: 24
+
+        Text {
+            content: props.title
+            size: 24
+            weight: "bold"
+            color: token("color.text.primary")
+        }
+
+        @for method in props.methods {
+            InstallMethod {
+                name: method.name
+                commands: method.commands
+                description: method.description
+                download_url: method.download_url
+            }
+        }
+    }
+}
+
+// InstallMethod Component
+Component {
+    id: "InstallMethod"
+
+    props: {
+        name: { type: "string", required: true }
+        commands: { type: "array", item_type: "string", required: true }
+        description: { type: "string", required: true }
+        download_url: { type: "string", optional: true }
+    }
+
+    render: Container {
+        padding: 20
+        background: token("color.surface")
+        border: "1px solid"
+        border_color: token("color.border")
+        radius: 8
+
+        Column {
+            gap: 12
+
+            Text {
+                content: props.name
+                size: 16
+                weight: "semibold"
+                color: token("color.text.primary")
+            }
+
+            Text {
+                content: props.description
+                size: 14
+                color: token("color.text.secondary")
+            }
+
+            @if props.commands.length > 0 {
+                CodeBlock {
+                    content: join(props.commands, "\n")
+                }
+            }
+
+            @if props.download_url {
+                Button {
+                    text: "Download"
+                    icon: "download"
+                    variant: "primary"
+                    href: props.download_url
+                }
+            }
+        }
+    }
+}
+
+// CodeBlock Component
+Component {
+    id: "CodeBlock"
+
+    props: {
+        content: { type: "string", required: true }
+    }
+
+    render: Container {
+        padding: 16
+        background: "#1E1E1E"
+        radius: 8
+        overflow_x: "auto"
+
+        Row {
+            justify: space_between
+            align: flex_start
+
+            Code {
+                content: props.content
+                color: "#E5E5E5"
+                font: "monospace"
+                size: 14
+            }
+
+            Button {
+                icon: "copy"
+                variant: "ghost"
+                size: "sm"
+                on_click: copy_to_clipboard(props.content)
+                aria_label: "Copy code"
+            }
+        }
+    }
+}
+
+// RequirementCard Component
+Component {
+    id: "RequirementCard"
+
+    props: {
+        platform: { type: "string", required: true }
+        requirements: { type: "array", item_type: "string", required: true }
+    }
+
+    render: Container {
+        flex: 1
+        min_width: 220
+        padding: 20
+        background: token("color.background")
+        border: "1px solid"
+        border_color: token("color.border")
+        radius: 8
+
+        Column {
+            gap: 12
+
+            Text {
+                content: props.platform
+                size: 16
+                weight: "semibold"
+                color: token("color.text.primary")
+            }
+
+            Column {
+                gap: 8
+
+                @for req in props.requirements {
+                    Row {
+                        gap: 8
+                        align: flex_start
+
+                        Icon {
+                            name: "check"
+                            size: 14
+                            color: token("color.success")
+                            margin_top: 2
+                        }
+
+                        Text {
+                            content: req
+                            size: 13
+                            color: token("color.text.secondary")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// Helper function
+fn detect_platform() {
+    // This would be replaced by runtime platform detection
+    "macos"
+}

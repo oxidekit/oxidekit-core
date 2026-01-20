@@ -1,0 +1,78 @@
+# OxideKit Website - oxidekit.com
+# Built with OxideKit (dogfooding) - No web frameworks
+
+[app]
+id = "com.oxidekit.website"
+name = "OxideKit"
+version = "1.0.0"
+description = "Official OxideKit website - Built with OxideKit"
+authors = ["OxideKit Team"]
+license = "Apache-2.0"
+
+[core]
+requires = ">=0.3.0"
+
+[window]
+title = "OxideKit - Rust-Native Application Platform"
+width = 1400
+height = 900
+min_width = 375
+min_height = 600
+resizable = true
+decorations = true
+
+[build]
+target = ["static"]
+
+[build.static]
+out_dir = "dist"
+base_path = "/"
+minify = true
+source_maps = false
+
+[build.static.seo]
+title = "OxideKit - Build Native Apps with Rust"
+description = "A Rust-native application platform that replaces Electron/Tauri with native performance, compile-time safety, and modular design."
+keywords = ["rust", "native", "desktop", "mobile", "ui", "framework", "oxidekit", "electron alternative"]
+open_graph = true
+twitter_card = "summary_large_image"
+
+[build.static.assets]
+favicon = "/assets/favicon.ico"
+og_image = "/assets/og-image.png"
+manifest = "/assets/site.webmanifest"
+
+[dev]
+hot_reload = true
+port = 3001
+
+[theme]
+default = "dark"
+support = ["light", "dark"]
+
+[extensions]
+"ui.core" = "^0.1"
+
+[routing]
+mode = "hash"
+default = "/"
+
+[[routing.routes]]
+path = "/"
+page = "home"
+
+[[routing.routes]]
+path = "/why"
+page = "why-oxidekit"
+
+[[routing.routes]]
+path = "/docs"
+external = "/docs/"
+
+[[routing.routes]]
+path = "/roadmap"
+page = "roadmap"
+
+[[routing.routes]]
+path = "/download"
+page = "download"

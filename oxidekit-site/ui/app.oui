@@ -1,0 +1,114 @@
+// OxideKit Website - Main App
+// Built with OxideKit (dogfooding)
+
+app OxideKitSite {
+    state {
+        current_page: String = "home"
+        menu_open: Boolean = false
+        theme: String = "dark"
+    }
+
+    Column {
+        width: fill
+        height: fill
+        background: token("color.background")
+
+        // Navigation
+        Navbar {
+            current_page: state.current_page
+            on_navigate: state.current_page = page
+            on_toggle_menu: state.menu_open = !state.menu_open
+            theme: state.theme
+            on_toggle_theme: state.theme = state.theme == "dark" ? "light" : "dark"
+        }
+
+        // Mobile menu overlay
+        @if state.menu_open {
+            Container {
+                position: "fixed"
+                top: 64
+                left: 0
+                right: 0
+                bottom: 0
+                background: token("color.background")
+                z_index: 50
+                padding: 24
+
+                Column {
+                    gap: 16
+
+                    NavLink {
+                        label: "Home"
+                        active: state.current_page == "home"
+                        on_click: {
+                            state.current_page = "home"
+                            state.menu_open = false
+                        }
+                    }
+
+                    NavLink {
+                        label: "Why OxideKit"
+                        active: state.current_page == "why-oxidekit"
+                        on_click: {
+                            state.current_page = "why-oxidekit"
+                            state.menu_open = false
+                        }
+                    }
+
+                    NavLink {
+                        label: "Documentation"
+                        href: "/docs/"
+                        external: true
+                    }
+
+                    NavLink {
+                        label: "Roadmap"
+                        active: state.current_page == "roadmap"
+                        on_click: {
+                            state.current_page = "roadmap"
+                            state.menu_open = false
+                        }
+                    }
+
+                    Container {
+                        margin_top: 16
+
+                        Button {
+                            text: "Get Started"
+                            variant: "primary"
+                            on_click: {
+                                state.current_page = "download"
+                                state.menu_open = false
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Page content
+        Scroll {
+            flex: 1
+            width: fill
+
+            @if state.current_page == "home" {
+                HomePage {}
+            }
+
+            @if state.current_page == "why-oxidekit" {
+                WhyOxideKitPage {}
+            }
+
+            @if state.current_page == "roadmap" {
+                RoadmapPage {}
+            }
+
+            @if state.current_page == "download" {
+                DownloadPage {}
+            }
+        }
+
+        // Footer
+        Footer {}
+    }
+}

@@ -1,0 +1,226 @@
+// Footer Component
+// Site footer with links and copyright
+
+Component {
+    id: "Footer"
+
+    render: Container {
+        width: fill
+        background: token("color.surface")
+        border_top: "1px solid"
+        border_color: token("color.border")
+        padding: "48px 24px"
+
+        Container {
+            max_width: 1200
+            width: fill
+            margin: "0 auto"
+
+            Column {
+                gap: 48
+
+                // Footer grid
+                Row {
+                    gap: 48
+                    wrap: "wrap"
+                    justify: space_between
+
+                    // Brand column
+                    Column {
+                        gap: 16
+                        min_width: 200
+
+                        Row {
+                            gap: 12
+                            align: center
+
+                            Container {
+                                width: 32
+                                height: 32
+                                background: "linear-gradient(135deg, #3B82F6, #8B5CF6)"
+                                radius: 8
+
+                                Column {
+                                    align: center
+                                    justify: center
+                                    width: fill
+                                    height: fill
+
+                                    Text {
+                                        content: "O"
+                                        size: 18
+                                        weight: "bold"
+                                        color: "#FFFFFF"
+                                    }
+                                }
+                            }
+
+                            Text {
+                                content: "OxideKit"
+                                size: 18
+                                weight: "bold"
+                                color: token("color.text.primary")
+                            }
+                        }
+
+                        Text {
+                            content: "A Rust-native application platform for building fast, secure, and portable apps."
+                            size: 14
+                            color: token("color.text.secondary")
+                            max_width: 280
+                        }
+                    }
+
+                    // Product column
+                    Column {
+                        gap: 12
+                        min_width: 120
+
+                        Text {
+                            content: "Product"
+                            size: 14
+                            weight: "semibold"
+                            color: token("color.text.primary")
+                        }
+
+                        FooterLink { label: "Features" href: "/#features" }
+                        FooterLink { label: "Documentation" href: "/docs/" }
+                        FooterLink { label: "Roadmap" href: "/roadmap" }
+                        FooterLink { label: "Changelog" href: "/changelog" }
+                    }
+
+                    // Resources column
+                    Column {
+                        gap: 12
+                        min_width: 120
+
+                        Text {
+                            content: "Resources"
+                            size: 14
+                            weight: "semibold"
+                            color: token("color.text.primary")
+                        }
+
+                        FooterLink { label: "Getting Started" href: "/docs/getting-started" }
+                        FooterLink { label: "API Reference" href: "/docs/api" }
+                        FooterLink { label: "Examples" href: "/docs/examples" }
+                        FooterLink { label: "Blog" href: "/blog" }
+                    }
+
+                    // Company column
+                    Column {
+                        gap: 12
+                        min_width: 120
+
+                        Text {
+                            content: "Company"
+                            size: 14
+                            weight: "semibold"
+                            color: token("color.text.primary")
+                        }
+
+                        FooterLink { label: "About" href: "/about" }
+                        FooterLink { label: "Enterprise" href: "/enterprise" }
+                        FooterLink { label: "Contact" href: "/contact" }
+                        FooterLink { label: "Careers" href: "/careers" }
+                    }
+
+                    // Legal column
+                    Column {
+                        gap: 12
+                        min_width: 120
+
+                        Text {
+                            content: "Legal"
+                            size: 14
+                            weight: "semibold"
+                            color: token("color.text.primary")
+                        }
+
+                        FooterLink { label: "License" href: "/license" }
+                        FooterLink { label: "Privacy" href: "/privacy" }
+                        FooterLink { label: "Terms" href: "/terms" }
+                        FooterLink { label: "Security" href: "/security" }
+                    }
+                }
+
+                // Bottom bar
+                Container {
+                    border_top: "1px solid"
+                    border_color: token("color.border")
+                    padding_top: 24
+
+                    Row {
+                        justify: space_between
+                        align: center
+                        wrap: "wrap"
+                        gap: 16
+
+                        Text {
+                            content: "2024 OxideKit. All rights reserved."
+                            size: 14
+                            color: token("color.text.tertiary")
+                        }
+
+                        Row {
+                            gap: 16
+
+                            Link {
+                                href: "https://github.com/oxidekit"
+                                target: "_blank"
+
+                                Icon {
+                                    name: "github"
+                                    size: 20
+                                    color: token("color.text.tertiary")
+                                }
+                            }
+
+                            Link {
+                                href: "https://discord.gg/oxidekit"
+                                target: "_blank"
+
+                                Icon {
+                                    name: "message-circle"
+                                    size: 20
+                                    color: token("color.text.tertiary")
+                                }
+                            }
+
+                            Link {
+                                href: "https://twitter.com/oxidekit"
+                                target: "_blank"
+
+                                Icon {
+                                    name: "twitter"
+                                    size: 20
+                                    color: token("color.text.tertiary")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// FooterLink Component
+Component {
+    id: "FooterLink"
+
+    props: {
+        label: { type: "string", required: true }
+        href: { type: "string", required: true }
+    }
+
+    render: Link {
+        href: props.href
+
+        Text {
+            content: props.label
+            size: 14
+            color: token("color.text.secondary")
+        }
+    }
+}

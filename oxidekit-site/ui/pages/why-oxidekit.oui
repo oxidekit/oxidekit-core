@@ -1,0 +1,420 @@
+// Why OxideKit Page
+// Detailed explanation of OxideKit's advantages
+
+Component {
+    id: "WhyOxideKitPage"
+
+    render: Column {
+        width: fill
+
+        // Hero
+        Container {
+            width: fill
+            padding: "80px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 24
+
+                    Text {
+                        content: "Why OxideKit?"
+                        size: responsive(36, 48, 56)
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Text {
+                        content: "The application landscape is broken. Electron apps are bloated. Web frameworks break with every update. Security is an afterthought. OxideKit is our answer."
+                        size: 20
+                        color: token("color.text.secondary")
+                        line_height: 1.6
+                    }
+                }
+            }
+        }
+
+        // Problems Section
+        Container {
+            width: fill
+            padding: "64px 24px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 48
+
+                    Text {
+                        content: "The Problem"
+                        size: 32
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    ProblemItem {
+                        number: "01"
+                        title: "Bloated Applications"
+                        description: "Electron bundles an entire Chromium browser with every app. A simple note-taking app shouldn't need 150MB of disk space and 500MB of RAM."
+                    }
+
+                    ProblemItem {
+                        number: "02"
+                        title: "Constant Breakage"
+                        description: "Web frameworks move fast and break things. Every major version brings breaking changes. Teams spend more time on migrations than features."
+                    }
+
+                    ProblemItem {
+                        number: "03"
+                        title: "Security as an Afterthought"
+                        description: "npm install pulls thousands of transitive dependencies. Supply chain attacks are rampant. There's no way to audit what code actually runs."
+                    }
+
+                    ProblemItem {
+                        number: "04"
+                        title: "No Compile-Time Guarantees"
+                        description: "JavaScript and CSS fail silently at runtime. Typos in component names, invalid props, broken layouts - you only find out when users complain."
+                    }
+                }
+            }
+        }
+
+        // Solution Section
+        Container {
+            width: fill
+            padding: "64px 24px"
+            background: token("color.surface")
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 48
+
+                    Text {
+                        content: "The OxideKit Solution"
+                        size: 32
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    SolutionItem {
+                        icon: "cpu"
+                        title: "Native from the Ground Up"
+                        description: "No JavaScript runtime. No webview. Pure Rust compiled to native code with wgpu-powered GPU rendering. Your apps start instantly and use minimal resources."
+                        benefits: ["~5MB bundle size", "Low memory footprint", "Fast startup", "60fps animations"]
+                    }
+
+                    SolutionItem {
+                        icon: "git-branch"
+                        title: "Stability Through Versioning"
+                        description: "Every component, every API, every extension is versioned. Breaking changes are impossible without a major version bump. Your code from 2024 will compile in 2030."
+                        benefits: ["Semantic versioning", "Compatibility manifests", "Automated migration tools", "Long-term support"]
+                    }
+
+                    SolutionItem {
+                        icon: "shield-check"
+                        title: "Security by Design"
+                        description: "Fine-grained permissions declare exactly what your app can do. Network access, filesystem access, system APIs - all explicitly allowed. Builds can be attested and verified."
+                        benefits: ["Permission manifests", "Network allowlists", "Filesystem sandboxing", "Build attestation"]
+                    }
+
+                    SolutionItem {
+                        icon: "check-circle"
+                        title: "Compile-Time Correctness"
+                        description: "Invalid component usage, missing props, type mismatches - all caught at compile time. If it compiles, it works. No more runtime surprises."
+                        benefits: ["Strong typing", "Exhaustive validation", "Component specs", "IDE autocomplete"]
+                    }
+                }
+            }
+        }
+
+        // For Companies Section
+        Container {
+            width: fill
+            padding: "64px 24px"
+
+            Container {
+                max_width: 800
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    gap: 32
+
+                    Text {
+                        content: "For Companies"
+                        size: 32
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+
+                    Text {
+                        content: "OxideKit isn't just for individual developers. It's built for teams that need reliability, security, and long-term stability."
+                        size: 18
+                        color: token("color.text.secondary")
+                        line_height: 1.6
+                    }
+
+                    Row {
+                        gap: 24
+                        wrap: "wrap"
+
+                        CompanyBenefit {
+                            icon: "building"
+                            title: "Enterprise Support"
+                            description: "Dedicated support, SLAs, and custom development for enterprise needs."
+                        }
+
+                        CompanyBenefit {
+                            icon: "file-check"
+                            title: "Compliance Ready"
+                            description: "Built-in attestation and audit trails for regulated industries."
+                        }
+
+                        CompanyBenefit {
+                            icon: "users"
+                            title: "Team Licensing"
+                            description: "Flexible licensing for teams of any size."
+                        }
+                    }
+
+                    Button {
+                        text: "Contact Sales"
+                        variant: "outline"
+                        size: "lg"
+                        href: "/enterprise"
+                    }
+                }
+            }
+        }
+
+        // CTA Section
+        Container {
+            width: fill
+            padding: "80px 24px"
+            background: "linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))"
+
+            Container {
+                max_width: 600
+                width: fill
+                margin: "0 auto"
+
+                Column {
+                    align: center
+                    gap: 24
+
+                    Text {
+                        content: "Ready to try OxideKit?"
+                        size: 32
+                        weight: "bold"
+                        color: token("color.text.primary")
+                        align: center
+                    }
+
+                    Text {
+                        content: "Get started in minutes. No credit card required."
+                        size: 18
+                        color: token("color.text.secondary")
+                        align: center
+                    }
+
+                    Row {
+                        gap: 16
+
+                        Button {
+                            text: "Get Started"
+                            variant: "primary"
+                            size: "lg"
+                            on_click: navigate("download")
+                        }
+
+                        Button {
+                            text: "Read the Docs"
+                            variant: "outline"
+                            size: "lg"
+                            href: "/docs/"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ProblemItem Component
+Component {
+    id: "ProblemItem"
+
+    props: {
+        number: { type: "string", required: true }
+        title: { type: "string", required: true }
+        description: { type: "string", required: true }
+    }
+
+    render: Row {
+        gap: 24
+        align: flex_start
+
+        Text {
+            content: props.number
+            size: 48
+            weight: "bold"
+            color: token("color.error")
+            opacity: 0.3
+        }
+
+        Column {
+            gap: 8
+            flex: 1
+
+            Text {
+                content: props.title
+                size: 20
+                weight: "semibold"
+                color: token("color.text.primary")
+            }
+
+            Text {
+                content: props.description
+                size: 16
+                color: token("color.text.secondary")
+                line_height: 1.6
+            }
+        }
+    }
+}
+
+// SolutionItem Component
+Component {
+    id: "SolutionItem"
+
+    props: {
+        icon: { type: "string", required: true }
+        title: { type: "string", required: true }
+        description: { type: "string", required: true }
+        benefits: { type: "array", item_type: "string", required: true }
+    }
+
+    render: Container {
+        padding: 24
+        background: token("color.background")
+        border: "1px solid"
+        border_color: token("color.border")
+        radius: 12
+
+        Column {
+            gap: 16
+
+            Row {
+                gap: 16
+                align: center
+
+                Container {
+                    width: 48
+                    height: 48
+                    background: token("color.success.subtle")
+                    radius: 12
+
+                    Column {
+                        align: center
+                        justify: center
+                        width: fill
+                        height: fill
+
+                        Icon {
+                            name: props.icon
+                            size: 24
+                            color: token("color.success")
+                        }
+                    }
+                }
+
+                Text {
+                    content: props.title
+                    size: 20
+                    weight: "semibold"
+                    color: token("color.text.primary")
+                }
+            }
+
+            Text {
+                content: props.description
+                size: 16
+                color: token("color.text.secondary")
+                line_height: 1.6
+            }
+
+            Row {
+                gap: 12
+                wrap: "wrap"
+
+                @for benefit in props.benefits {
+                    Container {
+                        padding: "6px 12px"
+                        background: token("color.success.subtle")
+                        radius: 6
+
+                        Text {
+                            content: benefit
+                            size: 13
+                            color: token("color.success")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// CompanyBenefit Component
+Component {
+    id: "CompanyBenefit"
+
+    props: {
+        icon: { type: "string", required: true }
+        title: { type: "string", required: true }
+        description: { type: "string", required: true }
+    }
+
+    render: Container {
+        flex: 1
+        min_width: 200
+        padding: 20
+        background: token("color.surface")
+        border: "1px solid"
+        border_color: token("color.border")
+        radius: 8
+
+        Column {
+            gap: 12
+
+            Icon {
+                name: props.icon
+                size: 24
+                color: token("color.primary")
+            }
+
+            Text {
+                content: props.title
+                size: 16
+                weight: "semibold"
+                color: token("color.text.primary")
+            }
+
+            Text {
+                content: props.description
+                size: 14
+                color: token("color.text.secondary")
+            }
+        }
+    }
+}
