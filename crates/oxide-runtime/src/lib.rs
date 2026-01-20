@@ -101,6 +101,9 @@ pub struct DevConfig {
     pub hot_reload: bool,
     #[serde(default)]
     pub inspector: bool,
+    /// Enable layout debug overlay (shows bounding boxes)
+    #[serde(default)]
+    pub debug_layout: bool,
 }
 
 /// The main OxideKit application
@@ -213,10 +216,19 @@ struct AppState {
     primitive_renderer: Option<PrimitiveRenderer>,
     text_renderer: Option<TextRenderer>,
     text_system: Option<TextSystem>,
+    /// Physical viewport size (in device pixels)
     viewport_size: (u32, u32),
+    /// Logical viewport size (in logical pixels, for layout)
+    logical_size: (f32, f32),
+    /// Device scale factor (physical / logical)
+    scale_factor: f64,
     layout_tree: Option<LayoutTree>,
     root_node: Option<NodeId>,
     text_elements: Vec<TextElement>,
+    /// Number of nodes in layout tree (for debug assertions)
+    node_count: usize,
+    /// Previous node count (for detecting duplicates)
+    prev_node_count: usize,
 }
 
 impl AppState {
@@ -232,19 +244,54 @@ impl AppState {
             text_renderer: None,
             text_system: None,
             viewport_size: (0, 0),
+            logical_size: (0.0, 0.0),
+            scale_factor: 1.0,
             layout_tree: None,
             root_node: None,
             text_elements: Vec::new(),
+            node_count: 0,
+            prev_node_count: 0,
         }
     }
 
     fn build_ui(&mut self) {
+        // Store previous count for duplicate detection
+        self.prev_node_count = self.node_count;
         self.text_elements.clear();
 
         // Build from IR if available
         if let Some(ir) = self.ui_ir.clone() {
             let mut tree = LayoutTree::new();
-            let root = build_from_ir(&ir, &mut tree, &mut self.text_elements);
+            // Use text_system for measurement if available
+            let root = if let Some(text_system) = &mut self.text_system {
+                build_from_ir_with_measurement(&ir, &mut tree, &mut self.text_elements, text_system)
+            } else {
+                // Fallback without measurement (will use estimates)
+                build_from_ir(&ir, &mut tree, &mut self.text_elements)
+            };
+
+            // Count nodes
+            let mut count = 0;
+            tree.traverse(root, |_, _, _| count += 1);
+            self.node_count = count;
+
+            // Debug: check for unexpected node count changes
+            if self.prev_node_count > 0 && self.node_count != self.prev_node_count {
+                tracing::warn!(
+                    "Node count changed: {} -> {} (possible duplication issue)",
+                    self.prev_node_count,
+                    self.node_count
+                );
+            }
+
+            if self.manifest.dev.debug_layout {
+                tracing::info!(
+                    "Layout tree: {} nodes, {} text elements",
+                    self.node_count,
+                    self.text_elements.len()
+                );
+            }
+
             self.layout_tree = Some(tree);
             self.root_node = Some(root);
             return;
@@ -390,12 +437,13 @@ impl AppState {
 
     fn compute_layout(&mut self) {
         if let (Some(tree), Some(root)) = (&mut self.layout_tree, self.root_node) {
-            let (w, h) = self.viewport_size;
+            // Use logical size for layout computation
+            let (w, h) = self.logical_size;
             tree.compute_layout(
                 root,
                 Size {
-                    width: AvailableSpace::Definite(w as f32),
-                    height: AvailableSpace::Definite(h as f32),
+                    width: AvailableSpace::Definite(w),
+                    height: AvailableSpace::Definite(h),
                 },
             );
         }
@@ -406,27 +454,34 @@ impl AppState {
             return;
         }
 
+        // Store physical size
         self.viewport_size = (width, height);
+
+        // Compute logical size from physical size using scale factor
+        self.logical_size = (
+            width as f32 / self.scale_factor as f32,
+            height as f32 / self.scale_factor as f32,
+        );
 
         if let (Some(ctx), Some(surface), Some(config)) =
             (&self.render_ctx, &self.surface, &mut self.surface_config)
         {
+            // Surface uses physical pixels
             config.width = width;
             config.height = height;
             surface.configure(&ctx.device, config);
 
-            // Update primitive renderer viewport
+            // Renderers use physical pixels for GPU viewport
             if let Some(renderer) = &self.primitive_renderer {
                 renderer.set_viewport(&ctx.queue, width as f32, height as f32);
             }
 
-            // Update text renderer viewport
             if let Some(renderer) = &self.text_renderer {
                 renderer.set_viewport(&ctx.queue, width as f32, height as f32);
             }
         }
 
-        // Recompute layout for new viewport size
+        // Recompute layout for new viewport size (uses logical_size)
         self.compute_layout();
     }
 
@@ -456,13 +511,21 @@ impl AppState {
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
+        // Scale factor for converting logical to physical coordinates
+        let scale = self.scale_factor as f32;
+
         // Begin rendering primitives
         if let Some(renderer) = &mut self.primitive_renderer {
             renderer.begin();
 
             // Render UI from layout tree
             if let (Some(tree), Some(root)) = (&self.layout_tree, self.root_node) {
-                render_layout_tree(tree, root, renderer);
+                render_layout_tree(tree, root, renderer, scale);
+
+                // Debug overlay: render bounding boxes
+                if self.manifest.dev.debug_layout {
+                    render_debug_overlay(tree, root, renderer, scale);
+                }
             }
         }
 
@@ -498,19 +561,21 @@ impl AppState {
             let (font_system, swash_cache) = text_system.get_render_refs();
 
             // Render each text element at its layout position
+            let scale = self.scale_factor as f32;
             for text_elem in &self.text_elements {
-                // Get the absolute position by traversing to the node
+                // Get the absolute position by traversing to the node (logical coords)
                 let rect = tree.get_absolute_rect(text_elem.node_id, (0.0, 0.0));
 
-                // Center the text within the rect (approximately)
-                let text_x = rect.x + 10.0; // Small padding
-                let text_y = rect.y + rect.height / 2.0 - text_elem.size / 2.0;
+                // Scale coordinates and font size for physical pixels
+                let text_x = (rect.x + 4.0) * scale; // Small padding
+                let text_y = (rect.y + rect.height / 2.0 - text_elem.size / 2.0) * scale;
+                let scaled_font_size = text_elem.size * scale;
 
                 text_renderer.draw_text(
                     &text_elem.content,
                     text_x,
                     text_y,
-                    text_elem.size,
+                    scaled_font_size,
                     text_elem.color,
                     font_system,
                     swash_cache,
@@ -526,42 +591,64 @@ impl AppState {
 }
 
 /// Render the layout tree to primitives
-fn render_layout_tree(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveRenderer) {
+/// Coordinates are scaled by scale_factor to convert from logical to physical pixels
+fn render_layout_tree(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveRenderer, scale: f32) {
     tree.traverse(root, |_node, rect, visual| {
         if let Some(vis) = visual {
+            // Scale coordinates from logical to physical pixels
+            let x = rect.x * scale;
+            let y = rect.y * scale;
+            let w = rect.width * scale;
+            let h = rect.height * scale;
+            let radius = vis.corner_radius * scale;
+            let border_w = vis.border_width * scale;
+
             // Draw background
             if let Some(bg) = vis.background {
                 let color = Color::new(bg[0], bg[1], bg[2], bg[3]);
-                if vis.corner_radius > 0.0 {
-                    renderer.rounded_rect(
-                        rect.x,
-                        rect.y,
-                        rect.width,
-                        rect.height,
-                        vis.corner_radius,
-                        color,
-                    );
+                if radius > 0.0 {
+                    renderer.rounded_rect(x, y, w, h, radius, color);
                 } else {
-                    renderer.rect(rect.x, rect.y, rect.width, rect.height, color);
+                    renderer.rect(x, y, w, h, color);
                 }
             }
 
             // Draw border
             if let Some(border) = vis.border_color {
-                if vis.border_width > 0.0 {
+                if border_w > 0.0 {
                     let color = Color::new(border[0], border[1], border[2], border[3]);
-                    renderer.border(
-                        rect.x,
-                        rect.y,
-                        rect.width,
-                        rect.height,
-                        vis.border_width,
-                        vis.corner_radius,
-                        color,
-                    );
+                    renderer.border(x, y, w, h, border_w, radius, color);
                 }
             }
         }
+    });
+}
+
+/// Render debug overlay showing bounding boxes for all nodes
+fn render_debug_overlay(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveRenderer, scale: f32) {
+    // Use different colors to distinguish nodes
+    let colors = [
+        Color::new(1.0, 0.0, 0.0, 0.5),   // Red
+        Color::new(0.0, 1.0, 0.0, 0.5),   // Green
+        Color::new(0.0, 0.0, 1.0, 0.5),   // Blue
+        Color::new(1.0, 1.0, 0.0, 0.5),   // Yellow
+        Color::new(1.0, 0.0, 1.0, 0.5),   // Magenta
+        Color::new(0.0, 1.0, 1.0, 0.5),   // Cyan
+    ];
+    let mut color_idx = 0;
+
+    tree.traverse(root, |_node, rect, _visual| {
+        let color = colors[color_idx % colors.len()];
+        color_idx += 1;
+
+        // Scale coordinates
+        let x = rect.x * scale;
+        let y = rect.y * scale;
+        let w = rect.width * scale;
+        let h = rect.height * scale;
+
+        // Draw border around each node
+        renderer.border(x, y, w, h, 1.0, 0.0, color);
     });
 }
 
@@ -572,19 +659,17 @@ fn hex_to_rgba(hex: &str) -> [f32; 4] {
         .unwrap_or([1.0, 1.0, 1.0, 1.0])
 }
 
-/// Build layout tree from IR (standalone function to avoid borrow issues)
-fn build_from_ir(
+/// Build layout tree from IR with proper text measurement
+fn build_from_ir_with_measurement(
     ir: &ComponentIR,
     tree: &mut LayoutTree,
     text_elements: &mut Vec<TextElement>,
+    text_system: &mut TextSystem,
 ) -> NodeId {
-    let style = ir_to_style(ir);
     let visual = ir_to_visual(ir);
 
     // Check if this is a Text component
     if ir.kind == "Text" {
-        let node = tree.new_visual_node(style, visual);
-
         let content = ir
             .props
             .iter()
@@ -595,7 +680,7 @@ fn build_from_ir(
             })
             .unwrap_or_default();
 
-        let size = ir
+        let font_size = ir
             .props
             .iter()
             .find(|p| p.name == "size")
@@ -615,15 +700,105 @@ fn build_from_ir(
             })
             .unwrap_or([0.898, 0.906, 0.922, 1.0]);
 
+        // Measure text dimensions
+        let (text_width, text_height) = text_system.measure_text(&content, font_size);
+
+        // Create style with measured dimensions
+        let style = StyleBuilder::new()
+            .size(text_width, text_height)
+            .build();
+
+        let node = tree.new_visual_node(style, visual);
+
         text_elements.push(TextElement {
             node_id: node,
             content,
-            size,
+            size: font_size,
             color,
         });
 
         return node;
     }
+
+    // For non-Text nodes, use normal style conversion
+    let style = ir_to_style(ir);
+
+    // Build children recursively
+    let children: Vec<NodeId> = ir
+        .children
+        .iter()
+        .map(|child| build_from_ir_with_measurement(child, tree, text_elements, text_system))
+        .collect();
+
+    if children.is_empty() {
+        tree.new_visual_node(style, visual)
+    } else {
+        tree.new_visual_node_with_children(style, visual, &children)
+    }
+}
+
+/// Build layout tree from IR (fallback without measurement)
+fn build_from_ir(
+    ir: &ComponentIR,
+    tree: &mut LayoutTree,
+    text_elements: &mut Vec<TextElement>,
+) -> NodeId {
+    let visual = ir_to_visual(ir);
+
+    // Check if this is a Text component
+    if ir.kind == "Text" {
+        let content = ir
+            .props
+            .iter()
+            .find(|p| p.name == "content")
+            .and_then(|p| match &p.value {
+                PropertyValue::String(s) => Some(s.clone()),
+                _ => None,
+            })
+            .unwrap_or_default();
+
+        let font_size = ir
+            .props
+            .iter()
+            .find(|p| p.name == "size")
+            .and_then(|p| match &p.value {
+                PropertyValue::Number(n) => Some(*n as f32),
+                _ => None,
+            })
+            .unwrap_or(16.0);
+
+        let color = ir
+            .props
+            .iter()
+            .find(|p| p.name == "color")
+            .and_then(|p| match &p.value {
+                PropertyValue::String(s) => Some(hex_to_rgba(s)),
+                _ => None,
+            })
+            .unwrap_or([0.898, 0.906, 0.922, 1.0]);
+
+        // Estimate text dimensions (fallback)
+        let estimated_width = content.len() as f32 * font_size * 0.6;
+        let estimated_height = font_size * 1.2;
+
+        let style = StyleBuilder::new()
+            .size(estimated_width, estimated_height)
+            .build();
+
+        let node = tree.new_visual_node(style, visual);
+
+        text_elements.push(TextElement {
+            node_id: node,
+            content,
+            size: font_size,
+            color,
+        });
+
+        return node;
+    }
+
+    // For non-Text nodes, use normal style conversion
+    let style = ir_to_style(ir);
 
     // Build children recursively
     let children: Vec<NodeId> = ir
@@ -650,21 +825,27 @@ fn ir_to_style(ir: &ComponentIR) -> oxide_layout::Style {
         _ => {}
     }
 
+    // Process properties from ir.props (this is where .oui properties go)
     for prop in &ir.props {
         match prop.name.as_str() {
             "align" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    if s == "center" {
-                        builder = builder.align_center();
+                    match s.as_str() {
+                        "center" => builder = builder.align_center(),
+                        "start" => builder = builder.align_start(),
+                        "end" => builder = builder.align_end(),
+                        _ => {}
                     }
                 }
             }
             "justify" => {
                 if let PropertyValue::String(s) = &prop.value {
-                    if s == "center" {
-                        builder = builder.justify_center();
-                    } else if s == "space-between" {
-                        builder = builder.justify_between();
+                    match s.as_str() {
+                        "center" => builder = builder.justify_center(),
+                        "space_between" | "space-between" => builder = builder.justify_between(),
+                        "start" => builder = builder.justify_start(),
+                        "end" => builder = builder.justify_end(),
+                        _ => {}
                     }
                 }
             }
@@ -696,13 +877,29 @@ fn ir_to_style(ir: &ComponentIR) -> oxide_layout::Style {
                     builder = builder.padding(*n as f32);
                 }
             }
+            "flex" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.flex_grow(*n as f32);
+                }
+            }
             _ => {}
         }
     }
 
+    // Also check ir.style for any style-specific properties
     for prop in &ir.style {
-        if let ("padding", PropertyValue::Number(n)) = (prop.name.as_str(), &prop.value) {
-            builder = builder.padding(*n as f32);
+        match prop.name.as_str() {
+            "padding" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.padding(*n as f32);
+                }
+            }
+            "gap" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.gap(*n as f32);
+                }
+            }
+            _ => {}
         }
     }
 
@@ -713,7 +910,10 @@ fn ir_to_style(ir: &ComponentIR) -> oxide_layout::Style {
 fn ir_to_visual(ir: &ComponentIR) -> NodeVisual {
     let mut visual = NodeVisual::default();
 
-    for prop in &ir.style {
+    // Process props (where .oui properties go) and style together
+    let all_props: Vec<_> = ir.props.iter().chain(ir.style.iter()).collect();
+
+    for prop in &all_props {
         match prop.name.as_str() {
             "background" => {
                 if let PropertyValue::String(s) = &prop.value {
@@ -722,8 +922,7 @@ fn ir_to_visual(ir: &ComponentIR) -> NodeVisual {
             }
             "border" | "border_width" => {
                 if let PropertyValue::Number(n) = &prop.value {
-                    let border_color = ir
-                        .style
+                    let border_color = all_props
                         .iter()
                         .find(|p| p.name == "border_color")
                         .and_then(|p| match &p.value {
@@ -782,11 +981,27 @@ impl ApplicationHandler for AppState {
         let surface = render_ctx.create_surface(window.clone());
         let surface: Surface<'static> = unsafe { std::mem::transmute(surface) };
 
+        // Get physical size and scale factor
         let size = window.inner_size();
+        let scale_factor = window.scale_factor();
+
+        // Compute logical size
+        let logical_width = size.width as f32 / scale_factor as f32;
+        let logical_height = size.height as f32 / scale_factor as f32;
+
+        tracing::info!(
+            "DPI: scale_factor={:.2}, physical={}x{}, logical={:.0}x{:.0}",
+            scale_factor,
+            size.width,
+            size.height,
+            logical_width,
+            logical_height
+        );
+
         let surface_config =
             render_ctx.configure_surface(&surface, size.width.max(1), size.height.max(1));
 
-        // Create primitive renderer
+        // Create primitive renderer (uses physical pixels)
         let primitive_renderer = render_ctx.create_primitive_renderer(surface_config.format);
         primitive_renderer.set_viewport(&render_ctx.queue, size.width as f32, size.height as f32);
 
@@ -795,7 +1010,10 @@ impl ApplicationHandler for AppState {
         text_renderer.set_viewport(&render_ctx.queue, size.width as f32, size.height as f32);
         let text_system = TextSystem::new();
 
+        // Store sizes and scale factor
         self.viewport_size = (size.width.max(1), size.height.max(1));
+        self.logical_size = (logical_width, logical_height);
+        self.scale_factor = scale_factor;
         self.window = Some(window);
         self.render_ctx = Some(render_ctx);
         self.surface = Some(surface);
@@ -822,6 +1040,18 @@ impl ApplicationHandler for AppState {
             }
             WindowEvent::Resized(size) => {
                 self.resize(size.width, size.height);
+            }
+            WindowEvent::ScaleFactorChanged { scale_factor, .. } => {
+                tracing::info!("Scale factor changed: {:.2}", scale_factor);
+                self.scale_factor = scale_factor;
+                // Recompute logical size
+                let (pw, ph) = self.viewport_size;
+                self.logical_size = (
+                    pw as f32 / scale_factor as f32,
+                    ph as f32 / scale_factor as f32,
+                );
+                // Recompute layout with new logical size
+                self.compute_layout();
             }
             WindowEvent::RedrawRequested => {
                 self.render();
