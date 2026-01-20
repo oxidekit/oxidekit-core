@@ -4,6 +4,9 @@
 
 mod lexer;
 mod parser;
+mod static_gen;
+
+pub use static_gen::generate_html;
 
 use lexer::Lexer;
 use parser::{Element, Parser, Value};
