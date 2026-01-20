@@ -45,6 +45,7 @@ pub mod components;
 pub mod diff;
 pub mod error;
 pub mod layout;
+pub mod local;
 pub mod sync;
 pub mod tokens;
 pub mod translator;
@@ -64,6 +65,7 @@ pub mod prelude {
     pub use crate::diff::{DesignDiff, DiffResult};
     pub use crate::error::{FigmaError, Result};
     pub use crate::layout::LayoutTranslator;
+    pub use crate::local::LocalLoader;
     pub use crate::sync::{SyncConfig, SyncConfigBuilder, SyncEngine, SyncResult};
     pub use crate::tokens::{TokenExtractor, ExtractedTokens};
     pub use crate::translator::{TranslationResult, Translator, TranslatorBuilder, TranslatorConfig};
