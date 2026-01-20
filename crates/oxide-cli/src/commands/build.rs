@@ -81,15 +81,70 @@ fn build_static() -> Result<()> {
     let out_path = out_dir.join("index.html");
     fs::write(&out_path, html)?;
 
+    // Copy assets to dist/
+    let assets_copied = copy_assets(out_dir)?;
+
     println!();
     println!("  Static build complete");
     println!("  Output: {}", out_path.display());
+    if assets_copied > 0 {
+        println!("  Assets: {} files copied to dist/assets/", assets_copied);
+    }
     println!();
     println!("  To serve locally:");
     println!("    cd dist && python3 -m http.server 8000");
     println!();
 
     Ok(())
+}
+
+/// Copy project assets to the dist directory
+fn copy_assets(out_dir: &Path) -> Result<usize> {
+    let mut count = 0;
+
+    // Check common asset directories
+    let asset_dirs = ["assets", "public", "static"];
+
+    for dir_name in &asset_dirs {
+        let source_dir = Path::new(dir_name);
+        if source_dir.exists() && source_dir.is_dir() {
+            let dest_dir = if *dir_name == "assets" {
+                out_dir.join("assets")
+            } else {
+                // For public/static, copy contents directly to dist
+                out_dir.to_path_buf()
+            };
+            count += copy_dir_recursive(source_dir, &dest_dir)?;
+        }
+    }
+
+    Ok(count)
+}
+
+/// Recursively copy a directory
+fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<usize> {
+    let mut count = 0;
+
+    if !dst.exists() {
+        fs::create_dir_all(dst)?;
+    }
+
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+
+        if file_type.is_dir() {
+            count += copy_dir_recursive(&src_path, &dst_path)?;
+        } else if file_type.is_file() {
+            fs::copy(&src_path, &dst_path)?;
+            count += 1;
+            tracing::debug!("Copied: {} -> {}", src_path.display(), dst_path.display());
+        }
+    }
+
+    Ok(count)
 }
 
 fn extract_title(manifest: &str) -> String {
