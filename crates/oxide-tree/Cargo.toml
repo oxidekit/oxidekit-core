@@ -1,0 +1,43 @@
+[package]
+name = "oxide-tree"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit TreeView component with virtual scrolling, drag-and-drop, and lazy loading"
+
+[features]
+default = []
+# Enable async lazy loading support
+async = ["dep:async-trait", "dep:tokio"]
+# Enable drag and drop functionality
+drag-drop = []
+# Enable file explorer presets
+file-explorer = ["dep:walkdir"]
+# Enable all features
+full = ["async", "drag-drop", "file-explorer"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# Optional: Async support
+async-trait = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["sync"], optional = true }
+
+# Optional: File system walking for file explorer
+walkdir = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

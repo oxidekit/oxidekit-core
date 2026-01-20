@@ -1,0 +1,13 @@
+[package]
+name = "oxide-dnd"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit drag and drop system with sortable lists, kanban boards, and multi-drag support"
+
+[dependencies]
+serde = { workspace = true }
+thiserror.workspace = true
+
+[dev-dependencies]

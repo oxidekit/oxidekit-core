@@ -1,0 +1,31 @@
+[package]
+name = "oxide-dialog"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit dialog and modal management system"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+
+# For animations and timing
+oxide-components.workspace = true
+oxide-layout.workspace = true
+oxide-render.workspace = true
+
+[features]
+default = []
+# Enable all features
+full = ["async", "gestures"]
+# Async dialog support
+async = []
+# Gesture-driven sheet dismissal
+gestures = []
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

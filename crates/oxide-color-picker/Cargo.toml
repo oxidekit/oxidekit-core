@@ -1,0 +1,32 @@
+[package]
+name = "oxide-color-picker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Color Picker Component with multi-format support, swatches, eyedropper, gradients, and palette generation"
+
+[features]
+default = []
+# Enable eyedropper/screen color picking (platform-specific)
+eyedropper = []
+# Enable gradient picker functionality
+gradients = []
+# Enable palette generation algorithms
+palettes = []
+# Enable all features
+full = ["eyedropper", "gradients", "palettes"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+[dev-dependencies]
+# Testing utilities

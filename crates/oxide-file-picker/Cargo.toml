@@ -1,0 +1,67 @@
+[package]
+name = "oxide-file-picker"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit file picker, dialogs, and drag-and-drop system"
+
+[features]
+default = []
+# Enable async file operations
+async-ops = ["dep:tokio"]
+# Enable image thumbnail generation
+thumbnails = ["dep:image"]
+# Enable full functionality
+full = ["async-ops", "thumbnails"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# File operations
+walkdir.workspace = true
+dirs.workspace = true
+
+# Path manipulation
+camino.workspace = true
+
+# Pattern matching
+glob.workspace = true
+
+# Async runtime (optional)
+tokio = { workspace = true, features = ["sync", "fs"], optional = true }
+
+# Image processing (optional for thumbnails)
+image = { workspace = true, optional = true }
+
+# MIME type detection
+mime_guess = "2.0"
+
+# Platform-specific dependencies
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.5"
+objc2-foundation = { version = "0.2", features = ["NSArray", "NSString", "NSURL", "NSPathUtilities", "NSFileManager"] }
+objc2-app-kit = { version = "0.2", features = ["NSOpenPanel", "NSSavePanel", "NSPanel", "NSWindow", "NSDragging", "NSPasteboard", "NSApplication", "NSResponder", "NSView", "NSRunningApplication"] }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = ["Win32_UI_Shell", "Win32_UI_Shell_Common", "Win32_Foundation", "Win32_System_Com", "Win32_System_Ole", "Win32_System_Registry"] }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+ashpd = { version = "0.9", default-features = false, features = ["tokio"] }
+
+[dev-dependencies]
+tempfile = "3.10"
+tokio = { workspace = true, features = ["rt", "macros", "time"] }

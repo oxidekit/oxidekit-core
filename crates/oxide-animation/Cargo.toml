@@ -1,0 +1,12 @@
+[package]
+name = "oxide-animation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit comprehensive animation system with implicit animations, explicit controllers, tweens, springs, and page transitions"
+
+[dependencies]
+serde = { workspace = true }
+
+[dev-dependencies]

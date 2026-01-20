@@ -1,0 +1,85 @@
+[package]
+name = "oxide-media"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit media playback system - audio, video, playlists, streaming, and OS media session integration"
+
+[features]
+default = ["audio"]
+# Audio playback support
+audio = ["dep:rodio", "dep:symphonia"]
+# Video playback support (requires audio)
+video = ["audio", "dep:gstreamer", "dep:gstreamer-video", "dep:gstreamer-audio", "dep:gstreamer-app"]
+# Streaming support (HLS/DASH)
+streaming = ["dep:m3u8-rs", "dep:dash-mpd"]
+# OS media session integration
+media-session = []
+# Full feature set
+full = ["audio", "video", "streaming", "media-session"]
+
+[dependencies]
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+
+# Async runtime
+tokio = { workspace = true, features = ["sync", "time", "fs", "io-util"] }
+
+# Logging
+tracing = { workspace = true }
+
+# Time and IDs
+chrono = { workspace = true }
+uuid = { workspace = true }
+
+# URL handling
+url = { workspace = true }
+
+# HTTP client for streaming
+reqwest = { workspace = true }
+
+# Async utilities
+async-trait = { workspace = true }
+futures = { workspace = true }
+
+# Random for shuffle
+rand = "0.8"
+
+# Path handling
+camino = { workspace = true }
+
+# Audio playback (rodio with cpal backend)
+rodio = { version = "0.20", optional = true }
+
+# Audio decoding (symphonia for format support)
+symphonia = { version = "0.5", optional = true, features = [
+    "mp3", "wav", "ogg", "flac", "aac", "alac", "pcm"
+] }
+
+# Video playback (GStreamer bindings)
+gstreamer = { version = "0.23", optional = true }
+gstreamer-video = { version = "0.23", optional = true }
+gstreamer-audio = { version = "0.23", optional = true }
+gstreamer-app = { version = "0.23", optional = true }
+
+# HLS streaming
+m3u8-rs = { version = "6.0", optional = true }
+
+# DASH streaming
+dash-mpd = { version = "0.16", optional = true }
+
+# Crossbeam for lock-free channels
+crossbeam-channel = "0.5"
+
+# Parking lot for efficient locks
+parking_lot = "0.12"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.10"

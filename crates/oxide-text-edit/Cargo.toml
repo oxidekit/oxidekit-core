@@ -1,0 +1,25 @@
+[package]
+name = "oxide-text-edit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit rich text editing system with selection, cursor, clipboard, undo/redo, and IME support"
+
+[dependencies]
+# Unicode handling
+unicode-segmentation = "1.11"
+
+# Time for cursor blinking
+instant = "0.1"
+
+# Serialization for clipboard
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+[features]
+default = []
+serde = ["dep:serde", "dep:serde_json"]
+
+[dev-dependencies]
+serde_json.workspace = true

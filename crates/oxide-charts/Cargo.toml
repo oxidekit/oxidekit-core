@@ -1,0 +1,13 @@
+[package]
+name = "oxide-charts"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit charts and data visualization library with GPU-accelerated rendering"
+
+[dependencies]
+oxide-render.workspace = true
+serde = { workspace = true }
+
+[dev-dependencies]

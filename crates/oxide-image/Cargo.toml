@@ -1,0 +1,79 @@
+[package]
+name = "oxide-image"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Image Loading, Caching, and Components - async image loading with LRU caching, transformations, and UI components"
+
+[features]
+default = ["png", "jpeg", "webp"]
+# Image format support
+png = ["image/png"]
+jpeg = ["image/jpeg"]
+gif = ["image/gif"]
+webp = ["image/webp"]
+svg = ["dep:resvg", "dep:usvg"]
+ico = ["image/ico"]
+# Enable all formats
+all-formats = ["png", "jpeg", "gif", "webp", "svg", "ico"]
+# Gallery lightbox feature
+gallery = []
+# Full feature set
+full = ["all-formats", "gallery"]
+
+[dependencies]
+# Image decoding (using workspace version for consistency)
+image = { version = "0.24", default-features = false }
+
+# SVG rendering (optional)
+resvg = { version = "0.44", optional = true }
+usvg = { version = "0.44", optional = true }
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Async runtime
+tokio = { workspace = true, features = ["sync", "time", "fs", "io-util"] }
+
+# HTTP client for URL loading
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
+
+# Async utilities
+async-trait = "0.1"
+futures = "0.3"
+
+# Logging
+tracing.workspace = true
+
+# Time
+chrono.workspace = true
+
+# IDs and hashing
+uuid.workspace = true
+sha2 = "0.10"
+hex = "0.4"
+
+# Base64 encoding
+base64.workspace = true
+
+# LRU cache
+lru = "0.12"
+
+# URL parsing
+url.workspace = true
+
+# Platform directories for disk cache
+dirs.workspace = true
+
+# Path manipulation
+camino.workspace = true
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.10"

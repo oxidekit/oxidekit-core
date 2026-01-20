@@ -301,7 +301,7 @@ App {{
 
     /// Generate theme.toml
     fn generate_theme_toml(&self, project_dir: &Path) -> anyhow::Result<()> {
-        let content = r#"# OxideKit Theme Configuration
+        let content = r##"# OxideKit Theme Configuration
 # Design tokens for colors, spacing, typography, and effects
 
 [colors]
@@ -390,7 +390,7 @@ weight_bold = "700"
 height_tight = "1.25"
 height_normal = "1.5"
 height_relaxed = "1.75"
-"#;
+"##;
 
         fs::write(project_dir.join("theme.toml"), content)?;
         Ok(())

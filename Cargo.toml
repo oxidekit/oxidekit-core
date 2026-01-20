@@ -35,6 +35,30 @@ members = [
     "crates/oxide-version",
     "crates/oxide-mobile",
     "crates/oxide-migrate",
+    "crates/oxide-charts",
+    "crates/oxide-a11y",
+    "crates/oxide-animation",
+    "crates/oxide-code-editor",
+    "crates/oxide-color-picker",
+    "crates/oxide-datetime",
+    "crates/oxide-dialog",
+    "crates/oxide-dnd",
+    "crates/oxide-file-picker",
+    "crates/oxide-forms",
+    "crates/oxide-gestures",
+    "crates/oxide-icons",
+    "crates/oxide-image",
+    "crates/oxide-loading",
+    "crates/oxide-markdown",
+    "crates/oxide-media",
+    "crates/oxide-platform",
+    "crates/oxide-router",
+    "crates/oxide-search",
+    "crates/oxide-table",
+    "crates/oxide-text-edit",
+    "crates/oxide-toast",
+    "crates/oxide-tree",
+    "crates/oxide-virtual-list",
 ]
 
 [workspace.package]
@@ -121,6 +145,30 @@ oxide-lsp = { path = "crates/oxide-lsp" }
 oxide-deploy = { path = "crates/oxide-deploy" }
 oxide-migrate = { path = "crates/oxide-migrate" }
 oxide-crypto = { path = "crates/oxide-crypto" }
+oxide-charts = { path = "crates/oxide-charts" }
+oxide-a11y = { path = "crates/oxide-a11y" }
+oxide-animation = { path = "crates/oxide-animation" }
+oxide-code-editor = { path = "crates/oxide-code-editor" }
+oxide-color-picker = { path = "crates/oxide-color-picker" }
+oxide-datetime = { path = "crates/oxide-datetime" }
+oxide-dialog = { path = "crates/oxide-dialog" }
+oxide-dnd = { path = "crates/oxide-dnd" }
+oxide-file-picker = { path = "crates/oxide-file-picker" }
+oxide-forms = { path = "crates/oxide-forms" }
+oxide-gestures = { path = "crates/oxide-gestures" }
+oxide-icons = { path = "crates/oxide-icons" }
+oxide-image = { path = "crates/oxide-image" }
+oxide-loading = { path = "crates/oxide-loading" }
+oxide-markdown = { path = "crates/oxide-markdown" }
+oxide-media = { path = "crates/oxide-media" }
+oxide-platform = { path = "crates/oxide-platform" }
+oxide-router = { path = "crates/oxide-router" }
+oxide-search = { path = "crates/oxide-search" }
+oxide-table = { path = "crates/oxide-table" }
+oxide-text-edit = { path = "crates/oxide-text-edit" }
+oxide-toast = { path = "crates/oxide-toast" }
+oxide-tree = { path = "crates/oxide-tree" }
+oxide-virtual-list = { path = "crates/oxide-virtual-list" }
 
 # i18n additional dependencies
 regex = "1.10"
@@ -145,8 +193,8 @@ camino = "1.1"
 # HTTP client
 reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
 
-# Image processing
-image = { version = "0.25", default-features = false, features = ["png", "webp"] }
+# Image processing (using 0.24 to avoid zune-jpeg ARM NEON bug in 0.25)
+image = { version = "0.24", default-features = false, features = ["png", "webp", "jpeg"] }
 
 # Text diffing
 similar = "2.6"

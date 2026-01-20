@@ -1,0 +1,38 @@
+[package]
+name = "oxide-virtual-list"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit virtualized list, grid, and masonry components for rendering 1M+ items efficiently"
+
+[features]
+default = []
+# Enable pull-to-refresh gesture support
+pull-to-refresh = []
+# Enable swipe action gestures
+swipe-actions = []
+# Enable async data loading
+async = ["dep:tokio"]
+# Enable all features
+full = ["pull-to-refresh", "swipe-actions", "async"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time
+chrono.workspace = true
+
+# Optional: Async support
+tokio = { workspace = true, features = ["sync"], optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

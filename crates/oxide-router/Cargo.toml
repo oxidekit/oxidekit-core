@@ -1,0 +1,49 @@
+[package]
+name = "oxide-router"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Navigation and routing system for OxideKit applications"
+
+[features]
+default = []
+# Enable async guards (server-side validation)
+async-guards = ["async-trait"]
+# Enable deep linking with custom URL schemes
+deep-linking = ["url"]
+# Enable page transition animations
+transitions = []
+# Enable debugging and inspection tools
+debug = []
+# Enable all features
+full = ["async-guards", "deep-linking", "transitions", "debug"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Unique identifiers
+uuid.workspace = true
+
+# Regex for path matching
+regex.workspace = true
+
+# URL parsing (optional, for deep linking)
+url = { workspace = true, optional = true }
+
+# Async trait support (optional, for async guards)
+async-trait = { workspace = true, optional = true }
+
+# Time tracking for history
+chrono.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

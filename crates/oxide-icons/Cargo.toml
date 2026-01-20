@@ -1,0 +1,20 @@
+[package]
+name = "oxide-icons"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit icon system with multiple icon sets, SVG rendering, and animation support"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+once_cell.workspace = true
+
+# For icon rendering
+oxide-render.workspace = true
+oxide-components.workspace = true
+
+[dev-dependencies]
+pretty_assertions = "1.4"

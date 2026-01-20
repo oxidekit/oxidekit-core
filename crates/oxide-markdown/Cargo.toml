@@ -1,0 +1,42 @@
+[package]
+name = "oxide-markdown"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit markdown rendering and editing component with CommonMark/GFM support"
+
+[dependencies]
+# Internal crates
+oxide-render.workspace = true
+oxide-text.workspace = true
+oxide-components.workspace = true
+
+# Markdown parsing
+pulldown-cmark = { version = "0.12", features = ["simd"] }
+
+# Serialization
+serde = { workspace = true }
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Regex for extensions
+regex.workspace = true
+once_cell.workspace = true
+
+# Unicode handling
+unicode-segmentation = "1.11"
+unicode-width = "0.2"
+
+# Text rope for editor
+ropey = "1.6"
+
+# Time for auto-save
+chrono.workspace = true
+
+[dev-dependencies]

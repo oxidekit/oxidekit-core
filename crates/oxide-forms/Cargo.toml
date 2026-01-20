@@ -1,0 +1,41 @@
+[package]
+name = "oxide-forms"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Forms and Validation Framework"
+
+[features]
+default = []
+# Enable async validation support
+async = ["dep:async-trait", "dep:tokio"]
+# Enable regex-based validators
+regex = ["dep:regex"]
+# Enable all features
+full = ["async", "regex"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# Optional: Async support
+async-trait = { workspace = true, optional = true }
+tokio = { workspace = true, features = ["sync"], optional = true }
+
+# Optional: Regex validation
+regex = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

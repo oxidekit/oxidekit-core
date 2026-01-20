@@ -1,0 +1,34 @@
+[package]
+name = "oxide-datetime"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Date and Time Picker Components"
+
+[features]
+default = []
+# Enable timezone support
+timezone = ["dep:chrono-tz"]
+# Enable all features
+full = ["timezone"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Date and time
+chrono.workspace = true
+
+# Optional: Timezone support
+chrono-tz = { version = "0.10", optional = true }
+
+[dev-dependencies]
+# Testing utilities
