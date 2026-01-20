@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            artifact: oxide
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            artifact: oxide
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            artifact: oxide
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            artifact: oxide.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev
+
+      - name: Build
+        run: cargo build --release --package oxide-cli --target ${{ matrix.target }}
+
+      - name: Create archive (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.target }}/release/${{ matrix.artifact }} dist/
+          cd dist
+          tar -czvf oxide-${{ matrix.target }}.tar.gz ${{ matrix.artifact }}
+          shasum -a 256 oxide-${{ matrix.target }}.tar.gz > oxide-${{ matrix.target }}.tar.gz.sha256
+
+      - name: Create archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          mkdir dist
+          cp target/${{ matrix.target }}/release/${{ matrix.artifact }} dist/
+          cd dist
+          Compress-Archive -Path ${{ matrix.artifact }} -DestinationPath oxide-${{ matrix.target }}.zip
+          Get-FileHash oxide-${{ matrix.target }}.zip -Algorithm SHA256 | Format-List > oxide-${{ matrix.target }}.zip.sha256
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oxide-${{ matrix.target }}
+          path: dist/oxide-*
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/**/*
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
