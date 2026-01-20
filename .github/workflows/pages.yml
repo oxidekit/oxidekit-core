@@ -34,7 +34,7 @@ jobs:
           sudo apt-get install -y libxkbcommon-dev libwayland-dev
 
       - name: Build Rust Documentation
-        run: cargo doc --workspace --no-deps --document-private-items
+        run: cargo +nightly doc --workspace --no-deps --document-private-items
         env:
           RUSTDOCFLAGS: --enable-index-page -Zunstable-options
 
