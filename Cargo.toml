@@ -1,0 +1,155 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/oxide-admin",
+    "crates/oxide-ai",
+    "crates/oxide-backend",
+    "crates/oxide-branding",
+    "crates/oxide-cli",
+    "crates/oxide-client-gen",
+    "crates/oxide-compiler",
+    "crates/oxide-compat",
+    "crates/oxide-components",
+    "crates/oxide-crypto",
+    "crates/oxide-deploy",
+    "crates/oxide-diagnostics",
+    "crates/oxide-docs",
+    "crates/oxide-figma",
+    "crates/oxide-i18n",
+    "crates/oxide-legal",
+    "crates/oxide-lsp",
+    "crates/oxide-metrics",
+    "crates/oxide-network",
+    "crates/oxide-permissions",
+    "crates/oxide-plugins",
+    "crates/oxide-portable",
+    "crates/oxide-portable-macros",
+    "crates/oxide-quality",
+    "crates/oxide-starters",
+    "crates/oxide-state",
+    "crates/oxide-runtime",
+    "crates/oxide-layout",
+    "crates/oxide-text",
+    "crates/oxide-render",
+    "crates/oxide-devtools",
+    "crates/oxide-version",
+    "crates/oxide-mobile",
+    "crates/oxide-migrate",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/oxidekit/oxidekit-core"
+homepage = "https://oxidekit.com"
+authors = ["OxideKit Contributors"]
+
+[workspace.dependencies]
+# Core dependencies
+winit = "0.30"
+wgpu = "23.0"
+pollster = "0.4"
+
+# Layout
+taffy = "0.6"
+
+# Text
+cosmic-text = "0.12"
+fontdb = "0.22"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+serde_json = "1.0"
+
+# CLI
+clap = { version = "4.5", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "2.0"
+
+# Async/IO
+tokio = { version = "1.43", features = ["full"] }
+notify = "7.0"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Time and IDs
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# URL parsing
+url = "2.5"
+
+# File operations
+walkdir = "2.5"
+
+# Internal crates
+oxide-compiler = { path = "crates/oxide-compiler" }
+oxide-components = { path = "crates/oxide-components" }
+oxide-diagnostics = { path = "crates/oxide-diagnostics" }
+oxide-i18n = { path = "crates/oxide-i18n" }
+oxide-plugins = { path = "crates/oxide-plugins" }
+oxide-runtime = { path = "crates/oxide-runtime" }
+oxide-layout = { path = "crates/oxide-layout" }
+oxide-text = { path = "crates/oxide-text" }
+oxide-render = { path = "crates/oxide-render" }
+oxide-devtools = { path = "crates/oxide-devtools" }
+oxide-starters = { path = "crates/oxide-starters" }
+oxide-docs = { path = "crates/oxide-docs" }
+oxide-legal = { path = "crates/oxide-legal" }
+oxide-metrics = { path = "crates/oxide-metrics" }
+oxide-portable = { path = "crates/oxide-portable" }
+oxide-portable-macros = { path = "crates/oxide-portable-macros" }
+oxide-branding = { path = "crates/oxide-branding" }
+oxide-version = { path = "crates/oxide-version" }
+oxide-network = { path = "crates/oxide-network" }
+oxide-quality = { path = "crates/oxide-quality" }
+oxide-compat = { path = "crates/oxide-compat" }
+oxide-state = { path = "crates/oxide-state" }
+oxide-figma = { path = "crates/oxide-figma" }
+oxide-permissions = { path = "crates/oxide-permissions" }
+oxide-admin = { path = "crates/oxide-admin" }
+oxide-ai = { path = "crates/oxide-ai" }
+oxide-backend = { path = "crates/oxide-backend" }
+oxide-client-gen = { path = "crates/oxide-client-gen" }
+oxide-mobile = { path = "crates/oxide-mobile" }
+oxide-lsp = { path = "crates/oxide-lsp" }
+oxide-deploy = { path = "crates/oxide-deploy" }
+oxide-migrate = { path = "crates/oxide-migrate" }
+oxide-crypto = { path = "crates/oxide-crypto" }
+
+# i18n additional dependencies
+regex = "1.10"
+once_cell = "1.20"
+
+# Semver parsing
+semver = "1.0"
+
+# Async utilities (for oxide-network)
+async-trait = "0.1"
+futures = "0.3"
+
+# Base64 encoding
+base64 = "0.22"
+
+# Platform directories
+dirs = "5.0"
+
+# Path manipulation
+camino = "1.1"
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "rustls-tls"] }
+
+# Image processing
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+
+# Text diffing
+similar = "2.6"
+
+# Glob pattern matching
+glob = "0.3"

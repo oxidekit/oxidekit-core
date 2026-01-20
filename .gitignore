@@ -1,0 +1,24 @@
+# Build artifacts
+/target/
+/build/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Local development
+.env
+.env.local
+
+# Generated docs
+/site/public/

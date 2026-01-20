@@ -1,0 +1,19 @@
+[app]
+id = "dev.oxidekit.hello"
+name = "Hello OxideKit"
+version = "0.1.0"
+description = "A minimal OxideKit demonstration application"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "Hello OxideKit"
+width = 800
+height = 600
+resizable = true
+decorations = true
+
+[dev]
+hot_reload = true
+inspector = true

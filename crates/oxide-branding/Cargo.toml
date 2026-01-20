@@ -1,0 +1,33 @@
+[package]
+name = "oxide-branding"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Design Governance & Branding System"
+
+[dependencies]
+oxide-components.workspace = true
+
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+walkdir.workspace = true
+
+# Image processing for icons/logos
+image = { version = "0.25", optional = true }
+
+# Hash for asset integrity
+sha2 = "0.10"
+hex = "0.4"
+
+[features]
+default = []
+image-processing = ["image"]
+
+[dev-dependencies]
+tempfile = "3.24"

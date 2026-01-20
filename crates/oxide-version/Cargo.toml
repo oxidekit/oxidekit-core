@@ -1,0 +1,36 @@
+[package]
+name = "oxide-version"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit versioning and compatibility enforcement system"
+
+[features]
+default = []
+# Full versioning features including migration and lockfile support
+full = ["migration", "lockfile", "breaking-detection"]
+# Enable migration helpers
+migration = []
+# Enable lockfile tracking
+lockfile = []
+# Enable breaking change detection
+breaking-detection = []
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+chrono.workspace = true
+
+# For regex-based version pattern matching
+regex-lite = "0.1"
+
+# For file system operations in lockfile
+walkdir = { version = "2.5", optional = true }
+
+[dev-dependencies]
+tempfile = "3.24"

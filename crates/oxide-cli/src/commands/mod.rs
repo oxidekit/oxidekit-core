@@ -1,0 +1,30 @@
+//! CLI command implementations
+
+pub mod new;
+pub mod init;
+pub mod dev;
+pub mod build;
+pub mod run;
+pub mod fmt;
+pub mod lint;
+pub mod doctor;
+pub mod docs;
+pub mod export;
+pub mod diagnostics;
+pub mod i18n;
+pub mod starters;
+pub mod learn;
+pub mod legal;
+pub mod check;
+pub mod brand;
+pub mod wizard;
+pub mod plugin;
+pub mod migrate;
+pub mod compat;
+pub mod version;
+pub mod metrics;
+pub mod figma;
+pub mod admin;
+pub mod mobile;
+#[cfg(feature = "quality")]
+pub mod quality;

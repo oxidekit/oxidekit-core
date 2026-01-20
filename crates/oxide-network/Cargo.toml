@@ -1,0 +1,80 @@
+[package]
+name = "oxide-network"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Networking & Auth System - HTTP, WebSocket, OAuth, JWT, and secure credential storage"
+
+[features]
+default = []
+# Enable WebSocket support
+websocket = ["dep:tokio-tungstenite", "dep:futures-util"]
+# Enable OAuth provider support
+oauth = ["dep:oauth2"]
+# Enable JWT validation and generation
+jwt = ["dep:jsonwebtoken"]
+# Enable secure credential storage (platform-specific keychain)
+keychain = ["dep:keyring"]
+# Enable TLS certificate pinning
+cert-pinning = ["dep:rustls-native-certs"]
+# Enable full feature set
+full = ["websocket", "oauth", "jwt", "keychain", "cert-pinning"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Async runtime
+tokio = { workspace = true, features = ["sync", "time", "net"] }
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# URL handling
+url.workspace = true
+
+# HTTP client
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "gzip", "brotli", "stream", "multipart"] }
+
+# Async utilities
+async-trait = "0.1"
+futures = "0.3"
+
+# Base64 encoding for auth headers
+base64 = "0.22"
+
+# Regex for URL allowlist matching
+regex = "1.11"
+
+# Platform directories
+dirs = "5.0"
+
+# Optional: WebSocket support
+tokio-tungstenite = { version = "0.24", features = ["rustls-tls-native-roots"], optional = true }
+futures-util = { version = "0.3", optional = true }
+
+# Optional: OAuth2 client
+oauth2 = { version = "4.4", optional = true }
+
+# Optional: JWT handling
+jsonwebtoken = { version = "9.3", optional = true }
+
+# Optional: Platform keychain integration
+keyring = { version = "3.0", optional = true }
+
+# Optional: Certificate pinning
+rustls-native-certs = { version = "0.7", optional = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.10"

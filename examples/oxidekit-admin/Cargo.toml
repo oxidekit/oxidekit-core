@@ -1,0 +1,21 @@
+[package]
+name = "oxidekit-admin"
+version = "0.1.0"
+edition = "2021"
+description = "OxideKit Admin - Golden Reference App"
+license = "Apache-2.0"
+publish = false
+
+[workspace]
+
+[dependencies]
+oxide-runtime = { path = "../../crates/oxide-runtime" }
+anyhow = "1.0"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing = "0.1"
+
+[dev-dependencies]
+
+[[bin]]
+name = "oxidekit-admin"
+path = "src/main.rs"

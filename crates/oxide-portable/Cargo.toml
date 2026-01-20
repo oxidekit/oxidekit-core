@@ -1,0 +1,57 @@
+[package]
+name = "oxide-portable"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Portability System - cross-platform API markers, target abstractions, and portability checking"
+
+[features]
+default = []
+# Enable proc-macro functionality for attribute macros
+macros = ["oxide-portable-macros"]
+# Enable compile-time portability checking
+checker = []
+# Web target support (wasm32-unknown-unknown)
+web = []
+# iOS target support
+ios = []
+# Android target support
+android = []
+# Desktop targets (default, always available)
+desktop = []
+# Full feature set
+full = ["macros", "checker", "web", "ios", "android", "desktop"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Semver for version compatibility
+semver = "1.0"
+
+# Proc-macro support (optional)
+oxide-portable-macros = { path = "../oxide-portable-macros", optional = true }
+
+[dev-dependencies]
+tempfile = "3.15"
+
+# Conditional dependencies for specific targets
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+# Web-specific dependencies would go here
+# wasm-bindgen = "0.2"
+
+[target.'cfg(target_os = "ios")'.dependencies]
+# iOS-specific dependencies would go here
+
+[target.'cfg(target_os = "android")'.dependencies]
+# Android-specific dependencies would go here

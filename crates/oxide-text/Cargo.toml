@@ -1,0 +1,13 @@
+[package]
+name = "oxide-text"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit text shaping and rendering"
+
+[dependencies]
+cosmic-text.workspace = true
+fontdb.workspace = true
+wgpu.workspace = true
+bytemuck = { version = "1.24", features = ["derive"] }

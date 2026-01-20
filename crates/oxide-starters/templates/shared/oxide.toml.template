@@ -1,0 +1,12 @@
+[app]
+name = "{{project_name}}"
+version = "0.1.0"
+description = "Built with OxideKit"
+
+[build]
+entry = "ui/app.oui"
+assets = "assets"
+
+[dev]
+hot_reload = true
+port = 3000

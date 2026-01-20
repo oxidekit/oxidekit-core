@@ -1,0 +1,69 @@
+[package]
+name = "oxide-plugins"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Plugin System - discovery, loading, sandboxing, and marketplace integration"
+
+[features]
+default = []
+# Enable WASM sandbox for community plugins
+wasm-sandbox = ["wasmtime", "wasmtime-wasi"]
+# Enable async runtime support
+async-runtime = ["tokio"]
+# Full feature set
+full = ["wasm-sandbox", "async-runtime"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+toml.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# URL parsing
+url.workspace = true
+
+# File operations
+walkdir.workspace = true
+
+# Async runtime (optional)
+tokio = { workspace = true, optional = true }
+
+# WASM runtime (optional, for sandbox)
+wasmtime = { version = "27.0", optional = true }
+wasmtime-wasi = { version = "27.0", optional = true }
+
+# Cryptographic verification
+sha2 = "0.10"
+hex = "0.4"
+
+# Semver parsing
+semver = "1.0"
+
+# HTTP client for registry/git fetching
+reqwest = { version = "0.12", features = ["json", "blocking"], default-features = false, optional = true }
+
+# Git operations
+git2 = { version = "0.19", optional = true }
+
+# Compression for plugin packages
+flate2 = "1.0"
+tar = "0.4"
+
+# Regex for validation
+regex = "1.11"
+
+[dev-dependencies]
+tempfile = "3.15"

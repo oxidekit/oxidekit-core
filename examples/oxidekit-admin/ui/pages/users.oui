@@ -1,0 +1,304 @@
+// Users Page
+// Data table with pagination, sorting, filtering, and CRUD operations
+
+Page {
+    id: "users"
+    layout: "admin_shell"
+    title: "Users"
+
+    Column {
+        gap: "24px"
+
+        // Header
+        Row {
+            justify: "space-between"
+            align: "center"
+
+            Column {
+                gap: "4px"
+
+                Text {
+                    content: "Users"
+                    role: "heading"
+                    level: 1
+                    color: token("color.text.primary")
+                }
+
+                Text {
+                    content: state.users.length + " users total"
+                    color: token("color.text.secondary")
+                }
+            }
+
+            Row {
+                gap: "12px"
+
+                Button {
+                    text: "Export"
+                    icon: "download"
+                    variant: "outline"
+                    on_click: emit("export_users")
+                }
+
+                Button {
+                    text: "Add User"
+                    icon: "plus"
+                    variant: "primary"
+                    on_click: emit("open_create_user_modal")
+                }
+            }
+        }
+
+        // Filters
+        Card {
+            padding: "16px"
+
+            Row {
+                gap: "16px"
+                wrap: "wrap"
+
+                SearchInput {
+                    placeholder: "Search users..."
+                    value: state.filters.search
+                    on_change: emit("filter_users", { search: value })
+                    width: "300px"
+                }
+
+                Select {
+                    label: "Role"
+                    options: ["All Roles", "Admin", "Editor", "Viewer"]
+                    value: state.filters.role
+                    on_change: emit("filter_users", { role: value })
+                }
+
+                Select {
+                    label: "Status"
+                    options: ["All Status", "Active", "Inactive", "Pending"]
+                    value: state.filters.status
+                    on_change: emit("filter_users", { status: value })
+                }
+
+                Spacer { flex: 1 }
+
+                Button {
+                    text: "Clear Filters"
+                    variant: "ghost"
+                    visible: has_active_filters(state.filters)
+                    on_click: emit("clear_filters")
+                }
+            }
+        }
+
+        // Data table
+        Card {
+            padding: "0"
+
+            DataTable {
+                id: "users-table"
+                data: state.filtered_users
+                page: state.pagination.page
+                page_size: state.pagination.page_size
+                total: state.pagination.total
+                sortable: true
+                selectable: true
+                selected: state.selected_users
+
+                columns: [
+                    {
+                        key: "name"
+                        label: "Name"
+                        sortable: true
+                        render: Column {
+                            Row {
+                                gap: "12px"
+                                align: "center"
+
+                                Avatar {
+                                    src: row.avatar
+                                    fallback: initials(row.name)
+                                    size: "32px"
+                                }
+
+                                Column {
+                                    gap: "2px"
+
+                                    Text {
+                                        content: row.name
+                                        weight: "medium"
+                                    }
+
+                                    Text {
+                                        content: row.email
+                                        size: "sm"
+                                        color: token("color.text.secondary")
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        key: "role"
+                        label: "Role"
+                        sortable: true
+                        render: Badge {
+                            text: row.role
+                            variant: role_badge_variant(row.role)
+                        }
+                    },
+                    {
+                        key: "status"
+                        label: "Status"
+                        sortable: true
+                        render: Badge {
+                            text: row.status
+                            variant: status_badge_variant(row.status)
+                        }
+                    },
+                    {
+                        key: "created_at"
+                        label: "Created"
+                        sortable: true
+                        render: Text {
+                            content: format_date(row.created_at)
+                            color: token("color.text.secondary")
+                        }
+                    },
+                    {
+                        key: "actions"
+                        label: ""
+                        width: "100px"
+                        render: Row {
+                            gap: "4px"
+                            justify: "flex-end"
+
+                            Button {
+                                icon: "edit"
+                                variant: "ghost"
+                                size: "sm"
+                                on_click: emit("edit_user", { id: row.id })
+                                aria_label: "Edit user"
+                            }
+
+                            Button {
+                                icon: "trash"
+                                variant: "ghost"
+                                size: "sm"
+                                on_click: emit("confirm_delete_user", { id: row.id })
+                                aria_label: "Delete user"
+                            }
+                        }
+                    }
+                ]
+
+                on_sort: emit("sort_users", { column: column, direction: direction })
+                on_select: emit("select_users", { ids: selected })
+                on_page_change: emit("change_page", { page: page })
+            }
+        }
+
+        // Bulk actions bar (visible when rows selected)
+        BulkActionsBar {
+            visible: state.selected_users.length > 0
+            count: state.selected_users.length
+
+            Row {
+                gap: "12px"
+
+                Button {
+                    text: "Delete Selected"
+                    icon: "trash"
+                    variant: "destructive"
+                    on_click: emit("confirm_bulk_delete")
+                }
+
+                Button {
+                    text: "Export Selected"
+                    icon: "download"
+                    variant: "outline"
+                    on_click: emit("export_selected_users")
+                }
+
+                Button {
+                    text: "Clear Selection"
+                    variant: "ghost"
+                    on_click: emit("clear_selection")
+                }
+            }
+        }
+    }
+}
+
+// Create User Modal
+Modal {
+    id: "create-user-modal"
+    open: state.modals.create_user
+    title: "Add New User"
+    width: "500px"
+    on_close: emit("close_create_user_modal")
+
+    Form {
+        id: "create-user-form"
+        on_submit: emit("create_user", { data: form_data })
+
+        Column {
+            gap: "16px"
+            padding: "24px"
+
+            TextField {
+                name: "name"
+                label: "Full Name"
+                placeholder: "Enter full name"
+                required: true
+                validation: { min_length: 2 }
+            }
+
+            TextField {
+                name: "email"
+                label: "Email Address"
+                type: "email"
+                placeholder: "Enter email address"
+                required: true
+                validation: { pattern: "email" }
+            }
+
+            Select {
+                name: "role"
+                label: "Role"
+                options: ["Admin", "Editor", "Viewer"]
+                required: true
+            }
+
+            PasswordField {
+                name: "password"
+                label: "Password"
+                placeholder: "Enter password"
+                required: true
+                validation: { min_length: 8 }
+                show_strength: true
+            }
+        }
+
+        Footer {
+            padding: "16px 24px"
+            border_top: "1px solid" token("color.border")
+
+            Row {
+                justify: "flex-end"
+                gap: "12px"
+
+                Button {
+                    text: "Cancel"
+                    variant: "outline"
+                    on_click: emit("close_create_user_modal")
+                }
+
+                Button {
+                    text: "Create User"
+                    variant: "primary"
+                    type: "submit"
+                    loading: state.creating_user
+                }
+            }
+        }
+    }
+}

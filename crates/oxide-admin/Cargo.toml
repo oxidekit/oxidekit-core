@@ -1,0 +1,44 @@
+[package]
+name = "oxide-admin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Admin Platform - A production-grade admin dashboard built with OxideKit"
+
+[dependencies]
+# Internal crates
+oxide-components.workspace = true
+oxide-runtime.workspace = true
+oxide-layout.workspace = true
+oxide-render.workspace = true
+oxide-text.workspace = true
+oxide-diagnostics.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Async runtime
+tokio.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# File operations
+walkdir.workspace = true
+
+# HTTP client for updates
+reqwest = { version = "0.12", features = ["json", "rustls-tls"], default-features = false }
+
+# Semver for version checking
+semver = "1.0"

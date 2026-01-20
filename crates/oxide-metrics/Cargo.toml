@@ -1,0 +1,44 @@
+[package]
+name = "oxide-metrics"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit observability system: metrics, tracing, and exporters"
+
+[features]
+default = []
+# Full observability suite
+full = ["prometheus", "structured-logs", "devtools-panel"]
+# Prometheus metrics exporter
+prometheus = ["dep:hyper", "dep:hyper-util", "tokio/net"]
+# Structured log exporter (JSON/OpenTelemetry format)
+structured-logs = []
+# Devtools metrics panels
+devtools-panel = []
+# Performance counters with detailed instrumentation
+perf-counters = []
+
+[dependencies]
+# Core
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+# Time and IDs
+chrono = { version = "0.4", features = ["serde"] }
+
+# Concurrency
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+
+# Async (minimal)
+tokio = { workspace = true, features = ["sync", "time"], optional = true }
+
+# HTTP server for Prometheus (optional)
+hyper = { version = "1.6", features = ["server", "http1"], optional = true }
+hyper-util = { version = "0.1", features = ["tokio", "server", "http1"], optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }

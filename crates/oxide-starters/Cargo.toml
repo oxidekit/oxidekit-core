@@ -1,0 +1,24 @@
+[package]
+name = "oxide-starters"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit starter templates and boilerplate system"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+
+# For unique IDs
+uuid.workspace = true
+
+# For file operations
+walkdir.workspace = true
+
+[dev-dependencies]
+tempfile = "3.24"

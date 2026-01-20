@@ -1,0 +1,176 @@
+// Dashboard Page
+// Shows stats, charts, and recent activity
+
+Page {
+    id: "dashboard"
+    layout: "admin_shell"
+    title: "Dashboard"
+
+    Column {
+        gap: "24px"
+
+        // Header
+        Row {
+            justify: "space-between"
+            align: "center"
+
+            Column {
+                gap: "4px"
+
+                Text {
+                    content: "Dashboard"
+                    role: "heading"
+                    level: 1
+                    color: token("color.text.primary")
+                }
+
+                Text {
+                    content: "Welcome back! Here's what's happening."
+                    color: token("color.text.secondary")
+                }
+            }
+
+            Button {
+                text: "Refresh"
+                icon: "refresh"
+                variant: "outline"
+                on_click: emit("refresh_data")
+            }
+        }
+
+        // Stats cards
+        Row {
+            gap: "16px"
+            wrap: "wrap"
+
+            StatCard {
+                title: "Total Users"
+                value: state.stats.total_users
+                icon: "users"
+                change: "+12%"
+                change_type: "positive"
+                background: token("color.surface")
+            }
+
+            StatCard {
+                title: "Active Users"
+                value: state.stats.active_users
+                icon: "user-check"
+                change: "+5%"
+                change_type: "positive"
+                background: token("color.surface")
+            }
+
+            StatCard {
+                title: "Revenue"
+                value: "$" + format_number(state.stats.total_revenue)
+                icon: "dollar-sign"
+                change: "+18%"
+                change_type: "positive"
+                background: token("color.surface")
+            }
+
+            StatCard {
+                title: "Orders Today"
+                value: state.stats.orders_today
+                icon: "shopping-cart"
+                change: "-3%"
+                change_type: "negative"
+                background: token("color.surface")
+            }
+        }
+
+        // Charts row
+        Row {
+            gap: "24px"
+
+            // Revenue chart
+            Card {
+                flex: 2
+                padding: "24px"
+
+                Column {
+                    gap: "16px"
+
+                    Row {
+                        justify: "space-between"
+                        align: "center"
+
+                        Text {
+                            content: "Revenue Overview"
+                            role: "heading"
+                            level: 3
+                        }
+
+                        Select {
+                            options: ["Last 7 days", "Last 30 days", "Last 90 days"]
+                            value: "Last 30 days"
+                            on_change: emit("change_period", { period: value })
+                        }
+                    }
+
+                    LineChart {
+                        data: state.revenue_data
+                        height: "300px"
+                        x_axis: "date"
+                        y_axis: "revenue"
+                        color: token("color.primary")
+                    }
+                }
+            }
+
+            // User breakdown
+            Card {
+                flex: 1
+                padding: "24px"
+
+                Column {
+                    gap: "16px"
+
+                    Text {
+                        content: "Users by Role"
+                        role: "heading"
+                        level: 3
+                    }
+
+                    PieChart {
+                        data: state.user_breakdown
+                        height: "300px"
+                        legend: true
+                    }
+                }
+            }
+        }
+
+        // Recent activity
+        Card {
+            padding: "24px"
+
+            Column {
+                gap: "16px"
+
+                Row {
+                    justify: "space-between"
+                    align: "center"
+
+                    Text {
+                        content: "Recent Activity"
+                        role: "heading"
+                        level: 3
+                    }
+
+                    Button {
+                        text: "View All"
+                        variant: "link"
+                        on_click: emit("navigate", { page: "activity" })
+                    }
+                }
+
+                ActivityList {
+                    items: state.recent_activity
+                    max_items: 5
+                }
+            }
+        }
+    }
+}

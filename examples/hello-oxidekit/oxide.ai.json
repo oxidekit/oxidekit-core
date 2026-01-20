@@ -1,0 +1,653 @@
+{
+  "version": "1.0",
+  "components": [
+    {
+      "id": "ui.Avatar",
+      "name": "Avatar",
+      "description": "A component for displaying user profile images or initials",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "src",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Image source URL",
+          "required": false
+        },
+        {
+          "name": "alt",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Alternative text for accessibility",
+          "required": false
+        },
+        {
+          "name": "fallback",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Text to show when image fails (usually initials)",
+          "required": false
+        },
+        {
+          "name": "size",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "xs",
+              "sm",
+              "md",
+              "lg",
+              "xl"
+            ]
+          },
+          "description": "Avatar size",
+          "required": false,
+          "default": "md"
+        },
+        {
+          "name": "shape",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "circle",
+              "square"
+            ]
+          },
+          "description": "Avatar shape",
+          "required": false,
+          "default": "circle"
+        },
+        {
+          "name": "bordered",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether to show a border",
+          "required": false
+        }
+      ],
+      "events": [],
+      "slots": [],
+      "style_tokens": [
+        "color.avatar.background",
+        "color.avatar.text"
+      ],
+      "style_overrides": [],
+      "accessibility": {
+        "role": "img",
+        "keyboard": [],
+        "focusable": false,
+        "required_aria": [
+          "aria-label"
+        ]
+      },
+      "variants": [],
+      "examples": []
+    },
+    {
+      "id": "ui.Text",
+      "name": "Text",
+      "description": "A component for rendering text with typography roles",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "content",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Text content to display",
+          "required": true
+        },
+        {
+          "name": "role",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "body",
+              "heading",
+              "title",
+              "caption",
+              "label",
+              "code"
+            ]
+          },
+          "description": "Typography role",
+          "required": false,
+          "default": "body"
+        },
+        {
+          "name": "size",
+          "prop_type": {
+            "type": "number"
+          },
+          "description": "Font size override",
+          "required": false
+        },
+        {
+          "name": "color",
+          "prop_type": {
+            "type": "color"
+          },
+          "description": "Text color override",
+          "required": false
+        },
+        {
+          "name": "weight",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "thin",
+              "light",
+              "normal",
+              "medium",
+              "semibold",
+              "bold"
+            ]
+          },
+          "description": "Font weight",
+          "required": false,
+          "default": "normal"
+        },
+        {
+          "name": "align",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "left",
+              "center",
+              "right"
+            ]
+          },
+          "description": "Text alignment",
+          "required": false,
+          "default": "left"
+        },
+        {
+          "name": "truncate",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether to truncate with ellipsis",
+          "required": false
+        },
+        {
+          "name": "lines",
+          "prop_type": {
+            "type": "number"
+          },
+          "description": "Max lines before truncation",
+          "required": false
+        }
+      ],
+      "events": [],
+      "slots": [],
+      "style_tokens": [
+        "typography.body",
+        "typography.heading",
+        "color.text"
+      ],
+      "style_overrides": [],
+      "accessibility": {
+        "keyboard": [],
+        "focusable": false,
+        "required_aria": []
+      },
+      "variants": [],
+      "examples": []
+    },
+    {
+      "id": "ui.Button",
+      "name": "Button",
+      "description": "A clickable button component for triggering actions",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "label",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Button text content",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "primary",
+              "secondary",
+              "outline",
+              "ghost",
+              "danger"
+            ]
+          },
+          "description": "Visual style variant",
+          "required": false,
+          "default": "primary"
+        },
+        {
+          "name": "size",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          "description": "Button size",
+          "required": false,
+          "default": "md"
+        },
+        {
+          "name": "disabled",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether the button is disabled",
+          "required": false
+        },
+        {
+          "name": "loading",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether to show loading spinner",
+          "required": false
+        },
+        {
+          "name": "icon",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Icon name to display",
+          "required": false
+        },
+        {
+          "name": "icon_position",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "start",
+              "end"
+            ]
+          },
+          "description": "Position of icon relative to label",
+          "required": false,
+          "default": "start"
+        }
+      ],
+      "events": [
+        {
+          "name": "on_click",
+          "description": "Fired when button is clicked"
+        },
+        {
+          "name": "on_focus",
+          "description": "Fired when button receives focus"
+        },
+        {
+          "name": "on_blur",
+          "description": "Fired when button loses focus"
+        }
+      ],
+      "slots": [],
+      "style_tokens": [
+        "color.primary",
+        "color.text",
+        "spacing.button",
+        "radius.button"
+      ],
+      "style_overrides": [],
+      "accessibility": {
+        "role": "button",
+        "keyboard": [
+          {
+            "key": "Enter",
+            "action": "Activate button"
+          },
+          {
+            "key": "Space",
+            "action": "Activate button"
+          }
+        ],
+        "focusable": true,
+        "required_aria": []
+      },
+      "variants": [
+        {
+          "name": "primary",
+          "description": "Primary action button with filled background",
+          "defaults": {}
+        },
+        {
+          "name": "secondary",
+          "description": "Secondary action button with muted styling",
+          "defaults": {}
+        }
+      ],
+      "examples": [
+        {
+          "title": "Basic Button",
+          "description": "A simple primary button",
+          "code": "Button { label: \"Click me\" on_click: handle_click }"
+        }
+      ]
+    },
+    {
+      "id": "ui.Divider",
+      "name": "Divider",
+      "description": "A visual separator between content sections",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "orientation",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "horizontal",
+              "vertical"
+            ]
+          },
+          "description": "Divider orientation",
+          "required": false,
+          "default": "horizontal"
+        },
+        {
+          "name": "variant",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "solid",
+              "dashed",
+              "dotted"
+            ]
+          },
+          "description": "Divider style",
+          "required": false,
+          "default": "solid"
+        },
+        {
+          "name": "label",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Optional label text in the middle",
+          "required": false
+        }
+      ],
+      "events": [],
+      "slots": [],
+      "style_tokens": [
+        "color.divider"
+      ],
+      "style_overrides": [],
+      "accessibility": {
+        "role": "separator",
+        "keyboard": [],
+        "focusable": false,
+        "required_aria": []
+      },
+      "variants": [],
+      "examples": []
+    },
+    {
+      "id": "ui.IconButton",
+      "name": "IconButton",
+      "description": "A button that displays only an icon",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "icon",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Icon name to display",
+          "required": true
+        },
+        {
+          "name": "aria_label",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Accessible label for the button",
+          "required": true
+        },
+        {
+          "name": "variant",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "default",
+              "ghost",
+              "outline"
+            ]
+          },
+          "description": "Visual style variant",
+          "required": false,
+          "default": "default"
+        },
+        {
+          "name": "size",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          "description": "Button size",
+          "required": false,
+          "default": "md"
+        },
+        {
+          "name": "disabled",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether the button is disabled",
+          "required": false
+        }
+      ],
+      "events": [
+        {
+          "name": "on_click",
+          "description": "Fired when button is clicked"
+        }
+      ],
+      "slots": [],
+      "style_tokens": [],
+      "style_overrides": [],
+      "accessibility": {
+        "role": "button",
+        "keyboard": [
+          {
+            "key": "Enter",
+            "action": "Activate button"
+          },
+          {
+            "key": "Space",
+            "action": "Activate button"
+          }
+        ],
+        "focusable": true,
+        "required_aria": [
+          "aria-label"
+        ]
+      },
+      "variants": [],
+      "examples": []
+    },
+    {
+      "id": "ui.Card",
+      "name": "Card",
+      "description": "A container component with optional header, content, and footer sections",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "variant",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "elevated",
+              "outlined",
+              "filled"
+            ]
+          },
+          "description": "Card style variant",
+          "required": false,
+          "default": "elevated"
+        },
+        {
+          "name": "interactive",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether card responds to hover/click",
+          "required": false
+        },
+        {
+          "name": "selected",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Whether card is in selected state",
+          "required": false
+        }
+      ],
+      "events": [
+        {
+          "name": "on_click",
+          "description": "Fired when card is clicked (if interactive)"
+        }
+      ],
+      "slots": [
+        {
+          "name": "default",
+          "description": "Default slot for child content",
+          "allowed_children": [],
+          "min_children": 0,
+          "max_children": 0,
+          "required": false
+        },
+        {
+          "name": "header",
+          "description": "Card header content",
+          "allowed_children": [],
+          "min_children": 0,
+          "max_children": 0,
+          "required": false
+        },
+        {
+          "name": "footer",
+          "description": "Card footer content",
+          "allowed_children": [],
+          "min_children": 0,
+          "max_children": 0,
+          "required": false
+        }
+      ],
+      "style_tokens": [
+        "color.surface",
+        "color.border",
+        "radius.card",
+        "shadow.card"
+      ],
+      "style_overrides": [],
+      "accessibility": {
+        "role": "article",
+        "keyboard": [],
+        "focusable": false,
+        "required_aria": []
+      },
+      "variants": [],
+      "examples": []
+    },
+    {
+      "id": "ui.Badge",
+      "name": "Badge",
+      "description": "A small label for status or counts",
+      "pack": "ui.core",
+      "version": "0.1.0",
+      "props": [
+        {
+          "name": "label",
+          "prop_type": {
+            "type": "string"
+          },
+          "description": "Badge text content",
+          "required": false
+        },
+        {
+          "name": "variant",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "default",
+              "primary",
+              "success",
+              "warning",
+              "danger"
+            ]
+          },
+          "description": "Badge color variant",
+          "required": false,
+          "default": "default"
+        },
+        {
+          "name": "size",
+          "prop_type": {
+            "type": "enum",
+            "values": [
+              "sm",
+              "md",
+              "lg"
+            ]
+          },
+          "description": "Badge size",
+          "required": false,
+          "default": "md"
+        },
+        {
+          "name": "dot",
+          "prop_type": {
+            "type": "bool"
+          },
+          "description": "Show as dot indicator without text",
+          "required": false
+        },
+        {
+          "name": "max",
+          "prop_type": {
+            "type": "number"
+          },
+          "description": "Maximum value before showing overflow",
+          "required": false
+        }
+      ],
+      "events": [],
+      "slots": [],
+      "style_tokens": [
+        "color.badge"
+      ],
+      "style_overrides": [],
+      "accessibility": {
+        "keyboard": [],
+        "focusable": false,
+        "required_aria": []
+      },
+      "variants": [],
+      "examples": []
+    }
+  ]
+}

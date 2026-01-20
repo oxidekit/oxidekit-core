@@ -1,0 +1,34 @@
+[package]
+name = "oxide-devtools"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit development tools (inspector, profiler, live editor, hot reload)"
+
+[features]
+default = []
+# Enable dev editor - MUST be disabled in production builds
+dev-editor = []
+# Enable diagnostics export (read-only, safe for release+diagnostics builds)
+diagnostics-export = []
+
+[dependencies]
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+notify.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "net", "io-util", "macros"] }
+tokio-tungstenite = "0.26"
+futures-util = "0.3"
+parking_lot = "0.12"
+crossbeam-channel = "0.5"
+oxide-compiler.workspace = true
+oxide-components = { path = "../oxide-components" }
+oxide-layout = { path = "../oxide-layout" }
+
+[dev-dependencies]
+tempfile = "3.24"

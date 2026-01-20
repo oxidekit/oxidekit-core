@@ -1,0 +1,367 @@
+// Settings Page
+// Application settings with forms and validation
+
+Page {
+    id: "settings"
+    layout: "admin_shell"
+    title: "Settings"
+
+    Column {
+        gap: "24px"
+
+        // Header
+        Column {
+            gap: "4px"
+
+            Text {
+                content: "Settings"
+                role: "heading"
+                level: 1
+                color: token("color.text.primary")
+            }
+
+            Text {
+                content: "Manage your application settings and preferences."
+                color: token("color.text.secondary")
+            }
+        }
+
+        // Settings sections
+        Row {
+            gap: "24px"
+            align: "flex-start"
+
+            // Sidebar navigation
+            Card {
+                width: "240px"
+                padding: "8px"
+
+                Column {
+                    gap: "4px"
+
+                    SettingsNavItem {
+                        icon: "user"
+                        label: "Profile"
+                        active: state.settings_section == "profile"
+                        on_click: emit("change_settings_section", { section: "profile" })
+                    }
+
+                    SettingsNavItem {
+                        icon: "bell"
+                        label: "Notifications"
+                        active: state.settings_section == "notifications"
+                        on_click: emit("change_settings_section", { section: "notifications" })
+                    }
+
+                    SettingsNavItem {
+                        icon: "shield"
+                        label: "Security"
+                        active: state.settings_section == "security"
+                        on_click: emit("change_settings_section", { section: "security" })
+                    }
+
+                    SettingsNavItem {
+                        icon: "palette"
+                        label: "Appearance"
+                        active: state.settings_section == "appearance"
+                        on_click: emit("change_settings_section", { section: "appearance" })
+                    }
+
+                    SettingsNavItem {
+                        icon: "database"
+                        label: "Data & Privacy"
+                        active: state.settings_section == "data"
+                        on_click: emit("change_settings_section", { section: "data" })
+                    }
+                }
+            }
+
+            // Settings content
+            Card {
+                flex: 1
+                padding: "24px"
+
+                // Profile Section
+                Column {
+                    gap: "24px"
+                    visible: state.settings_section == "profile"
+
+                    Text {
+                        content: "Profile Settings"
+                        role: "heading"
+                        level: 2
+                    }
+
+                    Form {
+                        id: "profile-form"
+                        on_submit: emit("save_profile", { data: form_data })
+
+                        Column {
+                            gap: "16px"
+
+                            // Avatar upload
+                            Row {
+                                gap: "16px"
+                                align: "center"
+
+                                Avatar {
+                                    src: state.user.avatar
+                                    fallback: initials(state.user.name)
+                                    size: "80px"
+                                }
+
+                                Column {
+                                    gap: "8px"
+
+                                    Button {
+                                        text: "Change Avatar"
+                                        variant: "outline"
+                                        on_click: emit("open_avatar_picker")
+                                    }
+
+                                    Text {
+                                        content: "JPG, PNG or GIF. Max 2MB."
+                                        size: "sm"
+                                        color: token("color.text.secondary")
+                                    }
+                                }
+                            }
+
+                            Divider {}
+
+                            TextField {
+                                name: "name"
+                                label: "Full Name"
+                                value: state.user.name
+                                required: true
+                            }
+
+                            TextField {
+                                name: "email"
+                                label: "Email Address"
+                                type: "email"
+                                value: state.user.email
+                                required: true
+                            }
+
+                            TextField {
+                                name: "bio"
+                                label: "Bio"
+                                multiline: true
+                                rows: 3
+                                value: state.user.bio
+                                max_length: 200
+                            }
+
+                            Row {
+                                justify: "flex-end"
+
+                                Button {
+                                    text: "Save Changes"
+                                    variant: "primary"
+                                    type: "submit"
+                                    loading: state.saving_profile
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Notifications Section
+                Column {
+                    gap: "24px"
+                    visible: state.settings_section == "notifications"
+
+                    Text {
+                        content: "Notification Preferences"
+                        role: "heading"
+                        level: 2
+                    }
+
+                    Column {
+                        gap: "16px"
+
+                        SettingsRow {
+                            title: "Email Notifications"
+                            description: "Receive email notifications for important updates"
+
+                            Toggle {
+                                checked: state.notifications.email
+                                on_change: emit("toggle_notification", { type: "email", value: checked })
+                            }
+                        }
+
+                        SettingsRow {
+                            title: "Push Notifications"
+                            description: "Receive push notifications on your desktop"
+
+                            Toggle {
+                                checked: state.notifications.push
+                                on_change: emit("toggle_notification", { type: "push", value: checked })
+                            }
+                        }
+
+                        SettingsRow {
+                            title: "Weekly Digest"
+                            description: "Receive a weekly summary of activity"
+
+                            Toggle {
+                                checked: state.notifications.digest
+                                on_change: emit("toggle_notification", { type: "digest", value: checked })
+                            }
+                        }
+
+                        Divider {}
+
+                        Text {
+                            content: "Notification Types"
+                            weight: "medium"
+                        }
+
+                        CheckboxGroup {
+                            name: "notification_types"
+                            value: state.notifications.types
+
+                            Checkbox {
+                                value: "users"
+                                label: "User activity (new signups, role changes)"
+                            }
+
+                            Checkbox {
+                                value: "orders"
+                                label: "Order notifications"
+                            }
+
+                            Checkbox {
+                                value: "system"
+                                label: "System alerts and maintenance"
+                            }
+
+                            on_change: emit("update_notification_types", { types: value })
+                        }
+                    }
+                }
+
+                // Appearance Section
+                Column {
+                    gap: "24px"
+                    visible: state.settings_section == "appearance"
+
+                    Text {
+                        content: "Appearance"
+                        role: "heading"
+                        level: 2
+                    }
+
+                    Column {
+                        gap: "16px"
+
+                        SettingsRow {
+                            title: "Theme"
+                            description: "Choose your preferred color theme"
+
+                            SegmentedControl {
+                                options: [
+                                    { value: "light", label: "Light", icon: "sun" },
+                                    { value: "dark", label: "Dark", icon: "moon" },
+                                    { value: "system", label: "System", icon: "monitor" }
+                                ]
+                                value: state.theme
+                                on_change: emit("change_theme", { theme: value })
+                            }
+                        }
+
+                        SettingsRow {
+                            title: "Sidebar"
+                            description: "Default sidebar state"
+
+                            Select {
+                                options: ["Expanded", "Collapsed"]
+                                value: state.sidebar_default
+                                on_change: emit("change_sidebar_default", { value: value })
+                            }
+                        }
+
+                        SettingsRow {
+                            title: "Compact Mode"
+                            description: "Use more compact spacing throughout the app"
+
+                            Toggle {
+                                checked: state.compact_mode
+                                on_change: emit("toggle_compact_mode", { value: checked })
+                            }
+                        }
+                    }
+                }
+
+                // Data & Privacy Section
+                Column {
+                    gap: "24px"
+                    visible: state.settings_section == "data"
+
+                    Text {
+                        content: "Data & Privacy"
+                        role: "heading"
+                        level: 2
+                    }
+
+                    Column {
+                        gap: "16px"
+
+                        SettingsRow {
+                            title: "Export Your Data"
+                            description: "Download a copy of all your data"
+
+                            Button {
+                                text: "Export Data"
+                                variant: "outline"
+                                on_click: emit("export_user_data")
+                                loading: state.exporting_data
+                            }
+                        }
+
+                        SettingsRow {
+                            title: "Analytics"
+                            description: "Help us improve by sharing anonymous usage data"
+
+                            Toggle {
+                                checked: state.analytics_enabled
+                                on_change: emit("toggle_analytics", { value: checked })
+                            }
+                        }
+
+                        Divider {}
+
+                        Card {
+                            variant: "warning"
+                            padding: "16px"
+
+                            Column {
+                                gap: "12px"
+
+                                Row {
+                                    gap: "8px"
+                                    align: "center"
+
+                                    Icon { name: "alert-triangle" color: token("color.warning") }
+                                    Text { content: "Danger Zone" weight: "medium" }
+                                }
+
+                                Text {
+                                    content: "Once you delete your account, there is no going back. Please be certain."
+                                    color: token("color.text.secondary")
+                                }
+
+                                Button {
+                                    text: "Delete Account"
+                                    variant: "destructive"
+                                    on_click: emit("confirm_delete_account")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

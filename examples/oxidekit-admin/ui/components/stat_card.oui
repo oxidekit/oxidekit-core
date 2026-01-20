@@ -1,0 +1,94 @@
+// Stat Card Component
+// Displays a single statistic with icon, value, and change indicator
+
+Component {
+    id: "StatCard"
+
+    props: {
+        title: { type: "string", required: true }
+        value: { type: "string", required: true }
+        icon: { type: "string", required: true }
+        change: { type: "string" }
+        change_type: { type: "enum", values: ["positive", "negative", "neutral"], default: "neutral" }
+        background: { type: "color", default: token("color.surface") }
+    }
+
+    render: Card {
+        padding: "20px"
+        background: props.background
+        min_width: "200px"
+        flex: 1
+
+        Column {
+            gap: "12px"
+
+            Row {
+                justify: "space-between"
+                align: "flex-start"
+
+                Column {
+                    gap: "4px"
+
+                    Text {
+                        content: props.title
+                        size: "sm"
+                        color: token("color.text.secondary")
+                    }
+
+                    Text {
+                        content: props.value
+                        size: "2xl"
+                        weight: "bold"
+                        color: token("color.text.primary")
+                    }
+                }
+
+                Box {
+                    padding: "12px"
+                    background: token("color.primary.subtle")
+                    border_radius: token("radius.md")
+
+                    Icon {
+                        name: props.icon
+                        size: "24px"
+                        color: token("color.primary")
+                    }
+                }
+            }
+
+            Row {
+                gap: "4px"
+                align: "center"
+                visible: props.change != null
+
+                Icon {
+                    name: props.change_type == "positive" ? "trending-up" : props.change_type == "negative" ? "trending-down" : "minus"
+                    size: "16px"
+                    color: change_color(props.change_type)
+                }
+
+                Text {
+                    content: props.change
+                    size: "sm"
+                    weight: "medium"
+                    color: change_color(props.change_type)
+                }
+
+                Text {
+                    content: "from last period"
+                    size: "sm"
+                    color: token("color.text.secondary")
+                }
+            }
+        }
+    }
+}
+
+// Helper function
+fn change_color(type) {
+    match type {
+        "positive" => token("color.success")
+        "negative" => token("color.error")
+        _ => token("color.text.secondary")
+    }
+}

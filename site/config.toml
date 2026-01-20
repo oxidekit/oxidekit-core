@@ -1,0 +1,49 @@
+# OxideKit Documentation Site
+# Built with Zola - https://www.getzola.org/
+
+base_url = "https://oxidekit.com"
+title = "OxideKit"
+description = "A Rust-native application platform"
+default_language = "en"
+
+# Build settings
+compile_sass = true
+build_search_index = true
+generate_feeds = true
+feed_filenames = ["rss.xml"]
+
+# Syntax highlighting
+[markdown]
+highlight_code = true
+highlight_theme = "one-dark"
+external_links_target_blank = true
+smart_punctuation = true
+
+# Search configuration
+[search]
+include_title = true
+include_description = true
+include_content = true
+include_path = true
+truncate_content_length = 100
+
+# Extra configuration
+[extra]
+# Site metadata
+author = "OxideKit Contributors"
+github = "https://github.com/oxidekit"
+version = "0.1.0"
+
+# Navigation
+nav = [
+    { name = "Docs", url = "/docs/" },
+    { name = "Guide", url = "/docs/guide/" },
+    { name = "Reference", url = "/docs/reference/" },
+    { name = "Blog", url = "/blog/" },
+]
+
+# Social links
+social = [
+    { name = "GitHub", url = "https://github.com/oxidekit", icon = "github" },
+    { name = "Discord", url = "https://discord.gg/oxidekit", icon = "discord" },
+]

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="{{ lang | default(value="en") }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ config.title }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{{ config.description }}{% endblock %}">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ get_url(path="css/main.css") | safe }}">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav-container">
+            <a href="/" class="logo">
+                <span class="logo-text">OxideKit</span>
+            </a>
+
+            <ul class="nav-links">
+                {% for item in config.extra.nav %}
+                <li><a href="{{ item.url }}">{{ item.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <div class="nav-actions">
+                <a href="https://github.com/oxidekit" class="github-link" target="_blank" rel="noopener">
+                    GitHub
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-container">
+            <p>&copy; {{ now() | date(format="%Y") }} OxideKit Contributors. Licensed under MIT/Apache-2.0.</p>
+            <ul class="footer-links">
+                <li><a href="https://github.com/oxidekit">GitHub</a></li>
+                <li><a href="/docs/">Documentation</a></li>
+            </ul>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

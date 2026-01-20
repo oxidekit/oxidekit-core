@@ -1,0 +1,11 @@
+[package]
+name = "oxide-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit layout engine"
+
+[dependencies]
+taffy.workspace = true
+bitflags = "2.4"

@@ -1,0 +1,67 @@
+[package]
+name = "oxide-permissions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Permissions & Attestation System - capability enforcement, network allowlists, and build attestation"
+
+[features]
+default = []
+# Enable async runtime support
+async-runtime = ["tokio"]
+# Enable network allowlist enforcement
+network-enforcement = ["trust-dns-resolver", "ipnet"]
+# Enable attestation service
+attestation = ["sha2", "hex", "ed25519-dalek", "base64"]
+# Enable disclosure UI components
+disclosure-ui = []
+# Full feature set
+full = ["async-runtime", "network-enforcement", "attestation", "disclosure-ui"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+toml.workspace = true
+serde_json.workspace = true
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# URL parsing
+url.workspace = true
+
+# Async runtime (optional)
+tokio = { workspace = true, optional = true }
+
+# DNS resolution for network enforcement (optional)
+trust-dns-resolver = { version = "0.23", optional = true }
+
+# IP network parsing (optional)
+ipnet = { version = "2.9", optional = true }
+
+# Cryptographic operations for attestation (optional)
+sha2 = { version = "0.10", optional = true }
+hex = { version = "0.4", optional = true }
+ed25519-dalek = { version = "2.1", optional = true }
+base64 = { version = "0.22", optional = true }
+
+# Regex for validation
+regex = "1.11"
+
+# Semver parsing
+semver = "1.0"
+
+# File walking
+walkdir.workspace = true
+
+[dev-dependencies]
+tempfile = "3.15"

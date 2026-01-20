@@ -1,0 +1,264 @@
+// OxideKit Admin - Golden Reference App
+// A working admin dashboard that validates the platform
+
+app OxideKitAdmin {
+    Row {
+        width: fill
+        height: fill
+
+        // Sidebar
+        Column {
+            width: 240
+            height: fill
+            background: "#1F2937"
+            padding: 16
+            gap: 8
+
+            // Logo
+            Text {
+                content: "OxideKit Admin"
+                size: 20
+                color: "#FFFFFF"
+            }
+
+            // Divider
+            Container {
+                height: 1
+                width: fill
+                background: "#374151"
+                margin_top: 16
+                margin_bottom: 16
+            }
+
+            // Nav items
+            Text {
+                content: "Dashboard"
+                size: 14
+                color: "#60A5FA"
+            }
+
+            Text {
+                content: "Users"
+                size: 14
+                color: "#9CA3AF"
+            }
+
+            Text {
+                content: "Settings"
+                size: 14
+                color: "#9CA3AF"
+            }
+        }
+
+        // Main content
+        Column {
+            flex: 1
+            height: fill
+            background: "#111827"
+
+            // Top bar
+            Row {
+                width: fill
+                height: 64
+                background: "#1F2937"
+                padding: 16
+                align: center
+                justify: space_between
+
+                Text {
+                    content: "Dashboard"
+                    size: 18
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: "Admin User"
+                    size: 14
+                    color: "#9CA3AF"
+                }
+            }
+
+            // Content area
+            Column {
+                padding: 24
+                gap: 24
+                flex: 1
+
+                // Welcome
+                Text {
+                    content: "Welcome to OxideKit Admin"
+                    size: 28
+                    color: "#FFFFFF"
+                }
+
+                Text {
+                    content: "Your admin dashboard is ready."
+                    size: 16
+                    color: "#9CA3AF"
+                }
+
+                // Stats row
+                Row {
+                    gap: 16
+                    width: fill
+
+                    // Stat card 1
+                    Container {
+                        padding: 20
+                        background: "#1F2937"
+                        radius: 8
+                        flex: 1
+
+                        Column {
+                            gap: 8
+
+                            Text {
+                                content: "Total Users"
+                                size: 14
+                                color: "#9CA3AF"
+                            }
+
+                            Text {
+                                content: "1,234"
+                                size: 32
+                                color: "#FFFFFF"
+                            }
+
+                            Text {
+                                content: "+12% from last month"
+                                size: 12
+                                color: "#10B981"
+                            }
+                        }
+                    }
+
+                    // Stat card 2
+                    Container {
+                        padding: 20
+                        background: "#1F2937"
+                        radius: 8
+                        flex: 1
+
+                        Column {
+                            gap: 8
+
+                            Text {
+                                content: "Active Users"
+                                size: 14
+                                color: "#9CA3AF"
+                            }
+
+                            Text {
+                                content: "987"
+                                size: 32
+                                color: "#FFFFFF"
+                            }
+
+                            Text {
+                                content: "+5% from last month"
+                                size: 12
+                                color: "#10B981"
+                            }
+                        }
+                    }
+
+                    // Stat card 3
+                    Container {
+                        padding: 20
+                        background: "#1F2937"
+                        radius: 8
+                        flex: 1
+
+                        Column {
+                            gap: 8
+
+                            Text {
+                                content: "Revenue"
+                                size: 14
+                                color: "#9CA3AF"
+                            }
+
+                            Text {
+                                content: "$12,456"
+                                size: 32
+                                color: "#FFFFFF"
+                            }
+
+                            Text {
+                                content: "+18% from last month"
+                                size: 12
+                                color: "#10B981"
+                            }
+                        }
+                    }
+
+                    // Stat card 4
+                    Container {
+                        padding: 20
+                        background: "#1F2937"
+                        radius: 8
+                        flex: 1
+
+                        Column {
+                            gap: 8
+
+                            Text {
+                                content: "Orders Today"
+                                size: 14
+                                color: "#9CA3AF"
+                            }
+
+                            Text {
+                                content: "42"
+                                size: 32
+                                color: "#FFFFFF"
+                            }
+
+                            Text {
+                                content: "-3% from yesterday"
+                                size: 12
+                                color: "#EF4444"
+                            }
+                        }
+                    }
+                }
+
+                // Recent activity section
+                Container {
+                    padding: 20
+                    background: "#1F2937"
+                    radius: 8
+                    width: fill
+
+                    Column {
+                        gap: 16
+
+                        Text {
+                            content: "Recent Activity"
+                            size: 18
+                            color: "#FFFFFF"
+                        }
+
+                        Text {
+                            content: "User alice@example.com signed up"
+                            size: 14
+                            color: "#9CA3AF"
+                        }
+
+                        Text {
+                            content: "Order #1234 completed"
+                            size: 14
+                            color: "#9CA3AF"
+                        }
+
+                        Text {
+                            content: "User bob@example.com updated profile"
+                            size: 14
+                            color: "#9CA3AF"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,59 @@
+[package]
+name = "oxide-docs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit offline documentation and learning system"
+
+[dependencies]
+# Core dependencies
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+anyhow.workspace = true
+tracing.workspace = true
+
+# For unique IDs
+uuid.workspace = true
+chrono.workspace = true
+
+# For file operations
+walkdir.workspace = true
+
+# Async runtime
+tokio.workspace = true
+
+# Documentation parsing
+pulldown-cmark = "0.11"
+pulldown-cmark-to-cmark = "17"
+
+# Search indexing
+tantivy = "0.22"
+
+# Template rendering
+minijinja = { version = "2.5", features = ["loader"] }
+
+# Syntax highlighting
+syntect = { version = "5.2", default-features = false, features = ["default-fancy"] }
+
+# Archive/bundle support
+tar = "0.4"
+flate2 = "1.0"
+
+# HTTP server for viewer (optional)
+tiny_http = { version = "0.12", optional = true }
+
+# URL handling
+url.workspace = true
+
+# Regex for parsing
+regex = "1.11"
+
+[dev-dependencies]
+tempfile = "3.24"
+
+[features]
+default = ["viewer"]
+viewer = ["tiny_http"]

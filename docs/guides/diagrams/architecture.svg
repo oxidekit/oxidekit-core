@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1D4ED8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="secondaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366F1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4338CA;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="#0F172A"/>
+
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" font-family="system-ui, sans-serif" font-size="24" font-weight="bold" fill="#F8FAFC">OxideKit Architecture</text>
+
+  <!-- Layer 5: Starters -->
+  <g transform="translate(400, 100)">
+    <rect x="-180" y="-25" width="360" height="50" rx="8" fill="url(#primaryGradient)" filter="url(#shadow)"/>
+    <text x="0" y="7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white">STARTERS</text>
+    <text x="0" y="22" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#BFDBFE">Complete project templates</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M400 125 L400 145" stroke="#475569" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+  <!-- Layer 4: Design -->
+  <g transform="translate(400, 170)">
+    <rect x="-180" y="-25" width="360" height="50" rx="8" fill="url(#secondaryGradient)" filter="url(#shadow)"/>
+    <text x="0" y="7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white">DESIGN</text>
+    <text x="0" y="22" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#C7D2FE">Themes, typography, layout patterns</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M400 195 L400 215" stroke="#475569" stroke-width="2"/>
+
+  <!-- Layer 3: Packs -->
+  <g transform="translate(400, 240)">
+    <rect x="-180" y="-25" width="360" height="50" rx="8" fill="#374151" filter="url(#shadow)"/>
+    <text x="0" y="7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white">PACKS</text>
+    <text x="0" y="22" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#9CA3AF">Bundled components &amp; functionality</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M400 265 L400 285" stroke="#475569" stroke-width="2"/>
+
+  <!-- Layer 2: Components -->
+  <g transform="translate(400, 310)">
+    <rect x="-180" y="-25" width="360" height="50" rx="8" fill="#374151" filter="url(#shadow)"/>
+    <text x="0" y="7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white">COMPONENTS</text>
+    <text x="0" y="22" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#9CA3AF">UI building blocks</text>
+  </g>
+
+  <!-- Arrow -->
+  <path d="M400 335 L400 355" stroke="#475569" stroke-width="2"/>
+
+  <!-- Layer 1: Tokens -->
+  <g transform="translate(400, 380)">
+    <rect x="-180" y="-25" width="360" height="50" rx="8" fill="url(#accentGradient)" filter="url(#shadow)"/>
+    <text x="0" y="7" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" font-weight="600" fill="white">TOKENS</text>
+    <text x="0" y="22" text-anchor="middle" font-family="system-ui, sans-serif" font-size="10" fill="#A7F3D0">Design primitives</text>
+  </g>
+
+  <!-- Plugin Categories (left side) -->
+  <g transform="translate(100, 460)">
+    <rect x="-80" y="-20" width="160" height="40" rx="6" fill="#1E3A5F" filter="url(#shadow)"/>
+    <text x="0" y="5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#60A5FA">UI Plugins</text>
+    <text x="0" y="17" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#93C5FD">No permissions</text>
+  </g>
+
+  <g transform="translate(280, 460)">
+    <rect x="-80" y="-20" width="160" height="40" rx="6" fill="#1E3A5F" filter="url(#shadow)"/>
+    <text x="0" y="5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#60A5FA">Service Plugins</text>
+    <text x="0" y="17" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#93C5FD">App-level logic</text>
+  </g>
+
+  <g transform="translate(460, 460)">
+    <rect x="-80" y="-20" width="160" height="40" rx="6" fill="#1E3A5F" filter="url(#shadow)"/>
+    <text x="0" y="5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#60A5FA">Native Plugins</text>
+    <text x="0" y="17" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#93C5FD">OS capabilities</text>
+  </g>
+
+  <g transform="translate(640, 460)">
+    <rect x="-80" y="-20" width="160" height="40" rx="6" fill="#1E3A5F" filter="url(#shadow)"/>
+    <text x="0" y="5" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="500" fill="#60A5FA">Tooling Plugins</text>
+    <text x="0" y="17" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#93C5FD">Dev/build time</text>
+  </g>
+
+  <!-- Build Modes (bottom) -->
+  <g transform="translate(200, 540)">
+    <rect x="-90" y="-22" width="180" height="44" rx="6" fill="#166534" filter="url(#shadow)"/>
+    <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white">DEV MODE</text>
+    <text x="0" y="14" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#86EFAC">Hot reload + Dev tools</text>
+  </g>
+
+  <g transform="translate(400, 540)">
+    <rect x="-90" y="-22" width="180" height="44" rx="6" fill="#7C2D12" filter="url(#shadow)"/>
+    <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white">RELEASE MODE</text>
+    <text x="0" y="14" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#FED7AA">Optimized, no dev tools</text>
+  </g>
+
+  <g transform="translate(600, 540)">
+    <rect x="-90" y="-22" width="180" height="44" rx="6" fill="#4C1D95" filter="url(#shadow)"/>
+    <text x="0" y="0" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="white">DIAGNOSTICS</text>
+    <text x="0" y="14" text-anchor="middle" font-family="system-ui, sans-serif" font-size="9" fill="#DDD6FE">Release + error reporting</text>
+  </g>
+
+  <!-- Labels -->
+  <text x="50" y="240" text-anchor="start" font-family="system-ui, sans-serif" font-size="11" fill="#64748B" transform="rotate(-90 50 240)">Conceptual Layers</text>
+  <text x="50" y="540" text-anchor="start" font-family="system-ui, sans-serif" font-size="11" fill="#64748B">Build Modes</text>
+</svg>

@@ -1,0 +1,36 @@
+[package]
+name = "oxide-crypto"
+description = "OxideKit Crypto Platform - First-class crypto support for wallets, nodes, and signing"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+
+[dependencies]
+# Core dependencies from workspace
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+url = { workspace = true }
+
+# Internal crates
+oxide-plugins = { workspace = true }
+oxide-permissions = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }
+
+[features]
+default = []
+# Feature flags for optional functionality
+ethereum = []
+bitcoin = []
+full = ["ethereum", "bitcoin"]

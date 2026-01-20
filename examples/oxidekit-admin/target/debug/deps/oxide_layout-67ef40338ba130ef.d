@@ -1,0 +1,10 @@
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/deps/liboxide_layout-67ef40338ba130ef.rmeta: /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/lib.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/adaptive.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/responsive.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/safe_area.rs
+
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/deps/liboxide_layout-67ef40338ba130ef.rlib: /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/lib.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/adaptive.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/responsive.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/safe_area.rs
+
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/examples/oxidekit-admin/target/debug/deps/oxide_layout-67ef40338ba130ef.d: /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/lib.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/adaptive.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/responsive.rs /Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/safe_area.rs
+
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/lib.rs:
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/adaptive.rs:
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/responsive.rs:
+/Users/nayiemwillems/workspace/blockchain/oxidekit/oxidekit-core/crates/oxide-layout/src/safe_area.rs:

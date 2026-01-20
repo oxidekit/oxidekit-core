@@ -1,0 +1,55 @@
+[package]
+name = "oxide-client-gen"
+description = "Client SDK generation from OpenAPI specs for OxideKit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+
+[dependencies]
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Async
+tokio = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+
+# File operations
+walkdir = { workspace = true }
+
+# Path manipulation
+camino = { workspace = true }
+
+# Regex for naming validation and parsing
+regex = { workspace = true }
+
+# OpenAPI parsing
+openapiv3 = "2.0"
+
+# Template rendering
+handlebars = "6.3"
+
+# Semver for version comparison
+semver = { workspace = true }
+
+# Text diffing for breaking change detection
+similar = { workspace = true }
+
+# Internal crates
+oxide-backend = { path = "../oxide-backend" }
+
+[dev-dependencies]
+tempfile = "3.14"
+
+[features]
+default = []

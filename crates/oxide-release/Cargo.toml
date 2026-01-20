@@ -1,0 +1,67 @@
+[package]
+name = "oxide-release"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit release automation, signing, packaging, and publishing system"
+
+[features]
+default = ["signing", "packaging", "changelog", "github"]
+# Core signing features
+signing = []
+# macOS notarization support
+notarization = ["signing"]
+# Packaging (DMG, MSI, AppImage)
+packaging = []
+# Changelog generation
+changelog = []
+# GitHub release automation
+github = []
+# Marketplace publishing
+publish = []
+# Update metadata generation
+update = []
+# All features
+full = ["signing", "notarization", "packaging", "changelog", "github", "publish", "update"]
+
+[dependencies]
+# Workspace dependencies
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+walkdir.workspace = true
+
+# Additional dependencies for release automation
+reqwest = { version = "0.12", features = ["json", "multipart"], optional = true }
+sha2 = "0.10"
+hex = "0.4"
+base64 = "0.22"
+flate2 = "1.0"
+tar = "0.4"
+zip = "2.2"
+which = "7.0"
+tempfile = "3.24"
+semver = "1.0"
+git2 = "0.19"
+regex = "1.11"
+globset = "0.4"
+async-trait = "0.1"
+once_cell = "1.20"
+
+# Platform-specific dependencies
+[target.'cfg(target_os = "macos")'.dependencies]
+plist = "1.7"
+
+[target.'cfg(target_os = "windows")'.dependencies]
+winreg = "0.52"
+
+[dev-dependencies]
+tempfile = "3.24"
+tokio-test = "0.4"

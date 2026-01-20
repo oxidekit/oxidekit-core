@@ -1,0 +1,153 @@
+// Admin Shell Layout
+// Main layout with collapsible sidebar and top bar
+
+Layout {
+    id: "admin-shell"
+    direction: "row"
+    width: "100%"
+    height: "100%"
+
+    // Sidebar
+    Sidebar {
+        id: "sidebar"
+        width: state.sidebar_collapsed ? "64px" : "240px"
+        height: "100%"
+        background: token("color.surface")
+        border_right: "1px solid" token("color.border")
+        transition: "width 200ms ease"
+
+        Column {
+            padding: "16px"
+            gap: "8px"
+
+            // Logo
+            Row {
+                justify: "space-between"
+                align: "center"
+
+                Image {
+                    src: "/assets/icons/logo.svg"
+                    width: "32px"
+                    height: "32px"
+                    visible: !state.sidebar_collapsed
+                }
+
+                Button {
+                    icon: state.sidebar_collapsed ? "menu-expand" : "menu-collapse"
+                    variant: "ghost"
+                    on_click: emit("toggle_sidebar")
+                    aria_label: "Toggle sidebar"
+                }
+            }
+
+            Divider { margin: "8px 0" }
+
+            // Navigation items
+            NavItem {
+                icon: "dashboard"
+                label: "Dashboard"
+                active: state.current_page == "dashboard"
+                on_click: emit("navigate", { page: "dashboard" })
+                collapsed: state.sidebar_collapsed
+            }
+
+            NavItem {
+                icon: "users"
+                label: "Users"
+                active: state.current_page == "users"
+                on_click: emit("navigate", { page: "users" })
+                collapsed: state.sidebar_collapsed
+            }
+
+            NavItem {
+                icon: "settings"
+                label: "Settings"
+                active: state.current_page == "settings"
+                on_click: emit("navigate", { page: "settings" })
+                collapsed: state.sidebar_collapsed
+            }
+
+            Spacer { flex: 1 }
+
+            Divider { margin: "8px 0" }
+
+            // Theme toggle
+            Row {
+                justify: state.sidebar_collapsed ? "center" : "flex-start"
+                padding: "8px"
+
+                Button {
+                    icon: state.theme == "dark" ? "sun" : "moon"
+                    variant: "ghost"
+                    on_click: emit("toggle_theme")
+                    aria_label: "Toggle theme"
+                }
+
+                Text {
+                    content: state.theme == "dark" ? "Light Mode" : "Dark Mode"
+                    visible: !state.sidebar_collapsed
+                    color: token("color.text.secondary")
+                }
+            }
+        }
+    }
+
+    // Main content area
+    Column {
+        flex: 1
+        height: "100%"
+
+        // Top bar
+        TopBar {
+            id: "topbar"
+            height: "64px"
+            padding: "0 24px"
+            background: token("color.surface")
+            border_bottom: "1px solid" token("color.border")
+
+            Row {
+                justify: "space-between"
+                align: "center"
+                height: "100%"
+
+                // Search
+                SearchInput {
+                    placeholder: "Search..."
+                    width: "300px"
+                    on_change: emit("search", { query: value })
+                }
+
+                // User menu
+                Row {
+                    gap: "16px"
+                    align: "center"
+
+                    Button {
+                        icon: "bell"
+                        variant: "ghost"
+                        badge: 3
+                        on_click: emit("show_notifications")
+                        aria_label: "Notifications"
+                    }
+
+                    UserMenu {
+                        name: state.user.name
+                        avatar: state.user.avatar
+                        on_click: emit("show_user_menu")
+                    }
+                }
+            }
+        }
+
+        // Content slot
+        Content {
+            id: "main-content"
+            flex: 1
+            padding: "24px"
+            background: token("color.background")
+            overflow: "auto"
+
+            slot: "main"
+        }
+    }
+}

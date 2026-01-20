@@ -1,0 +1,8 @@
+//! {{project_name}} - Built with OxideKit
+
+use oxide_runtime::prelude::*;
+
+fn main() -> anyhow::Result<()> {
+    let app = OxideApp::new("{{project_name}}")?;
+    app.run()
+}

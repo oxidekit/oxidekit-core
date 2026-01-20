@@ -1,0 +1,46 @@
+# OxideKit Admin - Golden Reference App
+# This app validates the platform by exercising all major capabilities
+
+[app]
+id = "com.oxidekit.admin"
+name = "OxideKit Admin"
+version = "0.1.0"
+description = "Golden Reference App - Admin Dashboard"
+
+[core]
+requires = ">=0.1.0"
+
+[window]
+title = "OxideKit Admin"
+width = 1280
+height = 720
+resizable = true
+decorations = true
+
+[extensions]
+"ui.core" = "^0.1"
+"ui.data" = "^0.1"
+"ui.forms" = "^0.1"
+"ui.navigation" = "^0.1"
+"native.fs" = "^0.1"
+
+[permissions]
+network = ["https://api.example.com", "https://localhost:8080"]
+filesystem = { read = ["./data", "./config"], write = ["./exports", "./logs"] }
+
+[build]
+target = ["windows", "macos", "linux", "static"]
+
+[theme]
+default = "light"
+available = ["light", "dark"]
+
+[devtools]
+inspector = true
+diagnostics = true
+hot_reload = true
+
+[diagnostics]
+crash_reporting = true
+performance_metrics = true
+endpoint = "https://diagnostics.oxidekit.com/v1/reports"

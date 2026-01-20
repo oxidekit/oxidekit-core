@@ -1,0 +1,61 @@
+[package]
+name = "oxide-state"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit State Management & Persistence System"
+
+[features]
+default = []
+# Enable SQLite persistence backend
+sqlite = ["dep:rusqlite"]
+# Enable encryption for sensitive data
+encryption = ["dep:aes-gcm", "dep:argon2", "dep:rand"]
+# Enable full debugging/inspection tools
+debug = []
+# Enable all features
+full = ["sqlite", "encryption", "debug"]
+
+[dependencies]
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Async runtime
+tokio = { workspace = true, features = ["sync", "fs", "time"] }
+
+# Logging
+tracing.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# Type ID for reflection
+typetag = "0.2"
+
+# File system operations
+directories = "5.0"
+
+# Hashing for change detection
+seahash = "4.1"
+
+# Async trait support
+async-trait.workspace = true
+
+# Optional: SQLite persistence
+rusqlite = { version = "0.32", features = ["bundled", "serde_json"], optional = true }
+
+# Optional: Encryption
+aes-gcm = { version = "0.10", optional = true }
+argon2 = { version = "0.5", optional = true }
+rand = { version = "0.8", optional = true }
+
+[dev-dependencies]
+tempfile = "3.10"
+tokio-test = "0.4"

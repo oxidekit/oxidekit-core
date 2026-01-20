@@ -1,0 +1,63 @@
+// Nav Item Component
+// Navigation item for the sidebar
+
+Component {
+    id: "NavItem"
+
+    props: {
+        icon: { type: "string", required: true }
+        label: { type: "string", required: true }
+        active: { type: "boolean", default: false }
+        collapsed: { type: "boolean", default: false }
+        badge: { type: "number" }
+    }
+
+    events: {
+        on_click: {}
+    }
+
+    render: Button {
+        variant: "ghost"
+        width: "100%"
+        justify: props.collapsed ? "center" : "flex-start"
+        padding: props.collapsed ? "12px" : "12px 16px"
+        background: props.active ? token("color.primary.subtle") : "transparent"
+        border_radius: token("radius.md")
+        on_click: emit("on_click")
+        aria_current: props.active ? "page" : null
+
+        Row {
+            gap: "12px"
+            align: "center"
+
+            Icon {
+                name: props.icon
+                size: "20px"
+                color: props.active ? token("color.primary") : token("color.text.secondary")
+            }
+
+            Text {
+                content: props.label
+                visible: !props.collapsed
+                weight: props.active ? "medium" : "normal"
+                color: props.active ? token("color.primary") : token("color.text.primary")
+            }
+
+            Spacer { flex: 1 visible: !props.collapsed }
+
+            Badge {
+                visible: props.badge != null && !props.collapsed
+                value: props.badge
+                variant: "primary"
+                size: "sm"
+            }
+        }
+    }
+
+    // Tooltip when collapsed
+    Tooltip {
+        content: props.label
+        visible: props.collapsed
+        position: "right"
+    }
+}

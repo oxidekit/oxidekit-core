@@ -1,0 +1,69 @@
+[package]
+name = "oxide-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit CLI tool"
+
+[[bin]]
+name = "oxide"
+path = "src/main.rs"
+
+[features]
+default = []
+# Enable legal tools (license scanning, compliance)
+legal = ["oxide-legal"]
+# Enable SBOM generation
+legal-sbom = ["legal", "oxide-legal/sbom"]
+# Enable CLA checking
+legal-cla = ["legal", "oxide-legal/cla"]
+# Enable export control checks
+legal-export = ["legal", "oxide-legal/export-control"]
+# Enable all legal features
+legal-full = ["legal", "legal-sbom", "legal-cla", "legal-export"]
+# Enable quality gates
+quality = ["oxide-quality"]
+# Enable all quality features
+quality-full = ["quality", "oxide-quality/full"]
+
+[dependencies]
+oxide-compiler.workspace = true
+oxide-components.workspace = true
+oxide-diagnostics.workspace = true
+oxide-devtools.workspace = true
+oxide-docs.workspace = true
+oxide-i18n.workspace = true
+oxide-legal = { workspace = true, optional = true }
+oxide-metrics.workspace = true
+oxide-plugins.workspace = true
+oxide-portable.workspace = true
+oxide-quality = { workspace = true, optional = true, features = ["full"] }
+oxide-starters.workspace = true
+oxide-runtime.workspace = true
+oxide-version = { workspace = true, features = ["full"] }
+oxide-figma.workspace = true
+oxide-branding.workspace = true
+oxide-admin.workspace = true
+oxide-ai.workspace = true
+
+clap.workspace = true
+camino.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+tokio.workspace = true
+notify.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+url.workspace = true
+tempfile = "3.24"
+ctrlc = "3.4"
+
+# Interactive CLI prompts
+dialoguer = { version = "0.11", features = ["fuzzy-select"] }
+console = "0.15"
+
+# File walking (for migration analysis)
+walkdir.workspace = true

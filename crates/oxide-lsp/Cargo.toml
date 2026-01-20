@@ -1,0 +1,61 @@
+[package]
+name = "oxide-lsp"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit Language Server Protocol implementation for VS Code and other editors"
+
+[[bin]]
+name = "oxide-lsp"
+path = "src/main.rs"
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+# LSP protocol
+tower-lsp = "0.20"
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Logging
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# File watching
+notify.workspace = true
+
+# Path manipulation
+camino.workspace = true
+
+# File operations
+walkdir.workspace = true
+
+# Async utilities
+async-trait.workspace = true
+
+# Internal crates for parsing and validation
+oxide-compiler.workspace = true
+oxide-components.workspace = true
+oxide-i18n.workspace = true
+oxide-diagnostics.workspace = true
+
+# URL handling for document URIs
+url.workspace = true
+
+# Regex for pattern matching
+regex.workspace = true
+
+[dev-dependencies]
+tempfile = "3.14"

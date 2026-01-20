@@ -1,0 +1,40 @@
+// Hello OxideKit - Main application UI
+// This file defines the root UI component using Oxide UI language
+
+app HelloApp {
+    Column {
+        align: center
+        justify: center
+        width: fill
+        height: fill
+        gap: 24
+
+        // Main title
+        Text {
+            content: "Hello OxideKit!"
+            size: 48
+            color: "#E5E7EB"
+            font: "system"
+        }
+
+        // Subtitle
+        Text {
+            content: "A Rust-native application platform"
+            size: 20
+            color: "#9CA3AF"
+        }
+
+        // Description
+        Container {
+            padding: 24
+            max_width: 600
+
+            Text {
+                content: "Build fast, ship native. No browser, no JavaScript, no bundlers."
+                size: 16
+                color: "#6B7280"
+                align: center
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+// {{project_name}} - Main UI
+
+App {
+    Window {
+        title: "{{project_name}}"
+        width: 1200
+        height: 800
+
+        Column {
+            padding: 24
+            gap: 16
+
+            Text {
+                content: "Welcome to {{project_name}}"
+                role: "heading"
+            }
+        }
+    }
+}

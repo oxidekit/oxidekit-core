@@ -1,0 +1,104 @@
+# Backend Contract Definition
+# Defines the API contract for type-safe client generation
+
+[contract]
+name = "admin-api"
+version = "0.1.0"
+base_url = "https://api.example.com"
+
+# User endpoints
+[[endpoints]]
+name = "list_users"
+method = "GET"
+path = "/users"
+description = "List all users with pagination"
+
+[endpoints.query]
+page = { type = "integer", default = 1 }
+limit = { type = "integer", default = 20 }
+search = { type = "string", optional = true }
+
+[endpoints.response]
+type = "UserList"
+
+[[endpoints]]
+name = "get_user"
+method = "GET"
+path = "/users/{id}"
+description = "Get a single user by ID"
+
+[endpoints.params]
+id = { type = "string" }
+
+[endpoints.response]
+type = "User"
+
+[[endpoints]]
+name = "create_user"
+method = "POST"
+path = "/users"
+description = "Create a new user"
+
+[endpoints.body]
+type = "CreateUserRequest"
+
+[endpoints.response]
+type = "User"
+
+[[endpoints]]
+name = "update_user"
+method = "PUT"
+path = "/users/{id}"
+description = "Update an existing user"
+
+[endpoints.params]
+id = { type = "string" }
+
+[endpoints.body]
+type = "UpdateUserRequest"
+
+[endpoints.response]
+type = "User"
+
+[[endpoints]]
+name = "delete_user"
+method = "DELETE"
+path = "/users/{id}"
+description = "Delete a user"
+
+[endpoints.params]
+id = { type = "string" }
+
+[endpoints.response]
+type = "DeleteResponse"
+
+# Type definitions
+[types.User]
+id = "string"
+email = "string"
+name = "string"
+role = "string"
+status = "string"
+created_at = "datetime"
+updated_at = "datetime"
+
+[types.UserList]
+users = "User[]"
+total = "integer"
+page = "integer"
+limit = "integer"
+
+[types.CreateUserRequest]
+email = "string"
+name = "string"
+role = "string"
+password = "string"
+
+[types.UpdateUserRequest]
+email = { type = "string", optional = true }
+name = { type = "string", optional = true }
+role = { type = "string", optional = true }
+
+[types.DeleteResponse]
+success = "boolean"
+message = "string"

@@ -1,0 +1,49 @@
+[package]
+name = "oxide-migrate"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "OxideKit HTML Theme Migrator - Bootstrap/Tailwind/ThemeForest to OxideKit design tokens"
+
+[dependencies]
+# OxideKit internal crates
+oxide-components.workspace = true
+oxide-branding.workspace = true
+
+# Serialization
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+
+# Error handling
+thiserror.workspace = true
+anyhow.workspace = true
+
+# Logging
+tracing.workspace = true
+
+# Regex for pattern matching
+regex.workspace = true
+
+# File operations
+walkdir.workspace = true
+
+# Time and IDs
+chrono.workspace = true
+uuid.workspace = true
+
+# Path manipulation
+camino.workspace = true
+
+# Archive handling for zip files
+zip = "2.2"
+
+# HTML parsing
+scraper = "0.22"
+
+# CSS parsing (using cssparser as alternative since lightningcss is alpha-only)
+cssparser = "0.34"
+
+[dev-dependencies]
+tempfile = "3.24"
