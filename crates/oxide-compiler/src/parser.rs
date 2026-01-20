@@ -7,7 +7,19 @@ use crate::lexer::{Token, TokenKind};
 /// AST node for a .oui program
 #[derive(Debug, Clone)]
 pub struct Program {
+    /// Import statements
+    pub imports: Vec<Import>,
+    /// The main app declaration
     pub app: AppDecl,
+}
+
+/// An import statement
+#[derive(Debug, Clone)]
+pub struct Import {
+    /// Components being imported
+    pub items: Vec<String>,
+    /// Source path (file or module)
+    pub from: String,
 }
 
 /// App declaration
@@ -61,8 +73,56 @@ impl Parser {
 
     /// Parse the token stream into a program
     pub fn parse(&mut self) -> Result<Program, ParseError> {
+        // Parse imports first
+        let mut imports = Vec::new();
+        while self.check(TokenKind::Import) {
+            imports.push(self.parse_import()?);
+        }
+
+        // Then parse the app
         let app = self.parse_app()?;
-        Ok(Program { app })
+        Ok(Program { imports, app })
+    }
+
+    /// Parse an import statement: import { A, B } from "path"
+    fn parse_import(&mut self) -> Result<Import, ParseError> {
+        self.expect(TokenKind::Import)?;
+        self.expect(TokenKind::LBrace)?;
+
+        // Parse items (comma-separated identifiers)
+        let mut items = Vec::new();
+        loop {
+            let name = self.expect_ident()?;
+            items.push(name);
+
+            if self.check(TokenKind::Comma) {
+                self.advance(); // consume comma
+            } else {
+                break;
+            }
+        }
+
+        self.expect(TokenKind::RBrace)?;
+        self.expect(TokenKind::From)?;
+
+        // Get the path string
+        let from = match &self.peek().kind {
+            TokenKind::String(s) => {
+                let path = s.clone();
+                self.advance();
+                path
+            }
+            _ => {
+                let token = self.peek().clone();
+                return Err(ParseError {
+                    line: token.line,
+                    column: token.column,
+                    message: format!("Expected string path after 'from', found {:?}", token.kind),
+                });
+            }
+        };
+
+        Ok(Import { items, from })
     }
 
     fn parse_app(&mut self) -> Result<AppDecl, ParseError> {
@@ -305,5 +365,50 @@ mod tests {
         let container = &program.app.children[0];
         assert!(container.style.is_some());
         assert_eq!(container.style.as_ref().unwrap().properties.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_import() {
+        let source = r##"
+            import { Button, Card } from "./components/ui.oui"
+
+            app MyApp {
+                Card {
+                    Button { text: "Click" }
+                }
+            }
+        "##;
+
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+        let mut parser = Parser::new(tokens);
+        let program = parser.parse().unwrap();
+
+        assert_eq!(program.imports.len(), 1);
+        assert_eq!(program.imports[0].items, vec!["Button", "Card"]);
+        assert_eq!(program.imports[0].from, "./components/ui.oui");
+        assert_eq!(program.app.children[0].name, "Card");
+    }
+
+    #[test]
+    fn test_parse_multiple_imports() {
+        let source = r##"
+            import { Navbar } from "./navbar.oui"
+            import { Footer } from "./footer.oui"
+
+            app MyApp {
+                Navbar {}
+                Footer {}
+            }
+        "##;
+
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+        let mut parser = Parser::new(tokens);
+        let program = parser.parse().unwrap();
+
+        assert_eq!(program.imports.len(), 2);
+        assert_eq!(program.imports[0].items, vec!["Navbar"]);
+        assert_eq!(program.imports[1].items, vec!["Footer"]);
     }
 }
