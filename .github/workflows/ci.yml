@@ -21,7 +21,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev libgtk-3-dev
       - run: cargo check --workspace --all-features
 
   test:
@@ -38,7 +38,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev libgtk-3-dev
       - run: cargo test --workspace
 
   fmt:
@@ -63,7 +63,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev libgtk-3-dev
       - run: cargo clippy --workspace --all-features -- -D warnings
 
   docs:
@@ -76,7 +76,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev
+          sudo apt-get install -y libxkbcommon-dev libwayland-dev libglib2.0-dev libgtk-3-dev
       - run: cargo doc --workspace --no-deps
         env:
           RUSTDOCFLAGS: -D warnings
