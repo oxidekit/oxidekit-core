@@ -50,25 +50,93 @@ fn normalize_prop_name(name: &str) -> String {
 }
 
 /// Resolve design tokens in string values
-/// Handles `token("color.primary")` syntax and returns the resolved CSS value
+/// Handles both `token("color.primary")` syntax and `{colors.primary}` syntax
 fn resolve_tokens(value: &str) -> String {
-    // Check for token() syntax
-    if let Some(start) = value.find("token(") {
-        if let Some(end) = value[start..].find(')') {
-            let token_call = &value[start..start + end + 1];
+    let mut result = value.to_string();
+
+    // First, handle token() syntax: token("color.primary")
+    while let Some(start) = result.find("token(") {
+        if let Some(end) = result[start..].find(')') {
+            let token_call = &result[start..start + end + 1];
             // Extract the token path from token("path") or token('path')
             let inner = &token_call[6..token_call.len() - 1].trim();
             let token_path = inner.trim_matches(|c| c == '"' || c == '\'');
 
             if let Some(resolved) = lookup_token(token_path) {
                 // Replace the token() call with the resolved value
-                let before = &value[..start];
-                let after = &value[start + end + 1..];
-                return format!("{}{}{}", before, resolved, resolve_tokens(after));
+                result = format!("{}{}{}", &result[..start], resolved, &result[start + end + 1..]);
+            } else {
+                break; // Unknown token, stop processing
             }
+        } else {
+            break;
         }
     }
-    value.to_string()
+
+    // Then, handle {path} syntax: {colors.primary} or {spacing.4}
+    while let Some(start) = result.find('{') {
+        if let Some(end) = result[start..].find('}') {
+            let token_path = &result[start + 1..start + end];
+            // Convert {colors.primary} to color.primary format
+            let normalized_path = normalize_token_path(token_path);
+
+            if let Some(resolved) = lookup_token(&normalized_path) {
+                result = format!("{}{}{}", &result[..start], resolved, &result[start + end + 1..]);
+            } else {
+                break; // Unknown token, stop processing
+            }
+        } else {
+            break;
+        }
+    }
+
+    result
+}
+
+/// Normalize token path from theme.toml format to internal format
+/// {colors.primary} -> color.primary
+/// {colors.text_primary} -> color.text.primary
+/// {spacing.md} -> spacing.md
+fn normalize_token_path(path: &str) -> String {
+    let path = path.trim();
+
+    // Map common theme.toml paths to internal token paths
+    if path.starts_with("colors.") {
+        // colors.primary -> color.primary
+        // colors.text_primary -> color.text.primary
+        let suffix = &path[7..];
+        // Convert snake_case to dot notation for nested paths
+        let normalized_suffix = suffix.replace('_', ".");
+        return format!("color.{}", normalized_suffix);
+    }
+    if path.starts_with("color.") {
+        // Also convert snake_case in color.* paths
+        let suffix = &path[6..];
+        let normalized_suffix = suffix.replace('_', ".");
+        return format!("color.{}", normalized_suffix);
+    }
+    if path.starts_with("spacing.") {
+        return path.to_string();
+    }
+    if path.starts_with("radius.") {
+        return path.to_string();
+    }
+    if path.starts_with("shadow.") {
+        return path.to_string();
+    }
+    if path.starts_with("font.") {
+        let suffix = &path[5..];
+        let normalized_suffix = suffix.replace('_', ".");
+        return format!("font.{}", normalized_suffix);
+    }
+    if path.starts_with("line.") {
+        let suffix = &path[5..];
+        let normalized_suffix = suffix.replace('_', ".");
+        return format!("line.{}", normalized_suffix);
+    }
+
+    // Default: return as-is
+    path.to_string()
 }
 
 /// Look up a design token by its path
@@ -1490,6 +1558,35 @@ mod tests {
         // Spacing tokens
         assert_eq!(resolve_tokens(r#"token("spacing.4")"#), "16px");
         assert_eq!(resolve_tokens(r#"token("radius.md")"#), "8px");
+
+        // Curly brace syntax: {colors.primary} from theme.toml format
+        assert_eq!(resolve_tokens("{colors.primary}"), "#3B82F6");
+        assert_eq!(resolve_tokens("{color.surface}"), "#1F2937");
+        assert_eq!(resolve_tokens("{spacing.4}"), "16px");
+        assert_eq!(resolve_tokens("{radius.md}"), "8px");
+    }
+
+    #[test]
+    fn test_curly_brace_token_in_html() {
+        let source = r##"
+            app Test {
+                Column {
+                    background: "{colors.primary}"
+
+                    Text {
+                        content: "Hello"
+                        color: "{colors.text_primary}"
+                    }
+                }
+            }
+        "##;
+
+        let ir = compile(source).unwrap();
+        let html = generate_html(&ir, "Test");
+
+        // Curly brace tokens should be resolved to actual CSS values
+        assert!(html.contains("background-color: #3B82F6"));
+        assert!(html.contains("color: #E5E7EB"));
     }
 
     #[test]

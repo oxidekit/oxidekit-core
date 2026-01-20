@@ -26,7 +26,7 @@ impl<'a> ProjectGenerator<'a> {
     pub fn generate(&self) -> Result<GenerationResult> {
         let mut result = GenerationResult::new(&self.config.name);
 
-        // Check if output directory already exists
+        // Check if output directory already exists (but don't create it yet for starters)
         if self.config.output_dir.exists() {
             // For init, we allow existing empty directories
             let is_empty = fs::read_dir(&self.config.output_dir)?
@@ -40,17 +40,20 @@ impl<'a> ProjectGenerator<'a> {
                     self.config.output_dir.display()
                 );
             }
-        } else {
-            fs::create_dir_all(&self.config.output_dir)
-                .context("Failed to create project directory")?;
         }
 
         prompts::info(&format!("Creating project in {}", self.config.output_dir.display()));
 
         // Generate from starter or blank template
         if let Some(ref starter_id) = self.config.starter {
+            // StarterGenerator creates the directory itself, so we don't create it here
             self.generate_from_starter(starter_id, &mut result)?;
         } else {
+            // For blank projects, create the directory first
+            if !self.config.output_dir.exists() {
+                fs::create_dir_all(&self.config.output_dir)
+                    .context("Failed to create project directory")?;
+            }
             self.generate_blank_project(&mut result)?;
         }
 

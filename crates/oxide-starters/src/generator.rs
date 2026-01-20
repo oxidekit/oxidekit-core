@@ -45,12 +45,21 @@ impl<'a> StarterGenerator<'a> {
         vars.insert("starter_id".to_string(), self.spec.id.clone());
         vars.insert("starter_version".to_string(), self.spec.version.clone());
 
-        // Create output directory
+        // Create output directory (allow existing empty directories)
         let project_dir = output_dir.join(project_name);
         if project_dir.exists() {
-            anyhow::bail!("Directory already exists: {}", project_dir.display());
+            // Check if it's empty (excluding .git)
+            let is_empty = fs::read_dir(&project_dir)?
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_name() != ".git")
+                .count() == 0;
+
+            if !is_empty {
+                anyhow::bail!("Directory already exists and is not empty: {}", project_dir.display());
+            }
+        } else {
+            fs::create_dir_all(&project_dir)?;
         }
-        fs::create_dir_all(&project_dir)?;
 
         let mut result = GenerationResult {
             project_dir: project_dir.clone(),
@@ -89,6 +98,10 @@ impl<'a> StarterGenerator<'a> {
         fs::create_dir_all(project_dir.join("assets/fonts"))?;
         fs::create_dir_all(project_dir.join("assets/icons"))?;
         fs::create_dir_all(project_dir.join("assets/images"))?;
+
+        // Generate theme.toml
+        self.generate_theme_toml(&project_dir)?;
+        result.files_created.push(project_dir.join("theme.toml"));
 
         // Record plugins to install
         for plugin in &self.spec.plugins {
@@ -283,6 +296,103 @@ App {{
         );
 
         fs::write(project_dir.join("ui/app.oui"), content)?;
+        Ok(())
+    }
+
+    /// Generate theme.toml
+    fn generate_theme_toml(&self, project_dir: &Path) -> anyhow::Result<()> {
+        let content = r#"# OxideKit Theme Configuration
+# Design tokens for colors, spacing, typography, and effects
+
+[colors]
+# Primary brand colors
+primary = "#3B82F6"
+primary_light = "#60A5FA"
+primary_dark = "#2563EB"
+
+# Semantic colors
+secondary = "#6B7280"
+success = "#22C55E"
+warning = "#F59E0B"
+danger = "#EF4444"
+info = "#06B6D4"
+
+# Surface colors
+background = "#0B0F14"
+surface = "#1F2937"
+surface_variant = "#374151"
+
+# Text colors
+text_primary = "#E5E7EB"
+text_secondary = "#9CA3AF"
+text_disabled = "#6B7280"
+text_inverse = "#111827"
+
+# Border colors
+border = "#374151"
+border_strong = "#4B5563"
+divider = "#374151"
+
+[spacing]
+# Scale: 4px base unit
+0 = "0"
+1 = "4px"
+2 = "8px"
+3 = "12px"
+4 = "16px"
+5 = "20px"
+6 = "24px"
+8 = "32px"
+10 = "40px"
+12 = "48px"
+16 = "64px"
+20 = "80px"
+24 = "96px"
+
+[radius]
+none = "0"
+sm = "4px"
+md = "8px"
+lg = "12px"
+xl = "16px"
+full = "9999px"
+
+[shadow]
+none = "none"
+sm = "0 1px 2px rgba(0,0,0,0.05)"
+md = "0 4px 6px rgba(0,0,0,0.1)"
+lg = "0 10px 15px rgba(0,0,0,0.1)"
+xl = "0 20px 25px rgba(0,0,0,0.15)"
+
+[font]
+# Font families
+family_sans = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+family_mono = "'SF Mono', 'Fira Code', Consolas, monospace"
+
+# Font sizes
+size_xs = "12px"
+size_sm = "14px"
+size_base = "16px"
+size_lg = "18px"
+size_xl = "20px"
+size_2xl = "24px"
+size_3xl = "30px"
+size_4xl = "36px"
+
+# Font weights
+weight_normal = "400"
+weight_medium = "500"
+weight_semibold = "600"
+weight_bold = "700"
+
+[line]
+# Line heights
+height_tight = "1.25"
+height_normal = "1.5"
+height_relaxed = "1.75"
+"#;
+
+        fs::write(project_dir.join("theme.toml"), content)?;
         Ok(())
     }
 }
