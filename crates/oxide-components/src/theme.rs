@@ -413,6 +413,173 @@ pub struct TypographyTokens {
     /// Letter spacing
     #[serde(default)]
     pub letter_spacing: LetterSpacingTokens,
+
+    /// Typography roles (semantic text styles)
+    #[serde(default)]
+    pub roles: TypographyRoles,
+}
+
+/// Typography roles - semantic text style presets
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TypographyRoles {
+    /// Page title (h1)
+    pub display: TypographyStyle,
+    /// Section heading (h2)
+    pub headline: TypographyStyle,
+    /// Subsection heading (h3)
+    pub title: TypographyStyle,
+    /// Card/component title (h4)
+    pub subtitle: TypographyStyle,
+    /// Primary body text
+    pub body: TypographyStyle,
+    /// Secondary/supporting text
+    pub body_small: TypographyStyle,
+    /// Button text
+    pub button: TypographyStyle,
+    /// Form labels
+    pub label: TypographyStyle,
+    /// Captions and helper text
+    pub caption: TypographyStyle,
+    /// Code/monospace text
+    pub code: TypographyStyle,
+    /// Overline text (uppercase small)
+    pub overline: TypographyStyle,
+}
+
+impl Default for TypographyRoles {
+    fn default() -> Self {
+        Self {
+            display: TypographyStyle {
+                font_family: None, // uses default sans
+                font_size: 48.0,
+                font_weight: 700,
+                line_height: 1.1,
+                letter_spacing: -0.02,
+            },
+            headline: TypographyStyle {
+                font_family: None,
+                font_size: 32.0,
+                font_weight: 600,
+                line_height: 1.2,
+                letter_spacing: -0.01,
+            },
+            title: TypographyStyle {
+                font_family: None,
+                font_size: 24.0,
+                font_weight: 600,
+                line_height: 1.3,
+                letter_spacing: 0.0,
+            },
+            subtitle: TypographyStyle {
+                font_family: None,
+                font_size: 18.0,
+                font_weight: 500,
+                line_height: 1.4,
+                letter_spacing: 0.0,
+            },
+            body: TypographyStyle {
+                font_family: None,
+                font_size: 16.0,
+                font_weight: 400,
+                line_height: 1.5,
+                letter_spacing: 0.0,
+            },
+            body_small: TypographyStyle {
+                font_family: None,
+                font_size: 14.0,
+                font_weight: 400,
+                line_height: 1.5,
+                letter_spacing: 0.0,
+            },
+            button: TypographyStyle {
+                font_family: None,
+                font_size: 14.0,
+                font_weight: 500,
+                line_height: 1.0,
+                letter_spacing: 0.01,
+            },
+            label: TypographyStyle {
+                font_family: None,
+                font_size: 14.0,
+                font_weight: 500,
+                line_height: 1.4,
+                letter_spacing: 0.0,
+            },
+            caption: TypographyStyle {
+                font_family: None,
+                font_size: 12.0,
+                font_weight: 400,
+                line_height: 1.4,
+                letter_spacing: 0.0,
+            },
+            code: TypographyStyle {
+                font_family: Some("mono".into()),
+                font_size: 14.0,
+                font_weight: 400,
+                line_height: 1.5,
+                letter_spacing: 0.0,
+            },
+            overline: TypographyStyle {
+                font_family: None,
+                font_size: 10.0,
+                font_weight: 600,
+                line_height: 1.4,
+                letter_spacing: 0.1, // uppercase tracking
+            },
+        }
+    }
+}
+
+/// A complete typography style definition
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TypographyStyle {
+    /// Font family key (references font_family tokens, None = default sans)
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub font_family: Option<String>,
+    /// Font size in logical pixels
+    pub font_size: f32,
+    /// Font weight (100-900)
+    pub font_weight: u16,
+    /// Line height multiplier
+    pub line_height: f32,
+    /// Letter spacing (em units)
+    pub letter_spacing: f32,
+}
+
+impl TypographyStyle {
+    /// Create a new typography style
+    pub fn new(font_size: f32, font_weight: u16) -> Self {
+        Self {
+            font_family: None,
+            font_size,
+            font_weight,
+            line_height: 1.5,
+            letter_spacing: 0.0,
+        }
+    }
+
+    /// Set font family
+    pub fn with_family(mut self, family: impl Into<String>) -> Self {
+        self.font_family = Some(family.into());
+        self
+    }
+
+    /// Set line height
+    pub fn with_line_height(mut self, line_height: f32) -> Self {
+        self.line_height = line_height;
+        self
+    }
+
+    /// Set letter spacing
+    pub fn with_letter_spacing(mut self, letter_spacing: f32) -> Self {
+        self.letter_spacing = letter_spacing;
+        self
+    }
+
+    /// Get computed line height in pixels
+    pub fn line_height_px(&self) -> f32 {
+        self.font_size * self.line_height
+    }
 }
 
 /// Font family tokens
