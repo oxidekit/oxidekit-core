@@ -33,6 +33,7 @@ pub enum TokenKind {
     Dot,       // .
     Equal,     // =
     Arrow,     // =>
+    Question,  // ?
 
     // Special
     Eof,
@@ -127,6 +128,10 @@ impl<'a> Lexer<'a> {
                     } else {
                         TokenKind::Equal
                     }
+                }
+                '?' => {
+                    self.advance();
+                    TokenKind::Question
                 }
                 '"' => self.string()?,
                 c if c.is_ascii_digit() || c == '-' => self.number()?,

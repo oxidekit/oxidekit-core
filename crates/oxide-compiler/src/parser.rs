@@ -9,6 +9,8 @@ use crate::lexer::{Token, TokenKind};
 pub struct Program {
     /// Import statements
     pub imports: Vec<Import>,
+    /// Component definitions
+    pub components: Vec<ComponentDef>,
     /// The main app declaration
     pub app: AppDecl,
 }
@@ -20,6 +22,40 @@ pub struct Import {
     pub items: Vec<String>,
     /// Source path (file or module)
     pub from: String,
+}
+
+/// A custom component definition
+#[derive(Debug, Clone)]
+pub struct ComponentDef {
+    /// Component name
+    pub name: String,
+    /// Component props (typed parameters)
+    pub props: Vec<PropDef>,
+    /// Component body (the UI tree)
+    pub body: Element,
+}
+
+/// A prop definition with type and optional default
+#[derive(Debug, Clone)]
+pub struct PropDef {
+    /// Prop name
+    pub name: String,
+    /// Prop type
+    pub prop_type: PropType,
+    /// Whether the prop is optional
+    pub optional: bool,
+    /// Default value (if any)
+    pub default: Option<Value>,
+}
+
+/// Prop types
+#[derive(Debug, Clone, PartialEq)]
+pub enum PropType {
+    String,
+    Number,
+    Bool,
+    Color,
+    Any,
 }
 
 /// App declaration
@@ -79,9 +115,93 @@ impl Parser {
             imports.push(self.parse_import()?);
         }
 
+        // Parse component definitions
+        let mut components = Vec::new();
+        while self.check(TokenKind::Component) {
+            components.push(self.parse_component_def()?);
+        }
+
         // Then parse the app
         let app = self.parse_app()?;
-        Ok(Program { imports, app })
+        Ok(Program {
+            imports,
+            components,
+            app,
+        })
+    }
+
+    /// Parse a component definition: component MyButton { props { ... } body { ... } }
+    fn parse_component_def(&mut self) -> Result<ComponentDef, ParseError> {
+        self.expect(TokenKind::Component)?;
+        let name = self.expect_ident()?;
+        self.expect(TokenKind::LBrace)?;
+
+        // Parse props block if present
+        let mut props = Vec::new();
+        if self.check(TokenKind::Prop) {
+            self.advance(); // consume 'prop' keyword
+            self.expect(TokenKind::LBrace)?;
+
+            while !self.check(TokenKind::RBrace) && !self.is_at_end() {
+                props.push(self.parse_prop_def()?);
+            }
+
+            self.expect(TokenKind::RBrace)?;
+        }
+
+        // Parse the component body (single element)
+        let body = self.parse_element()?;
+
+        self.expect(TokenKind::RBrace)?;
+
+        Ok(ComponentDef { name, props, body })
+    }
+
+    /// Parse a prop definition: name: Type = default
+    fn parse_prop_def(&mut self) -> Result<PropDef, ParseError> {
+        let name = self.expect_ident()?;
+        self.expect(TokenKind::Colon)?;
+
+        // Parse type (with optional ?)
+        let (prop_type, optional) = self.parse_prop_type()?;
+
+        // Parse default value if present
+        let default = if self.check(TokenKind::Equal) {
+            self.advance(); // consume =
+            Some(self.parse_value()?)
+        } else {
+            None
+        };
+
+        Ok(PropDef {
+            name,
+            prop_type,
+            optional,
+            default,
+        })
+    }
+
+    /// Parse a prop type: String, Number, Bool, Color, or Type?
+    fn parse_prop_type(&mut self) -> Result<(PropType, bool), ParseError> {
+        let type_name = self.expect_ident()?;
+
+        // Check for optional marker (?)
+        let optional = if self.peek().kind == TokenKind::Question {
+            self.advance();
+            true
+        } else {
+            false
+        };
+
+        let prop_type = match type_name.to_lowercase().as_str() {
+            "string" => PropType::String,
+            "number" | "int" | "float" => PropType::Number,
+            "bool" | "boolean" => PropType::Bool,
+            "color" => PropType::Color,
+            _ => PropType::Any,
+        };
+
+        Ok((prop_type, optional))
     }
 
     /// Parse an import statement: import { A, B } from "path"
@@ -410,5 +530,76 @@ mod tests {
         assert_eq!(program.imports.len(), 2);
         assert_eq!(program.imports[0].items, vec!["Navbar"]);
         assert_eq!(program.imports[1].items, vec!["Footer"]);
+    }
+
+    #[test]
+    fn test_parse_component_def() {
+        let source = r##"
+            component MyButton {
+                prop {
+                    text: String
+                    disabled: Bool?
+                    size: Number = 16
+                }
+
+                Button {
+                    content: text
+                    disabled: disabled
+                }
+            }
+
+            app MyApp {
+                MyButton { text: "Click me" }
+            }
+        "##;
+
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+        let mut parser = Parser::new(tokens);
+        let program = parser.parse().unwrap();
+
+        assert_eq!(program.components.len(), 1);
+        assert_eq!(program.components[0].name, "MyButton");
+        assert_eq!(program.components[0].props.len(), 3);
+
+        // Check props
+        let props = &program.components[0].props;
+        assert_eq!(props[0].name, "text");
+        assert_eq!(props[0].prop_type, PropType::String);
+        assert!(!props[0].optional);
+
+        assert_eq!(props[1].name, "disabled");
+        assert_eq!(props[1].prop_type, PropType::Bool);
+        assert!(props[1].optional);
+
+        assert_eq!(props[2].name, "size");
+        assert_eq!(props[2].prop_type, PropType::Number);
+        assert!(props[2].default.is_some());
+    }
+
+    #[test]
+    fn test_parse_component_without_props() {
+        let source = r##"
+            component Divider {
+                Container {
+                    height: 1
+                    background: "#374151"
+                }
+            }
+
+            app MyApp {
+                Divider {}
+            }
+        "##;
+
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+        let mut parser = Parser::new(tokens);
+        let program = parser.parse().unwrap();
+
+        assert_eq!(program.components.len(), 1);
+        assert_eq!(program.components[0].name, "Divider");
+        assert!(program.components[0].props.is_empty());
+        assert_eq!(program.components[0].body.name, "Container");
     }
 }
