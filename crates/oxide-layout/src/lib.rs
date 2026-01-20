@@ -30,6 +30,7 @@ pub mod safe_area;
 
 pub use taffy;
 pub use taffy::prelude::*;
+pub use taffy::{Overflow, Point};
 
 use std::collections::HashMap;
 
@@ -45,7 +46,7 @@ pub mod prelude {
 
     // Core types
     pub use crate::{
-        centered_column, column, row, ComputedRect, LayoutTree, NodeVisual, StyleBuilder,
+        centered_column, column, row, ClipContext, ComputedRect, LayoutTree, NodeVisual, StyleBuilder,
     };
 
     // Responsive types
@@ -74,6 +75,47 @@ impl ComputedRect {
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         Self { x, y, width, height }
     }
+
+    /// Check if this rect intersects with another
+    pub fn intersects(&self, other: &ComputedRect) -> bool {
+        self.x < other.x + other.width
+            && self.x + self.width > other.x
+            && self.y < other.y + other.height
+            && self.y + self.height > other.y
+    }
+
+    /// Get the intersection of two rects (for clipping)
+    pub fn intersection(&self, other: &ComputedRect) -> Option<ComputedRect> {
+        let x = self.x.max(other.x);
+        let y = self.y.max(other.y);
+        let right = (self.x + self.width).min(other.x + other.width);
+        let bottom = (self.y + self.height).min(other.y + other.height);
+
+        if right > x && bottom > y {
+            Some(ComputedRect {
+                x,
+                y,
+                width: right - x,
+                height: bottom - y,
+            })
+        } else {
+            None
+        }
+    }
+
+    /// Check if a point is inside this rect
+    pub fn contains_point(&self, px: f32, py: f32) -> bool {
+        px >= self.x && px < self.x + self.width && py >= self.y && py < self.y + self.height
+    }
+}
+
+/// Clipping context for rendering
+#[derive(Debug, Clone, Copy)]
+pub struct ClipContext {
+    /// Current clipping bounds (None means no clipping)
+    pub clip_rect: Option<ComputedRect>,
+    /// Accumulated scroll offset from parent scroll containers
+    pub scroll_offset: (f32, f32),
 }
 
 /// Visual properties for a UI node
@@ -87,6 +129,10 @@ pub struct NodeVisual {
     pub border_width: f32,
     /// Corner radius in pixels
     pub corner_radius: f32,
+    /// Whether this node clips its children to its bounds
+    pub clips_children: bool,
+    /// Scroll offset (x, y) for scrollable containers
+    pub scroll_offset: (f32, f32),
 }
 
 impl Default for NodeVisual {
@@ -96,6 +142,8 @@ impl Default for NodeVisual {
             border_color: None,
             border_width: 0.0,
             corner_radius: 0.0,
+            clips_children: false,
+            scroll_offset: (0.0, 0.0),
         }
     }
 }
@@ -114,6 +162,16 @@ impl NodeVisual {
 
     pub fn with_radius(mut self, radius: f32) -> Self {
         self.corner_radius = radius;
+        self
+    }
+
+    pub fn with_clips_children(mut self, clips: bool) -> Self {
+        self.clips_children = clips;
+        self
+    }
+
+    pub fn with_scroll_offset(mut self, x: f32, y: f32) -> Self {
+        self.scroll_offset = (x, y);
         self
     }
 }
@@ -243,6 +301,93 @@ impl LayoutTree {
         let new_offset = (rect.x, rect.y);
         for child in self.children(node) {
             self.traverse_recursive(child, new_offset, callback);
+        }
+    }
+
+    /// Iterate over all nodes with clipping context (for proper overflow handling)
+    pub fn traverse_with_clip<F>(&self, root: NodeId, mut callback: F)
+    where
+        F: FnMut(NodeId, ComputedRect, Option<&NodeVisual>, ClipContext),
+    {
+        let initial_clip = ClipContext {
+            clip_rect: None,
+            scroll_offset: (0.0, 0.0),
+        };
+        self.traverse_with_clip_recursive(root, (0.0, 0.0), initial_clip, &mut callback);
+    }
+
+    fn traverse_with_clip_recursive<F>(
+        &self,
+        node: NodeId,
+        parent_offset: (f32, f32),
+        clip_ctx: ClipContext,
+        callback: &mut F,
+    ) where
+        F: FnMut(NodeId, ComputedRect, Option<&NodeVisual>, ClipContext),
+    {
+        let visual = self.visuals.get(&node);
+
+        // Apply scroll offset from visual
+        let scroll = visual.map(|v| v.scroll_offset).unwrap_or((0.0, 0.0));
+        let adjusted_offset = (
+            parent_offset.0 - clip_ctx.scroll_offset.0,
+            parent_offset.1 - clip_ctx.scroll_offset.1,
+        );
+
+        let rect = self.get_absolute_rect(node, adjusted_offset);
+        callback(node, rect, visual, clip_ctx);
+
+        // Determine new clip context for children
+        let mut child_clip = clip_ctx;
+
+        // If this node clips its children, update the clip rect
+        if let Some(vis) = visual {
+            if vis.clips_children {
+                child_clip.clip_rect = match clip_ctx.clip_rect {
+                    Some(parent_clip) => rect.intersection(&parent_clip),
+                    None => Some(rect),
+                };
+            }
+            // Accumulate scroll offset
+            child_clip.scroll_offset = (
+                clip_ctx.scroll_offset.0 + scroll.0,
+                clip_ctx.scroll_offset.1 + scroll.1,
+            );
+        }
+
+        let new_offset = (rect.x, rect.y);
+        for child in self.children(node) {
+            self.traverse_with_clip_recursive(child, new_offset, child_clip, callback);
+        }
+    }
+
+    /// Set scroll offset for a scrollable node
+    pub fn set_scroll_offset(&mut self, node: NodeId, x: f32, y: f32) {
+        if let Some(visual) = self.visuals.get_mut(&node) {
+            visual.scroll_offset = (x, y);
+        }
+    }
+
+    /// Get scroll offset for a node
+    pub fn get_scroll_offset(&self, node: NodeId) -> (f32, f32) {
+        self.visuals
+            .get(&node)
+            .map(|v| v.scroll_offset)
+            .unwrap_or((0.0, 0.0))
+    }
+
+    /// Get the style of a node (for reading overflow settings)
+    pub fn get_style(&self, node: NodeId) -> Option<&Style> {
+        self.taffy.style(node).ok()
+    }
+
+    /// Check if a node has overflow hidden or scroll
+    pub fn clips_content(&self, node: NodeId) -> bool {
+        if let Ok(style) = self.taffy.style(node) {
+            matches!(style.overflow.x, Overflow::Hidden | Overflow::Scroll)
+                || matches!(style.overflow.y, Overflow::Hidden | Overflow::Scroll)
+        } else {
+            false
         }
     }
 }
@@ -402,6 +547,157 @@ impl StyleBuilder {
 
     pub fn flex_shrink(mut self, value: f32) -> Self {
         self.style.flex_shrink = value;
+        self
+    }
+
+    // Overflow handling
+    pub fn overflow_hidden(mut self) -> Self {
+        self.style.overflow = Point {
+            x: Overflow::Hidden,
+            y: Overflow::Hidden,
+        };
+        self
+    }
+
+    pub fn overflow_scroll(mut self) -> Self {
+        self.style.overflow = Point {
+            x: Overflow::Scroll,
+            y: Overflow::Scroll,
+        };
+        self
+    }
+
+    pub fn overflow_visible(mut self) -> Self {
+        self.style.overflow = Point {
+            x: Overflow::Visible,
+            y: Overflow::Visible,
+        };
+        self
+    }
+
+    pub fn overflow_x_scroll(mut self) -> Self {
+        self.style.overflow.x = Overflow::Scroll;
+        self
+    }
+
+    pub fn overflow_y_scroll(mut self) -> Self {
+        self.style.overflow.y = Overflow::Scroll;
+        self
+    }
+
+    pub fn overflow_x_hidden(mut self) -> Self {
+        self.style.overflow.x = Overflow::Hidden;
+        self
+    }
+
+    pub fn overflow_y_hidden(mut self) -> Self {
+        self.style.overflow.y = Overflow::Hidden;
+        self
+    }
+
+    // Min/max constraints
+    pub fn min_width(mut self, value: f32) -> Self {
+        self.style.min_size.width = Dimension::Length(value);
+        self
+    }
+
+    pub fn min_height(mut self, value: f32) -> Self {
+        self.style.min_size.height = Dimension::Length(value);
+        self
+    }
+
+    pub fn max_width(mut self, value: f32) -> Self {
+        self.style.max_size.width = Dimension::Length(value);
+        self
+    }
+
+    pub fn max_height(mut self, value: f32) -> Self {
+        self.style.max_size.height = Dimension::Length(value);
+        self
+    }
+
+    pub fn min_size(mut self, width: f32, height: f32) -> Self {
+        self.style.min_size = Size {
+            width: Dimension::Length(width),
+            height: Dimension::Length(height),
+        };
+        self
+    }
+
+    pub fn max_size(mut self, width: f32, height: f32) -> Self {
+        self.style.max_size = Size {
+            width: Dimension::Length(width),
+            height: Dimension::Length(height),
+        };
+        self
+    }
+
+    // Flex basis
+    pub fn flex_basis(mut self, value: f32) -> Self {
+        self.style.flex_basis = Dimension::Length(value);
+        self
+    }
+
+    pub fn flex_basis_auto(mut self) -> Self {
+        self.style.flex_basis = Dimension::Auto;
+        self
+    }
+
+    // Wrap
+    pub fn flex_wrap(mut self) -> Self {
+        self.style.flex_wrap = FlexWrap::Wrap;
+        self
+    }
+
+    pub fn flex_nowrap(mut self) -> Self {
+        self.style.flex_wrap = FlexWrap::NoWrap;
+        self
+    }
+
+    // Position
+    pub fn position_absolute(mut self) -> Self {
+        self.style.position = Position::Absolute;
+        self
+    }
+
+    pub fn position_relative(mut self) -> Self {
+        self.style.position = Position::Relative;
+        self
+    }
+
+    pub fn inset(mut self, top: f32, right: f32, bottom: f32, left: f32) -> Self {
+        self.style.inset = Rect {
+            top: LengthPercentageAuto::Length(top),
+            right: LengthPercentageAuto::Length(right),
+            bottom: LengthPercentageAuto::Length(bottom),
+            left: LengthPercentageAuto::Length(left),
+        };
+        self
+    }
+
+    pub fn top(mut self, value: f32) -> Self {
+        self.style.inset.top = LengthPercentageAuto::Length(value);
+        self
+    }
+
+    pub fn right(mut self, value: f32) -> Self {
+        self.style.inset.right = LengthPercentageAuto::Length(value);
+        self
+    }
+
+    pub fn bottom(mut self, value: f32) -> Self {
+        self.style.inset.bottom = LengthPercentageAuto::Length(value);
+        self
+    }
+
+    pub fn left(mut self, value: f32) -> Self {
+        self.style.inset.left = LengthPercentageAuto::Length(value);
+        self
+    }
+
+    // Aspect ratio
+    pub fn aspect_ratio(mut self, ratio: f32) -> Self {
+        self.style.aspect_ratio = Some(ratio);
         self
     }
 

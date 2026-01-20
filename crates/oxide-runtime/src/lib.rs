@@ -627,18 +627,22 @@ fn render_layout_tree(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveR
 /// Render debug overlay showing bounding boxes for all nodes
 fn render_debug_overlay(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveRenderer, scale: f32) {
     // Use different colors to distinguish nodes
-    let colors = [
-        Color::new(1.0, 0.0, 0.0, 0.5),   // Red
-        Color::new(0.0, 1.0, 0.0, 0.5),   // Green
-        Color::new(0.0, 0.0, 1.0, 0.5),   // Blue
-        Color::new(1.0, 1.0, 0.0, 0.5),   // Yellow
-        Color::new(1.0, 0.0, 1.0, 0.5),   // Magenta
-        Color::new(0.0, 1.0, 1.0, 0.5),   // Cyan
+    let border_colors = [
+        Color::new(1.0, 0.0, 0.0, 0.7),   // Red - content box
+        Color::new(0.0, 1.0, 0.0, 0.7),   // Green
+        Color::new(0.0, 0.0, 1.0, 0.7),   // Blue
+        Color::new(1.0, 1.0, 0.0, 0.7),   // Yellow
+        Color::new(1.0, 0.0, 1.0, 0.7),   // Magenta
+        Color::new(0.0, 1.0, 1.0, 0.7),   // Cyan
     ];
+    let padding_color = Color::new(0.0, 0.5, 0.0, 0.2);  // Green tint for padding
+    let margin_color = Color::new(1.0, 0.5, 0.0, 0.15);  // Orange tint for margin
+    let scroll_indicator = Color::new(0.0, 0.5, 1.0, 0.5); // Blue for scroll regions
+
     let mut color_idx = 0;
 
-    tree.traverse(root, |_node, rect, _visual| {
-        let color = colors[color_idx % colors.len()];
+    tree.traverse(root, |node, rect, visual| {
+        let border_color = border_colors[color_idx % border_colors.len()];
         color_idx += 1;
 
         // Scale coordinates
@@ -647,9 +651,78 @@ fn render_debug_overlay(tree: &LayoutTree, root: NodeId, renderer: &mut Primitiv
         let w = rect.width * scale;
         let h = rect.height * scale;
 
-        // Draw border around each node
-        renderer.border(x, y, w, h, 1.0, 0.0, color);
+        // Get style for this node to check padding/margin
+        if let Some(style) = tree.get_style(node) {
+            // Draw margin area (outer)
+            let margin_top = resolve_length(&style.margin.top) * scale;
+            let margin_right = resolve_length(&style.margin.right) * scale;
+            let margin_bottom = resolve_length(&style.margin.bottom) * scale;
+            let margin_left = resolve_length(&style.margin.left) * scale;
+
+            if margin_top > 0.0 || margin_right > 0.0 || margin_bottom > 0.0 || margin_left > 0.0 {
+                // Draw margin as outer highlight
+                let outer_x = x - margin_left;
+                let outer_y = y - margin_top;
+                let outer_w = w + margin_left + margin_right;
+                let _outer_h = h + margin_top + margin_bottom;
+                renderer.rect(outer_x, outer_y, outer_w, margin_top, margin_color); // Top
+                renderer.rect(outer_x, y + h, outer_w, margin_bottom, margin_color); // Bottom
+                renderer.rect(outer_x, y, margin_left, h, margin_color); // Left
+                renderer.rect(x + w, y, margin_right, h, margin_color); // Right
+            }
+
+            // Draw padding area (inner)
+            let pad_top = resolve_length_percent(&style.padding.top) * scale;
+            let pad_right = resolve_length_percent(&style.padding.right) * scale;
+            let pad_bottom = resolve_length_percent(&style.padding.bottom) * scale;
+            let pad_left = resolve_length_percent(&style.padding.left) * scale;
+
+            if pad_top > 0.0 || pad_right > 0.0 || pad_bottom > 0.0 || pad_left > 0.0 {
+                renderer.rect(x, y, w, pad_top, padding_color); // Top
+                renderer.rect(x, y + h - pad_bottom, w, pad_bottom, padding_color); // Bottom
+                renderer.rect(x, y + pad_top, pad_left, h - pad_top - pad_bottom, padding_color); // Left
+                renderer.rect(x + w - pad_right, y + pad_top, pad_right, h - pad_top - pad_bottom, padding_color); // Right
+            }
+
+            // Mark scroll containers with special indicator
+            if tree.clips_content(node) {
+                // Draw scroll indicator in corner
+                let indicator_size = 8.0 * scale;
+                renderer.rect(x + w - indicator_size - 2.0, y + 2.0, indicator_size, indicator_size, scroll_indicator);
+            }
+        }
+
+        // Draw border around the content box
+        renderer.border(x, y, w, h, 1.0, 0.0, border_color);
+
+        // Show clipping indicator if this node clips children
+        if let Some(vis) = visual {
+            if vis.clips_children {
+                // Dashed corner indicator for clip regions
+                let dash = 4.0 * scale;
+                renderer.rect(x, y, dash, 2.0, scroll_indicator);
+                renderer.rect(x, y, 2.0, dash, scroll_indicator);
+                renderer.rect(x + w - dash, y, dash, 2.0, scroll_indicator);
+                renderer.rect(x + w - 2.0, y, 2.0, dash, scroll_indicator);
+            }
+        }
     });
+}
+
+/// Helper to resolve LengthPercentageAuto to f32
+fn resolve_length(value: &oxide_layout::LengthPercentageAuto) -> f32 {
+    match value {
+        oxide_layout::LengthPercentageAuto::Length(l) => *l,
+        _ => 0.0,
+    }
+}
+
+/// Helper to resolve LengthPercentage to f32
+fn resolve_length_percent(value: &oxide_layout::LengthPercentage) -> f32 {
+    match value {
+        oxide_layout::LengthPercentage::Length(l) => *l,
+        _ => 0.0,
+    }
 }
 
 /// Convert hex color string to RGBA array
@@ -822,6 +895,15 @@ fn ir_to_style(ir: &ComponentIR) -> oxide_layout::Style {
         "Column" => builder = builder.flex_column(),
         "Row" => builder = builder.flex_row(),
         "Container" => builder = builder.flex_column(),
+        "Scroll" | "ScrollView" => {
+            builder = builder.flex_column().overflow_scroll();
+        }
+        "ScrollX" => {
+            builder = builder.flex_row().overflow_x_scroll().overflow_y_hidden();
+        }
+        "ScrollY" => {
+            builder = builder.flex_column().overflow_y_scroll().overflow_x_hidden();
+        }
         _ => {}
     }
 
@@ -882,6 +964,63 @@ fn ir_to_style(ir: &ComponentIR) -> oxide_layout::Style {
                     builder = builder.flex_grow(*n as f32);
                 }
             }
+            "overflow" => {
+                if let PropertyValue::String(s) = &prop.value {
+                    match s.as_str() {
+                        "hidden" => builder = builder.overflow_hidden(),
+                        "scroll" => builder = builder.overflow_scroll(),
+                        "visible" => builder = builder.overflow_visible(),
+                        _ => {}
+                    }
+                }
+            }
+            "min_width" | "minWidth" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.min_width(*n as f32);
+                }
+            }
+            "min_height" | "minHeight" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.min_height(*n as f32);
+                }
+            }
+            "max_width" | "maxWidth" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.max_width(*n as f32);
+                }
+            }
+            "max_height" | "maxHeight" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.max_height(*n as f32);
+                }
+            }
+            "flex_wrap" | "wrap" => {
+                if let PropertyValue::Bool(b) = &prop.value {
+                    if *b {
+                        builder = builder.flex_wrap();
+                    }
+                } else if let PropertyValue::String(s) = &prop.value {
+                    match s.as_str() {
+                        "wrap" => builder = builder.flex_wrap(),
+                        "nowrap" => builder = builder.flex_nowrap(),
+                        _ => {}
+                    }
+                }
+            }
+            "position" => {
+                if let PropertyValue::String(s) = &prop.value {
+                    match s.as_str() {
+                        "absolute" => builder = builder.position_absolute(),
+                        "relative" => builder = builder.position_relative(),
+                        _ => {}
+                    }
+                }
+            }
+            "aspect_ratio" | "aspectRatio" => {
+                if let PropertyValue::Number(n) = &prop.value {
+                    builder = builder.aspect_ratio(*n as f32);
+                }
+            }
             _ => {}
         }
     }
@@ -910,6 +1049,11 @@ fn ir_to_style(ir: &ComponentIR) -> oxide_layout::Style {
 fn ir_to_visual(ir: &ComponentIR) -> NodeVisual {
     let mut visual = NodeVisual::default();
 
+    // Scroll containers should clip their children
+    if matches!(ir.kind.as_str(), "Scroll" | "ScrollView" | "ScrollX" | "ScrollY") {
+        visual = visual.with_clips_children(true);
+    }
+
     // Process props (where .oui properties go) and style together
     let all_props: Vec<_> = ir.props.iter().chain(ir.style.iter()).collect();
 
@@ -936,6 +1080,11 @@ fn ir_to_visual(ir: &ComponentIR) -> NodeVisual {
             "radius" => {
                 if let PropertyValue::Number(n) = &prop.value {
                     visual = visual.with_radius(*n as f32);
+                }
+            }
+            "clip" | "clips" => {
+                if let PropertyValue::Bool(b) = &prop.value {
+                    visual = visual.with_clips_children(*b);
                 }
             }
             _ => {}
