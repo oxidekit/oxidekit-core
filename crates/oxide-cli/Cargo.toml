@@ -12,6 +12,8 @@ path = "src/main.rs"
 
 [features]
 default = []
+# Enable Prometheus metrics exporter
+prometheus = []
 # Enable legal tools (license scanning, compliance)
 legal = ["oxide-legal"]
 # Enable SBOM generation
