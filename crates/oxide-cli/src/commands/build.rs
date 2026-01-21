@@ -1,9 +1,11 @@
 //! `oxide build` command - build the application
 
 use anyhow::Result;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use toml::Value;
 
 pub fn run(release: bool, target: Option<String>) -> Result<()> {
     let manifest_path = Path::new("oxide.toml");
@@ -55,13 +57,16 @@ pub fn run(release: bool, target: Option<String>) -> Result<()> {
 
 /// Build static HTML output from .oui files
 fn build_static() -> Result<()> {
-    use oxide_compiler::{compile_file, generate_html};
+    use oxide_compiler::{generate_html, compile_file};
 
     tracing::info!("Building static HTML...");
 
     // Read oxide.toml to get app name
     let manifest = fs::read_to_string("oxide.toml")?;
     let title = extract_title(&manifest);
+
+    // Read theme.toml if it exists
+    let theme_tokens = load_theme_tokens();
 
     // Find the main .oui file
     let ui_path = Path::new("ui/app.oui");
@@ -75,7 +80,7 @@ fn build_static() -> Result<()> {
 
     // Compile and generate HTML
     let ir = compile_file(ui_path)?;
-    let html = generate_html(&ir, &title);
+    let html = generate_html(&ir, &title, theme_tokens.as_ref());
 
     // Write output
     let out_path = out_dir.join("index.html");
@@ -145,6 +150,45 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> Result<usize> {
     }
 
     Ok(count)
+}
+
+/// Load theme tokens from theme.toml
+fn load_theme_tokens() -> Option<HashMap<String, String>> {
+    let theme_path = Path::new("theme.toml");
+    if !theme_path.exists() {
+        tracing::debug!("No theme.toml found, using default theme");
+        return None;
+    }
+
+    let content = fs::read_to_string(theme_path).ok()?;
+    let toml: Value = content.parse().ok()?;
+
+    let mut tokens = HashMap::new();
+
+    // Extract sections: [colors], [spacing], [radius], [shadow], [font]
+    if let Some(table) = toml.as_table() {
+        for (section, value) in table {
+            if let Some(inner) = value.as_table() {
+                for (key, val) in inner {
+                    let token_key = format!("{}.{}", section, key);
+                    if let Some(s) = val.as_str() {
+                        tokens.insert(token_key, s.to_string());
+                    } else if let Some(n) = val.as_integer() {
+                        tokens.insert(token_key, n.to_string());
+                    } else if let Some(f) = val.as_float() {
+                        tokens.insert(token_key, f.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    if tokens.is_empty() {
+        None
+    } else {
+        tracing::info!("Loaded {} theme tokens from theme.toml", tokens.len());
+        Some(tokens)
+    }
 }
 
 fn extract_title(manifest: &str) -> String {

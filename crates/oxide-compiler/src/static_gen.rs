@@ -2,10 +2,51 @@
 //!
 //! Converts ComponentIR to static HTML + CSS for web deployment.
 
+use std::cell::RefCell;
+use std::collections::HashMap;
+
 use crate::{ComponentIR, Property, PropertyValue};
 
+/// Theme tokens loaded from project's theme.toml
+pub type ThemeTokens = HashMap<String, String>;
+
+// Thread-local storage for theme tokens during HTML generation
+thread_local! {
+    static CURRENT_THEME: RefCell<Option<ThemeTokens>> = RefCell::new(None);
+}
+
+/// Set the current theme tokens for the generation context
+fn set_theme_context(tokens: Option<&ThemeTokens>) {
+    CURRENT_THEME.with(|t| {
+        *t.borrow_mut() = tokens.cloned();
+    });
+}
+
+/// Get a theme token value from the current context
+fn get_theme_token(path: &str) -> Option<String> {
+    CURRENT_THEME.with(|t| {
+        t.borrow().as_ref().and_then(|tokens| {
+            // Try the path as-is
+            if let Some(value) = tokens.get(path) {
+                return Some(value.clone());
+            }
+            // Try with hyphenated variant: color.text.secondary -> colors.text-secondary
+            let hyphenated = path_to_theme_key(path);
+            tokens.get(&hyphenated).cloned()
+        })
+    })
+}
+
 /// Generate static HTML from ComponentIR
-pub fn generate_html(ir: &ComponentIR, title: &str) -> String {
+///
+/// # Arguments
+/// * `ir` - The compiled component IR
+/// * `title` - Page title
+/// * `theme_tokens` - Optional theme tokens from theme.toml
+pub fn generate_html(ir: &ComponentIR, title: &str, theme_tokens: Option<&ThemeTokens>) -> String {
+    // Set the theme context for this generation
+    set_theme_context(theme_tokens);
+
     let body_html = ir_to_html(ir);
     let css = generate_css();
 
@@ -96,14 +137,19 @@ fn resolve_tokens(value: &str) -> String {
 /// Normalize token path from theme.toml format to internal format
 /// {colors.primary} -> color.primary
 /// {colors.text_primary} -> color.text.primary
+/// {colors.text-secondary} -> color.text.secondary
 /// {spacing.md} -> spacing.md
 fn normalize_token_path(path: &str) -> String {
     let path = path.trim();
+
+    // Normalize hyphens to dots for nested paths: text-secondary -> text.secondary
+    let path = path.replace('-', ".");
 
     // Map common theme.toml paths to internal token paths
     if path.starts_with("colors.") {
         // colors.primary -> color.primary
         // colors.text_primary -> color.text.primary
+        // colors.text.secondary -> color.text.secondary
         let suffix = &path[7..];
         // Convert snake_case to dot notation for nested paths
         let normalized_suffix = suffix.replace('_', ".");
@@ -139,11 +185,30 @@ fn normalize_token_path(path: &str) -> String {
     path.to_string()
 }
 
+/// Convert internal token path to theme.toml key format
+/// color.text.secondary -> colors.text-secondary
+/// color.primary -> colors.primary
+fn path_to_theme_key(path: &str) -> String {
+    if path.starts_with("color.") {
+        let suffix = &path[6..];
+        // Convert nested dots back to hyphens: text.secondary -> text-secondary
+        let key = suffix.replace('.', "-");
+        format!("colors.{}", key)
+    } else {
+        path.to_string()
+    }
+}
+
 /// Look up a design token by its path
-/// Returns the CSS value for the token, or None if not found
-fn lookup_token(path: &str) -> Option<&'static str> {
-    // Default dark theme token values
-    match path {
+/// First checks theme_tokens from theme.toml (via thread-local context), then falls back to defaults
+fn lookup_token(path: &str) -> Option<String> {
+    // First, check theme tokens from the current context
+    if let Some(value) = get_theme_token(path) {
+        return Some(value);
+    }
+
+    // Fall back to default dark theme token values
+    let default: Option<&'static str> = match path {
         // Colors - primary semantic
         "color.primary" => Some("#3B82F6"),
         "color.primary.light" => Some("#60A5FA"),
@@ -229,7 +294,9 @@ fn lookup_token(path: &str) -> Option<&'static str> {
         "line.height.relaxed" => Some("1.75"),
 
         _ => None,
-    }
+    };
+
+    default.map(|s| s.to_string())
 }
 
 fn ir_to_html_recursive(ir: &ComponentIR, html: &mut String, indent: usize) {
@@ -1329,7 +1396,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("Hello World"));
         assert!(html.contains("background-color: #030712"));
@@ -1353,7 +1420,7 @@ mod tests {
         "#;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("flex-direction: column"));
         assert!(html.contains("flex-direction: row"));
@@ -1376,7 +1443,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("font-size: 60px"));
         assert!(html.contains("font-weight: 700"));
@@ -1398,7 +1465,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("font-size: 48px"));
         assert!(html.contains("font-weight: bold"));
@@ -1418,7 +1485,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("padding: 120px 64px"));
     }
@@ -1436,7 +1503,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("background: linear-gradient"));
     }
@@ -1455,7 +1522,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("margin-top: 20px"));
         assert!(html.contains("margin-bottom: 40px"));
@@ -1475,7 +1542,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("border: 1px solid"));
         assert!(html.contains("border-color: #FF0000"));
@@ -1494,7 +1561,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("max-width: 1200px"));
     }
@@ -1514,7 +1581,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         assert!(html.contains("flex-wrap: wrap"));
     }
@@ -1582,7 +1649,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         // Curly brace tokens should be resolved to actual CSS values
         assert!(html.contains("background-color: #3B82F6"));
@@ -1606,7 +1673,7 @@ mod tests {
         "##;
 
         let ir = compile(source).unwrap();
-        let html = generate_html(&ir, "Test");
+        let html = generate_html(&ir, "Test", None);
 
         // Tokens should be resolved to actual CSS values
         assert!(html.contains("background-color: #1F2937"));
