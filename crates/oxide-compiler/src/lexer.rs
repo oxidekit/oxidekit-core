@@ -294,6 +294,21 @@ impl<'a> Lexer<'a> {
         while let Some(c) = self.peek() {
             if c.is_alphanumeric() || c == '_' {
                 value.push(self.advance().unwrap());
+            } else if c == '-' {
+                // Allow hyphens in identifiers (e.g., my-site, my-app)
+                // But only if followed by an alphanumeric character
+                // This prevents capturing trailing hyphens or the minus operator
+                let remaining = &self.source[self.current..];
+                if remaining.len() > 1 {
+                    let next_char = remaining.chars().nth(1);
+                    if let Some(nc) = next_char {
+                        if nc.is_alphanumeric() {
+                            value.push(self.advance().unwrap()); // consume the hyphen
+                            continue;
+                        }
+                    }
+                }
+                break;
             } else {
                 break;
             }
@@ -360,5 +375,27 @@ mod tests {
         let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(tokens[0].kind, TokenKind::App);
+    }
+
+    #[test]
+    fn test_tokenize_hyphenated_identifiers() {
+        let source = "app my-site { Text { content: \"Hello\" } }";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+
+        assert_eq!(tokens[0].kind, TokenKind::App);
+        assert!(matches!(tokens[1].kind, TokenKind::Ident(ref s) if s == "my-site"));
+        assert_eq!(tokens[2].kind, TokenKind::LBrace);
+    }
+
+    #[test]
+    fn test_hyphen_vs_minus() {
+        // Ensure hyphen in identifier doesn't break number parsing
+        let source = "my-var -10";
+        let mut lexer = Lexer::new(source);
+        let tokens = lexer.tokenize().unwrap();
+
+        assert!(matches!(tokens[0].kind, TokenKind::Ident(ref s) if s == "my-var"));
+        assert_eq!(tokens[1].kind, TokenKind::Number(-10.0));
     }
 }
