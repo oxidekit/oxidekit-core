@@ -783,18 +783,25 @@ mod tests {
 
     #[test]
     fn test_search_field_callbacks() {
-        let mut search_called = false;
-        let mut change_called = false;
-        let mut clear_called = false;
+        use std::cell::Cell;
+        use std::rc::Rc;
+
+        let search_called = Rc::new(Cell::new(false));
+        let change_called = Rc::new(Cell::new(false));
+        let clear_called = Rc::new(Cell::new(false));
+
+        let search_flag = search_called.clone();
+        let change_flag = change_called.clone();
+        let clear_flag = clear_called.clone();
 
         let mut field = SearchField::new()
-            .on_search(|_| search_called = true)
-            .on_change(|_| change_called = true)
-            .on_clear(|| clear_called = true)
+            .on_search(move |_| search_flag.set(true))
+            .on_change(move |_| change_flag.set(true))
+            .on_clear(move || clear_flag.set(true))
             .build();
 
         field.handle_input("test".to_string());
-        // Note: In actual usage, callbacks would be invoked
+        // Note: In actual usage, callbacks would be invoked through the event system
     }
 
     #[test]

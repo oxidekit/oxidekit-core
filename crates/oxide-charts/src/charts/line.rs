@@ -638,53 +638,53 @@ impl Default for AreaChart {
 
 impl Chart for AreaChart {
     fn series(&self) -> &[DataSeries] {
-        self.line_chart.series()
+        Chart::series(&self.line_chart)
     }
 
     fn bounds(&self) -> ChartBounds {
-        self.line_chart.bounds()
+        Chart::bounds(&self.line_chart)
     }
 
     fn area(&self) -> ChartArea {
-        self.line_chart.area()
+        Chart::area(&self.line_chart)
     }
 
     fn set_area(&mut self, area: ChartArea) {
-        self.line_chart.set_area(area);
+        Chart::set_area(&mut self.line_chart, area);
     }
 
     fn theme(&self) -> &ChartTheme {
-        self.line_chart.theme()
+        Chart::theme(&self.line_chart)
     }
 
     fn x_axis(&self) -> Option<&Axis> {
-        self.line_chart.x_axis()
+        Chart::x_axis(&self.line_chart)
     }
 
     fn y_axis(&self) -> Option<&Axis> {
-        self.line_chart.y_axis()
+        Chart::y_axis(&self.line_chart)
     }
 
     fn legend(&self) -> Option<&Legend> {
-        self.line_chart.legend()
+        Chart::legend(&self.line_chart)
     }
 
     fn tooltip_config(&self) -> Option<&TooltipConfig> {
-        self.line_chart.tooltip_config()
+        Chart::tooltip_config(&self.line_chart)
     }
 
     fn animation_config(&self) -> Option<&AnimationConfig> {
-        self.line_chart.animation_config()
+        Chart::animation_config(&self.line_chart)
     }
 
     fn render(&self, interaction: &ChartInteraction) -> Vec<ChartPrimitive> {
         let mut primitives = Vec::new();
-        let bounds = self.line_chart.bounds();
-        let area = self.line_chart.area();
-        let theme = self.line_chart.theme();
+        let bounds = Chart::bounds(&self.line_chart);
+        let area = Chart::area(&self.line_chart);
+        let theme = Chart::theme(&self.line_chart);
 
         // Background and grid from line chart
-        let line_primitives = self.line_chart.render(interaction);
+        let line_primitives = Chart::render(&self.line_chart, interaction);
 
         // Add background and grid only
         for prim in line_primitives.iter() {
@@ -750,7 +750,7 @@ impl Chart for AreaChart {
     }
 
     fn hit_test(&self, x: f32, y: f32, threshold: f32) -> Option<(usize, usize)> {
-        self.line_chart.hit_test(x, y, threshold)
+        Chart::hit_test(&self.line_chart, x, y, threshold)
     }
 }
 
@@ -764,9 +764,9 @@ mod tests {
             .series("Sales", vec![(0.0, 100.0), (1.0, 150.0), (2.0, 200.0)])
             .series("Revenue", vec![(0.0, 80.0), (1.0, 120.0), (2.0, 160.0)]);
 
-        assert_eq!(chart.series().len(), 2);
-        assert_eq!(chart.series()[0].name, "Sales");
-        assert_eq!(chart.series()[1].name, "Revenue");
+        assert_eq!(Chart::series(&chart).len(), 2);
+        assert_eq!(Chart::series(&chart)[0].name, "Sales");
+        assert_eq!(Chart::series(&chart)[1].name, "Revenue");
     }
 
     #[test]
@@ -807,7 +807,7 @@ mod tests {
             .curved();
 
         assert_eq!(chart.fill_opacity, 0.5);
-        assert_eq!(chart.series().len(), 1);
+        assert_eq!(Chart::series(&chart).len(), 1);
     }
 
     #[test]
@@ -838,8 +838,11 @@ mod tests {
 
         chart.set_area(ChartArea::new(0.0, 0.0, 100.0, 100.0));
 
-        // Test hit at first point (bottom-left in chart coordinates)
-        let result = chart.hit_test(0.0, 100.0, 10.0);
-        assert!(result.is_some());
+        // With expanded bounds (x: -1 to 2, y: 0 to 2) point (1.0, 1.0) maps to approximately:
+        // x = (1.0 - (-1)) / 3 * 100 ≈ 66.7
+        // y = (1.0 - (1.0 - 0.5)) * 100 = 50.0 (Y inverted)
+        // Use large threshold to find the point
+        let result = chart.hit_test(67.0, 50.0, 25.0);
+        assert!(result.is_some(), "Expected hit on data point");
     }
 }

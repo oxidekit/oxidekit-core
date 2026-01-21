@@ -37,7 +37,7 @@ pub enum DecoderError {
 pub type Result<T> = std::result::Result<T, DecoderError>;
 
 /// Supported audio formats.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum AudioFormat {
     /// MP3 format.
     Mp3,
@@ -54,6 +54,7 @@ pub enum AudioFormat {
     /// AIFF format.
     Aiff,
     /// Unknown format.
+    #[default]
     Unknown,
 }
 

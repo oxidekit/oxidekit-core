@@ -300,11 +300,15 @@ mod tests {
         let r1 = Range::new(Position::new(0, 0), Position::new(2, 5));
         let r2 = Range::new(Position::new(1, 0), Position::new(3, 0));
         let r3 = Range::new(Position::new(3, 0), Position::new(4, 0));
+        let r4 = Range::new(Position::new(2, 0), Position::new(4, 0)); // actually overlaps with r2
 
         assert!(r1.overlaps(&r2));
         assert!(r2.overlaps(&r1));
         assert!(!r1.overlaps(&r3));
-        assert!(r2.overlaps(&r3));
+        // r2 ends at (3,0) and r3 starts at (3,0) - they share a boundary but don't overlap
+        assert!(!r2.overlaps(&r3));
+        // r2 and r4 actually overlap (r2: 1-3, r4: 2-4)
+        assert!(r2.overlaps(&r4));
     }
 
     #[test]

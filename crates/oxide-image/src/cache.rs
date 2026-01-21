@@ -340,7 +340,7 @@ impl ImageCache {
     }
 
     /// Load an image from source, using cache if available.
-    #[instrument(skip(self))]
+    #[instrument(skip(self, source))]
     pub async fn load(&self, source: impl Into<ImageSource>) -> ImageResult<Arc<ImageData>> {
         let source = source.into();
         let key = source.cache_key();
@@ -585,8 +585,7 @@ impl ImageCache {
         drop(metadata);
 
         // Parse format from metadata
-        let format = crate::formats::ImageFormat::from_magic_bytes(&bytes)
-            .unwrap_or(crate::formats::ImageFormat::Png);
+        let format = crate::formats::ImageFormat::from_magic_bytes(&bytes);
 
         Ok(Some(ImageData::new(
             bytes,

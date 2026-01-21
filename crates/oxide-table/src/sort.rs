@@ -168,20 +168,66 @@ impl SortState {
 }
 
 /// Trait for sortable values.
-pub trait Sortable {
+pub trait Sortable: Send + Sync {
     /// Compare two values for sorting.
-    fn compare(&self, other: &Self) -> Ordering;
+    fn compare(&self, other: &Self) -> Ordering
+    where
+        Self: Sized;
+
+    /// Compare with another boxed sortable value (for trait object usage).
+    /// Returns None if types don't match.
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering>;
+
+    /// Clone into a boxed sortable value.
+    fn clone_boxed(&self) -> Box<dyn SortableValue>;
+}
+
+/// Object-safe trait for sortable values (used internally).
+pub trait SortableValue: Send + Sync {
+    /// Compare with another sortable value.
+    fn cmp_with(&self, other: &dyn SortableValue) -> Ordering;
+
+    /// Get type name for debugging.
+    fn type_name(&self) -> &'static str;
+
+    /// Return self as Any for downcasting.
+    fn as_any(&self) -> &dyn std::any::Any;
+}
+
+/// Wrapper to make Sortable types into SortableValue.
+#[derive(Clone)]
+pub struct SortableWrapper<T: Clone + Ord + Send + Sync + 'static>(pub T);
+
+impl<T: Clone + Ord + Send + Sync + 'static> SortableValue for SortableWrapper<T> {
+    fn cmp_with(&self, other: &dyn SortableValue) -> Ordering {
+        // Try to downcast - if same type, compare
+        if let Some(other_wrapper) = other.as_any().downcast_ref::<SortableWrapper<T>>() {
+            self.0.cmp(&other_wrapper.0)
+        } else {
+            Ordering::Equal
+        }
+    }
+
+    fn type_name(&self) -> &'static str {
+        std::any::type_name::<T>()
+    }
+
+    fn as_any(&self) -> &dyn std::any::Any {
+        self
+    }
 }
 
 impl Sortable for String {
     fn compare(&self, other: &Self) -> Ordering {
         self.cmp(other)
     }
-}
 
-impl Sortable for &str {
-    fn compare(&self, other: &Self) -> Ordering {
-        self.cmp(other)
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(self.clone()).cmp_with(other))
+    }
+
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(self.clone()))
     }
 }
 
@@ -189,11 +235,27 @@ impl Sortable for i32 {
     fn compare(&self, other: &Self) -> Ordering {
         self.cmp(other)
     }
+
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(*self).cmp_with(other))
+    }
+
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(*self))
+    }
 }
 
 impl Sortable for i64 {
     fn compare(&self, other: &Self) -> Ordering {
         self.cmp(other)
+    }
+
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(*self).cmp_with(other))
+    }
+
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(*self))
     }
 }
 
@@ -201,23 +263,27 @@ impl Sortable for u32 {
     fn compare(&self, other: &Self) -> Ordering {
         self.cmp(other)
     }
+
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(*self).cmp_with(other))
+    }
+
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(*self))
+    }
 }
 
 impl Sortable for u64 {
     fn compare(&self, other: &Self) -> Ordering {
         self.cmp(other)
     }
-}
 
-impl Sortable for f32 {
-    fn compare(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(*self).cmp_with(other))
     }
-}
 
-impl Sortable for f64 {
-    fn compare(&self, other: &Self) -> Ordering {
-        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(*self))
     }
 }
 
@@ -225,23 +291,39 @@ impl Sortable for bool {
     fn compare(&self, other: &Self) -> Ordering {
         self.cmp(other)
     }
+
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(*self).cmp_with(other))
+    }
+
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(*self))
+    }
 }
 
-impl<T: Sortable> Sortable for Option<T> {
+impl<T: Sortable + Clone + Ord + Send + Sync + 'static> Sortable for Option<T> {
     fn compare(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Some(a), Some(b)) => a.compare(b),
-            (Some(_), None) => Ordering::Less,
-            (None, Some(_)) => Ordering::Greater,
             (None, None) => Ordering::Equal,
+            (None, Some(_)) => Ordering::Greater, // None sorts after Some
+            (Some(_), None) => Ordering::Less,
         }
+    }
+
+    fn compare_dyn(&self, other: &dyn SortableValue) -> Option<Ordering> {
+        Some(SortableWrapper(self.clone()).cmp_with(other))
+    }
+
+    fn clone_boxed(&self) -> Box<dyn SortableValue> {
+        Box::new(SortableWrapper(self.clone()))
     }
 }
 
 /// Sorter for sorting table data.
 pub struct Sorter<T> {
     /// Value extractor functions by column ID.
-    extractors: Vec<(String, Box<dyn Fn(&T) -> Box<dyn Sortable + '_> + Send + Sync>)>,
+    extractors: Vec<(String, Box<dyn Fn(&T) -> Box<dyn SortableValue> + Send + Sync>)>,
 }
 
 impl<T> Default for Sorter<T> {
@@ -262,12 +344,12 @@ impl<T> Sorter<T> {
     pub fn add_extractor<F, V>(mut self, column_id: impl Into<String>, extractor: F) -> Self
     where
         F: Fn(&T) -> V + Send + Sync + 'static,
-        V: Sortable + 'static,
+        V: Sortable + Clone + 'static,
     {
         let column_id = column_id.into();
         self.extractors.push((
             column_id,
-            Box::new(move |item| Box::new(extractor(item))),
+            Box::new(move |item| extractor(item).clone_boxed()),
         ));
         self
     }
@@ -283,7 +365,7 @@ impl<T> Sorter<T> {
                 if let Some((_, extractor)) = self.extractors.iter().find(|(id, _)| id == &spec.column_id) {
                     let val_a = extractor(a);
                     let val_b = extractor(b);
-                    let ordering = val_a.compare(&*val_b);
+                    let ordering = val_a.cmp_with(&*val_b);
                     let directed = spec.direction.apply(ordering);
                     if directed != Ordering::Equal {
                         return directed;
@@ -309,7 +391,7 @@ impl<T> Sorter<T> {
                 if let Some((_, extractor)) = self.extractors.iter().find(|(id, _)| id == &spec.column_id) {
                     let val_a = extractor(a);
                     let val_b = extractor(b);
-                    let ordering = val_a.compare(&*val_b);
+                    let ordering = val_a.cmp_with(&*val_b);
                     let directed = spec.direction.apply(ordering);
                     if directed != Ordering::Equal {
                         return directed;

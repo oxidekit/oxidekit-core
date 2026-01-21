@@ -14,7 +14,7 @@ tracing = { workspace = true }
 uuid = { workspace = true }
 
 # Bitflags for efficient state representation
-bitflags = "2.4"
+bitflags = { version = "2.4", features = ["serde"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4"

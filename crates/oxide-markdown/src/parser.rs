@@ -468,6 +468,22 @@ impl MarkdownParser {
                         }
                     }
                 }
+                Event::InlineMath(math) => {
+                    // Inline math (e.g., $x^2$)
+                    if let Some(inlines) = inline_stack.last_mut() {
+                        inlines.push(InlineElement::Code(format!("${}$", math)));
+                    }
+                }
+                Event::DisplayMath(math) => {
+                    // Display math (e.g., $$x^2$$)
+                    if let Some(blocks) = block_stack.last_mut() {
+                        blocks.push(BlockElement::CodeBlock {
+                            language: Some("math".to_string()),
+                            content: math.to_string(),
+                            filename: None,
+                        });
+                    }
+                }
             }
         }
 

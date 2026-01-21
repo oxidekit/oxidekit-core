@@ -302,7 +302,7 @@ impl<T: Clone + Send + Sync + fmt::Debug + 'static> NodeData for T {
 }
 
 /// A node in the tree structure.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct TreeNode {
     /// Unique identifier for this node.
     pub id: NodeId,

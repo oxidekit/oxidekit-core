@@ -740,7 +740,11 @@ mod tests {
         let ranges = matcher.find_ranges("test", "this is a test string with test");
         assert_eq!(ranges.len(), 2);
         assert_eq!(ranges[0].start, 10);
-        assert_eq!(ranges[1].start, 28);
+        // "this is a test string with test"
+        //  0123456789012345678901234567890
+        //            ^         ^
+        //           10        27
+        assert_eq!(ranges[1].start, 27);
     }
 
     #[test]

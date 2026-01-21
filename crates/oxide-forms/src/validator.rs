@@ -74,6 +74,14 @@ impl<T> Default for ValidatorChain<T> {
     }
 }
 
+impl<T> fmt::Debug for ValidatorChain<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ValidatorChain")
+            .field("count", &self.validators.len())
+            .finish()
+    }
+}
+
 // ============================================================================
 // Built-in Validators for String types
 // ============================================================================

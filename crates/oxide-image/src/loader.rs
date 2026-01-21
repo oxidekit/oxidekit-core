@@ -359,22 +359,37 @@ impl ImageLoader {
     }
 
     /// Load an image from any supported source.
-    #[instrument(skip(self))]
+    #[instrument(skip(self, source))]
     pub async fn load(&self, source: impl Into<ImageSource>) -> ImageResult<ImageData> {
         let source = source.into();
         debug!(?source, "Loading image");
 
-        match &source {
-            ImageSource::File(path) => self.load_file_internal(path, source).await,
-            ImageSource::Url(url) => self.load_url_internal(url, source).await,
-            ImageSource::Bytes(data) => self.load_bytes_internal(data, source).await,
-            ImageSource::Base64(data) => self.load_base64_internal(data, source).await,
-            ImageSource::Asset(name) => self.load_asset_internal(name, source).await,
+        match source {
+            ImageSource::File(path) => {
+                let source_clone = ImageSource::File(path.clone());
+                self.load_file_internal(&path, source_clone).await
+            }
+            ImageSource::Url(url) => {
+                let source_clone = ImageSource::Url(url.clone());
+                self.load_url_internal(&url, source_clone).await
+            }
+            ImageSource::Bytes(data) => {
+                let source_clone = ImageSource::Bytes(data.clone());
+                self.load_bytes_internal(&data, source_clone).await
+            }
+            ImageSource::Base64(data) => {
+                let source_clone = ImageSource::Base64(data.clone());
+                self.load_base64_internal(&data, source_clone).await
+            }
+            ImageSource::Asset(name) => {
+                let source_clone = ImageSource::Asset(name.clone());
+                self.load_asset_internal(&name, source_clone).await
+            }
         }
     }
 
     /// Load an image from a file path.
-    #[instrument(skip(self))]
+    #[instrument(skip(self, path))]
     pub async fn load_file(&self, path: impl AsRef<Path>) -> ImageResult<ImageData> {
         let path = path.as_ref();
         let source = ImageSource::File(path.to_path_buf());
@@ -516,8 +531,10 @@ impl ImageLoader {
 
     async fn decode_image(&self, bytes: Vec<u8>, source: ImageSource) -> ImageResult<ImageData> {
         // Detect format from magic bytes
-        let format = ImageFormat::from_magic_bytes(&bytes)
-            .ok_or_else(|| ImageError::decode("Unable to detect image format"))?;
+        let format = ImageFormat::from_magic_bytes(&bytes);
+        if format == ImageFormat::Unknown {
+            return Err(ImageError::decode("Unable to detect image format"));
+        }
 
         // Decode to get dimensions
         let (width, height) = Self::get_dimensions(&bytes, format)?;

@@ -205,7 +205,6 @@ pub enum DiagnosticSeverity {
 }
 
 /// The main code editor component
-#[derive(Debug)]
 pub struct CodeEditor {
     /// Editor configuration
     config: EditorConfig,
@@ -237,6 +236,25 @@ pub struct CodeEditor {
     gutter_config: GutterConfig,
     /// Minimap config
     minimap_config: MinimapConfig,
+}
+
+impl std::fmt::Debug for CodeEditor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CodeEditor")
+            .field("config", &self.config)
+            .field("language", &self.language)
+            .field("theme", &self.theme)
+            .field("state", &self.state)
+            .field("highlighter", &self.highlighter)
+            .field("search", &self.search)
+            .field("autocomplete", &self.autocomplete)
+            .field("language_registry", &self.language_registry)
+            .field("folding_provider", &"<FoldingProvider>")
+            .field("completion_providers", &format!("[{} providers]", self.completion_providers.len()))
+            .field("on_change", &self.on_change.as_ref().map(|_| "<callback>"))
+            .field("on_event", &self.on_event.as_ref().map(|_| "<callback>"))
+            .finish()
+    }
 }
 
 impl Default for CodeEditor {
@@ -480,8 +498,8 @@ impl CodeEditor {
             return Ok(());
         }
 
-        let cursor = self.state.cursors.primary();
-        let char_idx = self.position_to_char_index(cursor.position)?;
+        let cursor_position = self.state.cursors.primary().position;
+        let char_idx = self.position_to_char_index(cursor_position)?;
 
         // Record for undo
         let old_cursors: Vec<_> = self.state.cursors.all().iter().map(|c| c.position).collect();
@@ -494,13 +512,13 @@ impl CodeEditor {
 
         // Update highlighting incrementally
         self.highlighter
-            .highlight_range(&self.state.document, cursor.position.line, new_pos.line + 1);
+            .highlight_range(&self.state.document, cursor_position.line, new_pos.line + 1);
 
         let new_cursors: Vec<_> = self.state.cursors.all().iter().map(|c| c.position).collect();
 
         // Push undo operation
         self.state.undo_stack.push(EditOperation {
-            range: Range::new(cursor.position, new_pos),
+            range: Range::new(cursor_position, new_pos),
             old_text: String::new(),
             new_text: text.to_string(),
             old_cursors,
@@ -675,6 +693,8 @@ impl CodeEditor {
         self.validate_position(&range.start)?;
         self.validate_position(&range.end)?;
         self.state.cursors.primary_mut().set_selection(Selection {
+            start: range.start,
+            end: range.end,
             anchor: range.start,
             head: range.end,
         });
@@ -687,6 +707,8 @@ impl CodeEditor {
         let end_line = self.line_count().saturating_sub(1);
         let end_col = self.get_line_length(end_line).unwrap_or(0);
         self.state.cursors.primary_mut().set_selection(Selection {
+            start: Position::new(0, 0),
+            end: Position::new(end_line, end_col),
             anchor: Position::new(0, 0),
             head: Position::new(end_line, end_col),
         });
@@ -816,7 +838,7 @@ impl CodeEditor {
 
         if let Some(provider) = &self.folding_provider {
             if let Some(range) = provider.get_fold_range(&self.state.document, line) {
-                self.state.fold_state.fold(range);
+                self.state.fold_state.fold(range.start_line);
                 self.emit_event(EditorEvent::FoldToggle { line, folded: true });
             } else {
                 return Err(EditorError::CannotFold(line));
@@ -850,7 +872,7 @@ impl CodeEditor {
         if let Some(provider) = &self.folding_provider {
             let ranges = provider.get_all_fold_ranges(&self.state.document);
             for range in ranges {
-                self.state.fold_state.fold(range);
+                self.state.fold_state.fold(range.start_line);
             }
         }
         Ok(())

@@ -253,7 +253,7 @@ impl Range {
 }
 
 /// Heading level (1-6)
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum HeadingLevel {
     H1 = 1,
     H2 = 2,
