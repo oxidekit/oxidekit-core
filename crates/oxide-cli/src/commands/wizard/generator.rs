@@ -5,7 +5,7 @@
 use anyhow::{Context, Result};
 use oxide_starters::{StarterRegistry, StarterGenerator as StarterGen};
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use super::config::{ProjectConfig, PluginPreset, ThemeChoice};
@@ -24,7 +24,11 @@ impl<'a> ProjectGenerator<'a> {
 
     /// Generate the project
     pub fn generate(&self) -> Result<GenerationResult> {
-        let mut result = GenerationResult::new(&self.config.name);
+        // Determine the actual project directory
+        // For starters, StarterGenerator creates at parent_dir/name
+        // For blank projects, we use output_dir directly
+        let project_dir = self.config.output_dir.clone();
+        let mut result = GenerationResult::new(&self.config.name, project_dir.clone());
 
         // Check if output directory already exists (but don't create it yet for starters)
         if self.config.output_dir.exists() {
@@ -76,17 +80,24 @@ impl<'a> ProjectGenerator<'a> {
 
         prompts::step(1, 4, &format!("Applying starter template: {}", starter.name));
 
-        // Use the starter generator but in the parent directory
+        // StarterGenerator.generate() creates project at parent_dir/name
+        // We want the project at self.config.output_dir
+        // So we use output_dir's parent as parent_dir, and output_dir's filename as the directory name
         let parent_dir = self.config.output_dir.parent()
-            .unwrap_or_else(|| Path::new("."));
+            .unwrap_or(Path::new("."));
+        let dir_name = self.config.output_dir.file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| self.config.name.clone());
 
         let generator = StarterGen::new(starter);
-        let starter_result = generator.generate(&self.config.name, parent_dir)?;
+        let starter_result = generator.generate(&dir_name, parent_dir)?;
 
+        // Update result with the actual project directory from StarterGenerator
+        result.project_dir = starter_result.project_dir.clone();
         result.files_created = starter_result.files_created.iter().map(|p| p.display().to_string()).collect();
         result.plugins_to_install = starter_result.plugins_to_install;
 
-        // Now overlay our customizations
+        // Now overlay our customizations using the actual project directory
         self.apply_customizations(result)?;
 
         Ok(())
@@ -159,9 +170,9 @@ impl<'a> ProjectGenerator<'a> {
     fn apply_customizations(&self, result: &mut GenerationResult) -> Result<()> {
         prompts::step(2, 4, "Applying customizations");
 
-        // Re-generate oxide.toml with our settings
+        // Re-generate oxide.toml with our settings in the actual project directory
         let manifest = self.generate_manifest();
-        fs::write(self.config.output_dir.join("oxide.toml"), manifest)
+        fs::write(result.project_dir.join("oxide.toml"), manifest)
             .context("Failed to write oxide.toml")?;
 
         // Add additional plugins from presets
@@ -182,7 +193,7 @@ impl<'a> ProjectGenerator<'a> {
 
         let output = Command::new("git")
             .args(["init"])
-            .current_dir(&self.config.output_dir)
+            .current_dir(&result.project_dir)
             .output();
 
         match output {
@@ -408,6 +419,8 @@ MIT
 pub struct GenerationResult {
     /// Project name
     pub project_name: String,
+    /// Actual project directory path
+    pub project_dir: PathBuf,
     /// Whether generation was successful
     pub success: bool,
     /// List of files created
@@ -419,9 +432,10 @@ pub struct GenerationResult {
 }
 
 impl GenerationResult {
-    fn new(name: &str) -> Self {
+    fn new(name: &str, project_dir: PathBuf) -> Self {
         Self {
             project_name: name.to_string(),
+            project_dir,
             success: false,
             files_created: Vec::new(),
             plugins_to_install: Vec::new(),
