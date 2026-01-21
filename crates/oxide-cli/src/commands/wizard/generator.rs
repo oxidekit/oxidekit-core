@@ -321,7 +321,7 @@ fn main() -> anyhow::Result<()> {
             r#"// {} - Main application UI
 // This file defines the root UI component
 
-app {}App {{
+app {} {{
     Column {{
         align: center
         justify: center

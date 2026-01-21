@@ -725,8 +725,8 @@ fn tutorial_quick_start() -> Result<()> {
     [extensions]
     ui.core = "^1.0"
 
-  src/app.oui:
-    App {{
+  ui/app.oui:
+    app MyApp {{
         Header {{ title: "My App" }}
         Router {{
             Route {{ path: "/", component: HomePage }}

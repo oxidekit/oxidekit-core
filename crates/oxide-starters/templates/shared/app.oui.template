@@ -1,6 +1,6 @@
 // {{project_name}} - Main UI
 
-App {
+app {{project_name}} {
     Window {
         title: "{{project_name}}"
         width: 1200

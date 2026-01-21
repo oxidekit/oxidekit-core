@@ -266,7 +266,7 @@ fn main() -> anyhow::Result<()> {{
             r#"// {} - Main UI file
 // Generated from the {} starter
 
-App {{
+app {} {{
     Window {{
         title: "{}"
         width: 1200
@@ -291,6 +291,7 @@ App {{
 "#,
             project_name,
             self.spec.name,
+            project_name,
             project_name,
             project_name,
         );
