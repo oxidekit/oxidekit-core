@@ -77,6 +77,8 @@ pub enum PropertyValue {
     String(String),
     Number(f64),
     Bool(bool),
+    /// State binding: references a reactive state value
+    Binding { var: String },
 }
 
 /// Compile a .oui file to IR
@@ -186,7 +188,15 @@ fn element_to_ir(element: Element, id_counter: &mut usize) -> ComponentIR {
 /// Convert AST value to IR property value
 fn value_to_property_value(value: Value) -> PropertyValue {
     match value {
-        Value::String(s) => PropertyValue::String(s),
+        Value::String(s) => {
+            // Check if this is a binding: {variable_name}
+            if s.starts_with('{') && s.ends_with('}') && s.len() > 2 {
+                let var = s[1..s.len()-1].trim().to_string();
+                PropertyValue::Binding { var }
+            } else {
+                PropertyValue::String(s)
+            }
+        }
         Value::Number(n) => PropertyValue::Number(n),
         Value::Bool(b) => PropertyValue::Bool(b),
         Value::Ident(s) => PropertyValue::String(s), // Identifiers become strings for now

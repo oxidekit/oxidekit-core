@@ -21,9 +21,111 @@ use oxide_layout::{AvailableSpace, LayoutTree, NodeId, NodeVisual, Size, StyleBu
 use oxide_render::{Color, PrimitiveRenderer, RenderContext};
 use oxide_text::{TextRenderer, TextSystem};
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use wgpu::Surface;
+
+/// Command from UI to backend
+#[derive(Debug, Clone)]
+pub enum AppCommand {
+    /// Call a named function with arguments
+    CallFunction { name: String, args: Vec<events::ActionValue> },
+    /// Navigate to a route
+    Navigate { path: String },
+    /// Custom command
+    Custom(String),
+}
+
+/// State update from backend to UI
+#[derive(Debug, Clone)]
+pub struct StateUpdate {
+    pub key: String,
+    pub value: StateValue,
+}
+
+/// Shared application context for communication between UI and backend
+pub struct AppContext {
+    /// State updates to be applied to UI (backend writes, UI reads)
+    pub state_updates: Arc<Mutex<Vec<StateUpdate>>>,
+    /// Commands from UI (UI writes, backend reads)
+    pub commands: Arc<Mutex<Vec<AppCommand>>>,
+    /// Shared state that can be read/written by both
+    pub shared_state: Arc<Mutex<HashMap<String, String>>>,
+}
+
+impl AppContext {
+    pub fn new() -> Self {
+        Self {
+            state_updates: Arc::new(Mutex::new(Vec::new())),
+            commands: Arc::new(Mutex::new(Vec::new())),
+            shared_state: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    /// Push a state update (called from backend)
+    pub fn push_state_update(&self, key: impl Into<String>, value: StateValue) {
+        if let Ok(mut updates) = self.state_updates.lock() {
+            updates.push(StateUpdate {
+                key: key.into(),
+                value,
+            });
+        }
+    }
+
+    /// Push a command (called from UI)
+    pub fn push_command(&self, cmd: AppCommand) {
+        if let Ok(mut commands) = self.commands.lock() {
+            commands.push(cmd);
+        }
+    }
+
+    /// Take all pending commands (called from backend)
+    pub fn take_commands(&self) -> Vec<AppCommand> {
+        if let Ok(mut commands) = self.commands.lock() {
+            std::mem::take(&mut *commands)
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Take all pending state updates (called from UI)
+    pub fn take_state_updates(&self) -> Vec<StateUpdate> {
+        if let Ok(mut updates) = self.state_updates.lock() {
+            std::mem::take(&mut *updates)
+        } else {
+            Vec::new()
+        }
+    }
+
+    /// Set shared state value
+    pub fn set_shared(&self, key: impl Into<String>, value: impl Into<String>) {
+        if let Ok(mut state) = self.shared_state.lock() {
+            state.insert(key.into(), value.into());
+        }
+    }
+
+    /// Get shared state value
+    pub fn get_shared(&self, key: &str) -> Option<String> {
+        self.shared_state.lock().ok()?.get(key).cloned()
+    }
+}
+
+impl Default for AppContext {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Clone for AppContext {
+    fn clone(&self) -> Self {
+        Self {
+            state_updates: Arc::clone(&self.state_updates),
+            commands: Arc::clone(&self.commands),
+            shared_state: Arc::clone(&self.shared_state),
+        }
+    }
+}
 use winit::{
     application::ApplicationHandler,
     dpi::LogicalSize,
@@ -124,6 +226,7 @@ pub struct DevConfig {
 pub struct Application {
     manifest: Manifest,
     project_path: PathBuf,
+    context: Option<AppContext>,
 }
 
 impl Application {
@@ -148,7 +251,19 @@ impl Application {
         Ok(Self {
             manifest,
             project_path,
+            context: None,
         })
+    }
+
+    /// Set the application context for UI-backend communication
+    pub fn with_context(mut self, context: AppContext) -> Self {
+        self.context = Some(context);
+        self
+    }
+
+    /// Get a clone of the context (for use in backend threads)
+    pub fn context(&self) -> Option<AppContext> {
+        self.context.clone()
     }
 
     /// Create a default application (for testing)
@@ -166,6 +281,7 @@ impl Application {
                 dev: DevConfig::default(),
             },
             project_path: PathBuf::from("."),
+            context: None,
         }
     }
 
@@ -177,7 +293,7 @@ impl Application {
         // Try to compile the UI
         let ui_ir = self.compile_ui();
 
-        let mut app_state = AppState::new(self.manifest, ui_ir);
+        let mut app_state = AppState::new(self.manifest, ui_ir, self.context);
 
         event_loop.run_app(&mut app_state)?;
 
@@ -220,6 +336,9 @@ struct TextElement {
     /// Computed absolute position (updated after layout)
     computed_x: f32,
     computed_y: f32,
+    computed_height: f32,
+    /// State binding variable name (if content is bound to state)
+    binding: Option<String>,
 }
 
 /// Internal application state
@@ -256,6 +375,8 @@ struct AppState {
     text_input_manager: TextInputManager,
     /// Current keyboard modifiers state
     keyboard_modifiers: KeyboardModifiers,
+    /// Application context for UI-backend communication
+    app_context: Option<AppContext>,
 }
 
 /// Keyboard modifier state
@@ -268,7 +389,7 @@ struct KeyboardModifiers {
 }
 
 impl AppState {
-    fn new(manifest: Manifest, ui_ir: Option<ComponentIR>) -> Self {
+    fn new(manifest: Manifest, ui_ir: Option<ComponentIR>, app_context: Option<AppContext>) -> Self {
         Self {
             manifest,
             ui_ir,
@@ -292,6 +413,7 @@ impl AppState {
             last_state_version: 0,
             text_input_manager: TextInputManager::new(),
             keyboard_modifiers: KeyboardModifiers::default(),
+            app_context,
         }
     }
 
@@ -517,6 +639,7 @@ impl AppState {
             if let Some(rect) = node_rects.get(&text_elem.node_id) {
                 text_elem.computed_x = rect.x;
                 text_elem.computed_y = rect.y;
+                text_elem.computed_height = rect.height;
             }
         }
     }
@@ -555,6 +678,28 @@ impl AppState {
 
         // Recompute layout for new viewport size (uses logical_size)
         self.compute_layout();
+    }
+
+    /// Apply pending state updates from the application context
+    fn apply_state_updates(&mut self) {
+        let updates = if let Some(ctx) = &self.app_context {
+            ctx.take_state_updates()
+        } else {
+            return;
+        };
+
+        let mut needs_rebuild = false;
+        for update in updates {
+            tracing::debug!("Applying state update: {} = {:?}", update.key, update.value);
+            self.reactive_state.set(&update.key, update.value);
+            needs_rebuild = true;
+        }
+
+        // If state changed, rebuild UI to reflect text content changes
+        if needs_rebuild {
+            self.build_ui();
+            self.compute_layout();
+        }
     }
 
     fn render(&mut self) {
@@ -635,14 +780,26 @@ impl AppState {
             // Render each text element at its computed layout position
             let scale = self.scale_factor as f32;
             for text_elem in &self.text_elements {
+                // Resolve content - check if bound to state
+                let content = if let Some(var) = &text_elem.binding {
+                    // Get value from reactive state
+                    self.reactive_state
+                        .get(var)
+                        .and_then(|v| v.as_string())
+                        .unwrap_or(&text_elem.content)
+                        .to_string()
+                } else {
+                    text_elem.content.clone()
+                };
+
                 // Use pre-computed absolute positions (logical coords)
-                // Scale coordinates and font size for physical pixels
+                // Center text vertically within its container
                 let text_x = (text_elem.computed_x + 4.0) * scale; // Small padding
-                let text_y = text_elem.computed_y * scale;
+                let text_y = (text_elem.computed_y + text_elem.computed_height / 2.0 - text_elem.size / 2.0) * scale;
                 let scaled_font_size = text_elem.size * scale;
 
                 text_renderer.draw_text(
-                    &text_elem.content,
+                    &content,
                     text_x,
                     text_y,
                     scaled_font_size,
@@ -814,15 +971,17 @@ fn build_from_ir_with_measurement(
 
     // Check if this is a Text component
     if ir.kind == "Text" {
-        let content = ir
+        // Extract content - could be a string or a binding
+        let (content, binding) = ir
             .props
             .iter()
             .find(|p| p.name == "content")
-            .and_then(|p| match &p.value {
-                PropertyValue::String(s) => Some(s.clone()),
-                _ => None,
+            .map(|p| match &p.value {
+                PropertyValue::String(s) => (s.clone(), None),
+                PropertyValue::Binding { var } => (format!("{{{}}}", var), Some(var.clone())),
+                _ => (String::new(), None),
             })
-            .unwrap_or_default();
+            .unwrap_or((String::new(), None));
 
         let font_size = ir
             .props
@@ -844,8 +1003,9 @@ fn build_from_ir_with_measurement(
             })
             .unwrap_or([0.898, 0.906, 0.922, 1.0]);
 
-        // Measure text dimensions
-        let (text_width, text_height) = text_system.measure_text(&content, font_size);
+        // Measure text dimensions (use placeholder for bindings)
+        let measure_text = if binding.is_some() { "0.00".to_string() } else { content.clone() };
+        let (text_width, text_height) = text_system.measure_text(&measure_text, font_size);
 
         // Create style with measured dimensions
         let style = StyleBuilder::new()
@@ -861,6 +1021,8 @@ fn build_from_ir_with_measurement(
             color,
             computed_x: 0.0,
             computed_y: 0.0,
+            computed_height: 0.0,
+            binding,
         });
 
         // Register handlers for this node
@@ -1029,15 +1191,17 @@ fn build_from_ir(
 
     // Check if this is a Text component
     if ir.kind == "Text" {
-        let content = ir
+        // Extract content - could be a string or a binding
+        let (content, binding) = ir
             .props
             .iter()
             .find(|p| p.name == "content")
-            .and_then(|p| match &p.value {
-                PropertyValue::String(s) => Some(s.clone()),
-                _ => None,
+            .map(|p| match &p.value {
+                PropertyValue::String(s) => (s.clone(), None),
+                PropertyValue::Binding { var } => (format!("{{{}}}", var), Some(var.clone())),
+                _ => (String::new(), None),
             })
-            .unwrap_or_default();
+            .unwrap_or((String::new(), None));
 
         let font_size = ir
             .props
@@ -1060,7 +1224,8 @@ fn build_from_ir(
             .unwrap_or([0.898, 0.906, 0.922, 1.0]);
 
         // Estimate text dimensions (fallback)
-        let estimated_width = content.len() as f32 * font_size * 0.6;
+        let measure_text = if binding.is_some() { "0.00".to_string() } else { content.clone() };
+        let estimated_width = measure_text.len() as f32 * font_size * 0.6;
         let estimated_height = font_size * 1.2;
 
         let style = StyleBuilder::new()
@@ -1076,6 +1241,8 @@ fn build_from_ir(
             color,
             computed_x: 0.0,
             computed_y: 0.0,
+            computed_height: 0.0,
+            binding,
         });
 
         // Register handlers
@@ -1422,6 +1589,8 @@ impl ApplicationHandler for AppState {
                 self.compute_layout();
             }
             WindowEvent::RedrawRequested => {
+                // Apply any pending state updates from backend
+                self.apply_state_updates();
                 self.render();
                 if let Some(window) = &self.window {
                     window.request_redraw();
@@ -1545,11 +1714,23 @@ impl AppState {
                 }
                 HandlerAction::FunctionCall { name, args } => {
                     tracing::debug!("Function call: {}({:?})", name, args);
-                    // TODO: Implement function dispatch registry
+                    // Push command to context for backend to handle
+                    if let Some(ctx) = &self.app_context {
+                        ctx.push_command(AppCommand::CallFunction {
+                            name: name.clone(),
+                            args: args.clone(),
+                        });
+                    }
                 }
                 HandlerAction::Navigate { path } => {
                     tracing::info!("Navigate to: {}", path);
-                    // TODO: Implement navigation/routing
+                    // Push navigation command to context
+                    if let Some(ctx) = &self.app_context {
+                        ctx.push_command(AppCommand::Navigate { path: path.clone() });
+                    }
+                    // Also update reactive state for view switching
+                    self.reactive_state.set("view", StateValue::String(path.clone()));
+                    state_changed = true;
                 }
                 HandlerAction::Raw(expr) => {
                     tracing::debug!("Raw handler: {}", expr);
