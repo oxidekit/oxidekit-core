@@ -487,6 +487,7 @@ impl AppState {
         self.prev_node_count = self.node_count;
         self.text_elements.clear();
         self.event_manager.clear_handlers();
+        self.dev_overlay.log("DEV", "Rebuilding UI...");
 
         // Build from IR if available
         if let Some(ir) = self.ui_ir.clone() {
@@ -1398,7 +1399,7 @@ fn register_handlers(node: NodeId, ir: &ComponentIR, event_manager: &mut EventMa
             },
         );
 
-        tracing::debug!(
+        tracing::info!(
             "Registered {} handler for node {:?}: {}",
             handler_ir.event,
             node,

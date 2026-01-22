@@ -328,21 +328,25 @@ impl EventManager {
     }
 
     /// Perform hit testing to find the node at a given position
-    /// Returns the topmost (last rendered) node that contains the point
+    /// Returns the best node for interaction (prefers nodes with handlers)
     pub fn hit_test(&self, x: f32, y: f32, tree: &LayoutTree, root: NodeId) -> Option<NodeId> {
         let mut hit_node: Option<NodeId> = None;
+        let mut hit_node_with_handler: Option<NodeId> = None;
 
         // Traverse tree to find all nodes containing the point
-        // The last one in traversal order is the topmost
+        // Track both any hit node and specifically nodes with handlers
         tree.traverse(root, |node, rect, _visual| {
             if self.point_in_rect(x, y, &rect) {
-                // Check if this node has handlers registered (is interactive)
-                // For now, mark all nodes as potentially hittable
                 hit_node = Some(node);
+                // Prefer nodes that have handlers (event bubbling simulation)
+                if self.handlers.contains_key(&node) {
+                    hit_node_with_handler = Some(node);
+                }
             }
         });
 
-        hit_node
+        // Return the node with a handler if one exists, otherwise any hit node
+        hit_node_with_handler.or(hit_node)
     }
 
     /// Check if a point is inside a rectangle
