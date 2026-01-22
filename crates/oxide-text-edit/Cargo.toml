@@ -17,9 +17,13 @@ instant = "0.1"
 serde = { workspace = true, optional = true }
 serde_json = { workspace = true, optional = true }
 
+# System clipboard (optional)
+arboard = { version = "3.4", optional = true }
+
 [features]
 default = []
 serde = ["dep:serde", "dep:serde_json"]
+system-clipboard = ["dep:arboard"]
 
 [dev-dependencies]
 serde_json.workspace = true

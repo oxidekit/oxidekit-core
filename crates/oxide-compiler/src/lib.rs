@@ -48,8 +48,19 @@ pub struct ComponentIR {
     pub props: Vec<Property>,
     /// Style properties (separate for clarity)
     pub style: Vec<Property>,
+    /// Event handlers (on click, on hover, etc.)
+    pub handlers: Vec<HandlerIR>,
     /// Child components
     pub children: Vec<ComponentIR>,
+}
+
+/// Event handler IR
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct HandlerIR {
+    /// Event type (click, hover, etc.)
+    pub event: String,
+    /// Handler expression
+    pub handler: String,
 }
 
 /// A property on a component
@@ -114,6 +125,7 @@ pub fn compile(source: &str) -> Result<ComponentIR, CompilerError> {
             kind: "Column".to_string(),
             props: vec![],
             style: vec![],
+            handlers: vec![],
             children,
         })
     }
@@ -146,6 +158,15 @@ fn element_to_ir(element: Element, id_counter: &mut usize) -> ComponentIR {
         })
         .unwrap_or_default();
 
+    let handlers: Vec<HandlerIR> = element
+        .handlers
+        .into_iter()
+        .map(|h| HandlerIR {
+            event: h.event,
+            handler: h.handler,
+        })
+        .collect();
+
     let children: Vec<ComponentIR> = element
         .children
         .into_iter()
@@ -157,6 +178,7 @@ fn element_to_ir(element: Element, id_counter: &mut usize) -> ComponentIR {
         kind: element.name,
         props,
         style,
+        handlers,
         children,
     }
 }

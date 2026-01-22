@@ -3,8 +3,17 @@
 //! Window management, event handling, application lifecycle, and animation support.
 
 pub mod animation;
+pub mod events;
+pub mod reactive;
+pub mod text_input;
 
 pub use animation::{AnimationRuntime, Animatable, properties as anim_properties};
+pub use events::{EventManager, UiEvent, MouseButton, Modifiers, EventHandler, EventType, HandlerAction};
+pub use reactive::{ReactiveState, StateValue, StateBinding};
+pub use text_input::{TextInputManager, TextInputState};
+
+// Re-export file picker for easy access
+pub use oxide_file_picker::{OpenDialog, SaveDialog, DirectoryDialog, FileFilter};
 
 use anyhow::Result;
 use oxide_compiler::{compile, ComponentIR, PropertyValue};
@@ -18,8 +27,9 @@ use wgpu::Surface;
 use winit::{
     application::ApplicationHandler,
     dpi::LogicalSize,
-    event::WindowEvent,
+    event::{ElementState, MouseButton as WinitMouseButton, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
+    keyboard::{Key, NamedKey},
     window::{Window, WindowAttributes, WindowId},
 };
 
@@ -207,6 +217,9 @@ struct TextElement {
     content: String,
     size: f32,
     color: [f32; 4],
+    /// Computed absolute position (updated after layout)
+    computed_x: f32,
+    computed_y: f32,
 }
 
 /// Internal application state
@@ -233,6 +246,25 @@ struct AppState {
     node_count: usize,
     /// Previous node count (for detecting duplicates)
     prev_node_count: usize,
+    /// Event manager for handling user input
+    event_manager: EventManager,
+    /// Reactive state for UI data binding
+    reactive_state: ReactiveState,
+    /// Last state version (for change detection)
+    last_state_version: u64,
+    /// Text input manager for handling text fields
+    text_input_manager: TextInputManager,
+    /// Current keyboard modifiers state
+    keyboard_modifiers: KeyboardModifiers,
+}
+
+/// Keyboard modifier state
+#[derive(Debug, Default, Clone, Copy)]
+struct KeyboardModifiers {
+    shift: bool,
+    ctrl: bool,
+    alt: bool,
+    meta: bool,
 }
 
 impl AppState {
@@ -255,6 +287,11 @@ impl AppState {
             text_elements: Vec::new(),
             node_count: 0,
             prev_node_count: 0,
+            event_manager: EventManager::new(),
+            reactive_state: ReactiveState::new(),
+            last_state_version: 0,
+            text_input_manager: TextInputManager::new(),
+            keyboard_modifiers: KeyboardModifiers::default(),
         }
     }
 
@@ -262,16 +299,20 @@ impl AppState {
         // Store previous count for duplicate detection
         self.prev_node_count = self.node_count;
         self.text_elements.clear();
+        self.event_manager.clear_handlers();
 
         // Build from IR if available
         if let Some(ir) = self.ui_ir.clone() {
             let mut tree = LayoutTree::new();
+            let mut text_elements = Vec::new();
+            let mut event_manager = EventManager::new();
+
             // Use text_system for measurement if available
             let root = if let Some(text_system) = &mut self.text_system {
-                build_from_ir_with_measurement(&ir, &mut tree, &mut self.text_elements, text_system)
+                build_from_ir_with_measurement(&ir, &mut tree, &mut text_elements, text_system, &mut event_manager)
             } else {
                 // Fallback without measurement (will use estimates)
-                build_from_ir(&ir, &mut tree, &mut self.text_elements)
+                build_from_ir(&ir, &mut tree, &mut text_elements, &mut event_manager)
             };
 
             // Count nodes
@@ -290,12 +331,15 @@ impl AppState {
 
             if self.manifest.dev.debug_layout {
                 tracing::info!(
-                    "Layout tree: {} nodes, {} text elements",
+                    "Layout tree: {} nodes, {} text elements, {} handlers",
                     self.node_count,
-                    self.text_elements.len()
+                    text_elements.len(),
+                    event_manager.handlers.len()
                 );
             }
 
+            self.text_elements = text_elements;
+            self.event_manager = event_manager;
             self.layout_tree = Some(tree);
             self.root_node = Some(root);
             return;
@@ -440,16 +484,40 @@ impl AppState {
     }
 
     fn compute_layout(&mut self) {
-        if let (Some(tree), Some(root)) = (&mut self.layout_tree, self.root_node) {
-            // Use logical size for layout computation
-            let (w, h) = self.logical_size;
-            tree.compute_layout(
-                root,
-                Size {
-                    width: AvailableSpace::Definite(w),
-                    height: AvailableSpace::Definite(h),
-                },
-            );
+        let root = match self.root_node {
+            Some(r) => r,
+            None => return,
+        };
+
+        let tree = match &mut self.layout_tree {
+            Some(t) => t,
+            None => return,
+        };
+
+        // Use logical size for layout computation
+        let (w, h) = self.logical_size;
+        tree.compute_layout(
+            root,
+            Size {
+                width: AvailableSpace::Definite(w),
+                height: AvailableSpace::Definite(h),
+            },
+        );
+
+        // Build a map of node_id -> absolute rect by traversing the tree
+        use std::collections::HashMap;
+        let mut node_rects: HashMap<NodeId, oxide_layout::ComputedRect> = HashMap::new();
+
+        tree.traverse(root, |node, rect, _visual| {
+            node_rects.insert(node, rect);
+        });
+
+        // Update each text element's computed position
+        for text_elem in &mut self.text_elements {
+            if let Some(rect) = node_rects.get(&text_elem.node_id) {
+                text_elem.computed_x = rect.x;
+                text_elem.computed_y = rect.y;
+            }
         }
     }
 
@@ -556,23 +624,21 @@ impl AppState {
         }
 
         // Render text elements
-        if let (Some(text_renderer), Some(text_system), Some(tree)) =
-            (&mut self.text_renderer, &mut self.text_system, &self.layout_tree)
+        if let (Some(text_renderer), Some(text_system)) =
+            (&mut self.text_renderer, &mut self.text_system)
         {
             text_renderer.begin();
 
             // Get mutable references to satisfy borrow checker
             let (font_system, swash_cache) = text_system.get_render_refs();
 
-            // Render each text element at its layout position
+            // Render each text element at its computed layout position
             let scale = self.scale_factor as f32;
             for text_elem in &self.text_elements {
-                // Get the absolute position by traversing to the node (logical coords)
-                let rect = tree.get_absolute_rect(text_elem.node_id, (0.0, 0.0));
-
+                // Use pre-computed absolute positions (logical coords)
                 // Scale coordinates and font size for physical pixels
-                let text_x = (rect.x + 4.0) * scale; // Small padding
-                let text_y = (rect.y + rect.height / 2.0 - text_elem.size / 2.0) * scale;
+                let text_x = (text_elem.computed_x + 4.0) * scale; // Small padding
+                let text_y = text_elem.computed_y * scale;
                 let scaled_font_size = text_elem.size * scale;
 
                 text_renderer.draw_text(
@@ -742,6 +808,7 @@ fn build_from_ir_with_measurement(
     tree: &mut LayoutTree,
     text_elements: &mut Vec<TextElement>,
     text_system: &mut TextSystem,
+    event_manager: &mut EventManager,
 ) -> NodeId {
     let visual = ir_to_visual(ir);
 
@@ -792,7 +859,12 @@ fn build_from_ir_with_measurement(
             content,
             size: font_size,
             color,
+            computed_x: 0.0,
+            computed_y: 0.0,
         });
+
+        // Register handlers for this node
+        register_handlers(node, ir, event_manager);
 
         return node;
     }
@@ -804,14 +876,146 @@ fn build_from_ir_with_measurement(
     let children: Vec<NodeId> = ir
         .children
         .iter()
-        .map(|child| build_from_ir_with_measurement(child, tree, text_elements, text_system))
+        .map(|child| build_from_ir_with_measurement(child, tree, text_elements, text_system, event_manager))
         .collect();
 
-    if children.is_empty() {
+    let node = if children.is_empty() {
         tree.new_visual_node(style, visual)
     } else {
         tree.new_visual_node_with_children(style, visual, &children)
+    };
+
+    // Register handlers for this node
+    register_handlers(node, ir, event_manager);
+
+    node
+}
+
+/// Register event handlers for a node from IR
+fn register_handlers(node: NodeId, ir: &ComponentIR, event_manager: &mut EventManager) {
+    for handler_ir in &ir.handlers {
+        // Convert event string to EventType
+        let event_type = match handler_ir.event.to_lowercase().as_str() {
+            "click" => events::EventType::Click,
+            "doubleclick" | "dblclick" => events::EventType::DoubleClick,
+            "mousedown" => events::EventType::MouseDown,
+            "mouseup" => events::EventType::MouseUp,
+            "mouseenter" | "hover" => events::EventType::MouseEnter,
+            "mouseleave" => events::EventType::MouseLeave,
+            "mousemove" => events::EventType::MouseMove,
+            "focus" => events::EventType::Focus,
+            "blur" => events::EventType::Blur,
+            "keydown" => events::EventType::KeyDown,
+            "keyup" => events::EventType::KeyUp,
+            "input" => events::EventType::TextInput,
+            _ => {
+                tracing::warn!("Unknown event type: {}", handler_ir.event);
+                continue;
+            }
+        };
+
+        // Parse the handler expression
+        let action = parse_handler_action(&handler_ir.handler);
+
+        event_manager.register_handler(
+            node,
+            events::EventHandler {
+                event_type,
+                action,
+            },
+        );
+
+        tracing::debug!(
+            "Registered {} handler for node {:?}: {}",
+            handler_ir.event,
+            node,
+            handler_ir.handler
+        );
     }
+}
+
+/// Parse a handler expression string into a HandlerAction
+fn parse_handler_action(expr: &str) -> events::HandlerAction {
+    let expr = expr.trim();
+
+    // Check for state mutation patterns: state.field += value
+    if expr.starts_with("state.") {
+        if let Some(action) = parse_state_mutation(expr) {
+            return action;
+        }
+    }
+
+    // Check for navigate pattern: navigate('/path')
+    if expr.starts_with("navigate(") && expr.ends_with(')') {
+        let inner = &expr[9..expr.len() - 1].trim();
+        let path = inner.trim_matches(|c| c == '"' || c == '\'');
+        return events::HandlerAction::Navigate {
+            path: path.to_string(),
+        };
+    }
+
+    // Check for function call pattern: funcName(args)
+    if let Some(paren_pos) = expr.find('(') {
+        if expr.ends_with(')') {
+            let name = expr[..paren_pos].trim().to_string();
+            return events::HandlerAction::FunctionCall {
+                name,
+                args: vec![],
+            };
+        }
+    }
+
+    // Fallback to raw expression
+    events::HandlerAction::Raw(expr.to_string())
+}
+
+/// Parse a state mutation expression like "state.count += 1"
+fn parse_state_mutation(expr: &str) -> Option<events::HandlerAction> {
+    let rest = expr.strip_prefix("state.")?;
+
+    let (field, op, value_str) = if let Some(pos) = rest.find("+=") {
+        (&rest[..pos], events::MutationOp::Add, rest[pos + 2..].trim())
+    } else if let Some(pos) = rest.find("-=") {
+        (
+            &rest[..pos],
+            events::MutationOp::Subtract,
+            rest[pos + 2..].trim(),
+        )
+    } else if let Some(pos) = rest.find("*=") {
+        (
+            &rest[..pos],
+            events::MutationOp::Multiply,
+            rest[pos + 2..].trim(),
+        )
+    } else if let Some(pos) = rest.find("/=") {
+        (
+            &rest[..pos],
+            events::MutationOp::Divide,
+            rest[pos + 2..].trim(),
+        )
+    } else if let Some(pos) = rest.find('=') {
+        if pos > 0 && !rest[..pos].ends_with(['!', '<', '>', '=']) {
+            (&rest[..pos], events::MutationOp::Set, rest[pos + 1..].trim())
+        } else {
+            return None;
+        }
+    } else {
+        return None;
+    };
+
+    let field = field.trim().to_string();
+
+    let value = if let Ok(n) = value_str.parse::<f64>() {
+        events::ActionValue::Number(n)
+    } else if value_str == "true" {
+        events::ActionValue::Bool(true)
+    } else if value_str == "false" {
+        events::ActionValue::Bool(false)
+    } else {
+        events::ActionValue::String(value_str.trim_matches('"').to_string())
+    };
+
+    Some(events::HandlerAction::StateMutation { field, op, value })
 }
 
 /// Build layout tree from IR (fallback without measurement)
@@ -819,6 +1023,7 @@ fn build_from_ir(
     ir: &ComponentIR,
     tree: &mut LayoutTree,
     text_elements: &mut Vec<TextElement>,
+    event_manager: &mut EventManager,
 ) -> NodeId {
     let visual = ir_to_visual(ir);
 
@@ -869,7 +1074,12 @@ fn build_from_ir(
             content,
             size: font_size,
             color,
+            computed_x: 0.0,
+            computed_y: 0.0,
         });
+
+        // Register handlers
+        register_handlers(node, ir, event_manager);
 
         return node;
     }
@@ -881,14 +1091,19 @@ fn build_from_ir(
     let children: Vec<NodeId> = ir
         .children
         .iter()
-        .map(|child| build_from_ir(child, tree, text_elements))
+        .map(|child| build_from_ir(child, tree, text_elements, event_manager))
         .collect();
 
-    if children.is_empty() {
+    let node = if children.is_empty() {
         tree.new_visual_node(style, visual)
     } else {
         tree.new_visual_node_with_children(style, visual, &children)
-    }
+    };
+
+    // Register handlers
+    register_handlers(node, ir, event_manager);
+
+    node
 }
 
 /// Convert IR to layout style (standalone function)
@@ -1212,8 +1427,167 @@ impl ApplicationHandler for AppState {
                     window.request_redraw();
                 }
             }
+            WindowEvent::CursorMoved { position, .. } => {
+                // Convert to logical pixels
+                let x = position.x as f32 / self.scale_factor as f32;
+                let y = position.y as f32 / self.scale_factor as f32;
+
+                if let (Some(tree), Some(root)) = (&self.layout_tree, self.root_node) {
+                    let events = self.event_manager.on_mouse_move(x, y, tree, root);
+                    self.process_ui_events(&events);
+                }
+            }
+            WindowEvent::MouseInput { state, button, .. } => {
+                let (x, y) = self.event_manager.mouse_position;
+                let btn = match button {
+                    WinitMouseButton::Left => MouseButton::Left,
+                    WinitMouseButton::Right => MouseButton::Right,
+                    WinitMouseButton::Middle => MouseButton::Middle,
+                    _ => MouseButton::Left, // Default to left for other buttons
+                };
+
+                if let (Some(tree), Some(root)) = (&self.layout_tree, self.root_node) {
+                    let events = match state {
+                        ElementState::Pressed => self.event_manager.on_mouse_down(x, y, btn, tree, root),
+                        ElementState::Released => self.event_manager.on_mouse_up(x, y, btn, tree, root),
+                    };
+                    self.process_ui_events(&events);
+                }
+            }
+            WindowEvent::ModifiersChanged(modifiers) => {
+                let state = modifiers.state();
+                self.keyboard_modifiers = KeyboardModifiers {
+                    shift: state.shift_key(),
+                    ctrl: state.control_key(),
+                    alt: state.alt_key(),
+                    meta: state.super_key(),
+                };
+            }
+            WindowEvent::KeyboardInput { event, .. } => {
+                let modifiers = Modifiers {
+                    shift: self.keyboard_modifiers.shift,
+                    ctrl: self.keyboard_modifiers.ctrl,
+                    alt: self.keyboard_modifiers.alt,
+                    meta: self.keyboard_modifiers.meta,
+                };
+
+                // Get key string
+                let key_str = match &event.logical_key {
+                    Key::Named(named) => format!("{:?}", named),
+                    Key::Character(c) => c.to_string(),
+                    _ => "Unknown".to_string(),
+                };
+
+                // First, let text input manager handle it
+                if event.state == ElementState::Pressed {
+                    let handled = self.text_input_manager.on_key_down(
+                        &key_str,
+                        modifiers.shift,
+                        modifiers.ctrl,
+                        modifiers.meta,
+                    );
+                    if handled {
+                        // Text input handled the key, request redraw
+                        if let Some(window) = &self.window {
+                            window.request_redraw();
+                        }
+                        return;
+                    }
+                }
+
+                // If not handled by text input, dispatch to event system
+                let events = match event.state {
+                    ElementState::Pressed => self.event_manager.on_key_down(key_str, modifiers),
+                    ElementState::Released => self.event_manager.on_key_up(key_str, modifiers),
+                };
+                self.process_ui_events(&events);
+            }
+            WindowEvent::Ime(ime) => {
+                // Handle IME input for international text
+                match ime {
+                    winit::event::Ime::Commit(text) => {
+                        self.text_input_manager.on_text_input(&text);
+                        if let Some(window) = &self.window {
+                            window.request_redraw();
+                        }
+                    }
+                    _ => {}
+                }
+            }
             _ => {}
         }
+    }
+}
+
+impl AppState {
+    /// Process UI events and execute handlers
+    fn process_ui_events(&mut self, events: &[(NodeId, UiEvent)]) {
+        // Get handlers to execute
+        let actions = self.event_manager.dispatch_events(events);
+        let mut state_changed = false;
+
+        // Execute each action
+        for (_node, handler) in actions {
+            match &handler.action {
+                HandlerAction::StateMutation { field, op, value } => {
+                    tracing::debug!("State mutation: {} {:?} {:?}", field, op, value);
+                    // Execute the mutation on reactive state
+                    if self.reactive_state.mutate(field, *op, value) {
+                        state_changed = true;
+                        tracing::info!(
+                            "State '{}' updated to: {:?}",
+                            field,
+                            self.reactive_state.get(field)
+                        );
+                    } else {
+                        tracing::warn!("Failed to mutate state '{}' with {:?}", field, op);
+                    }
+                }
+                HandlerAction::FunctionCall { name, args } => {
+                    tracing::debug!("Function call: {}({:?})", name, args);
+                    // TODO: Implement function dispatch registry
+                }
+                HandlerAction::Navigate { path } => {
+                    tracing::info!("Navigate to: {}", path);
+                    // TODO: Implement navigation/routing
+                }
+                HandlerAction::Raw(expr) => {
+                    tracing::debug!("Raw handler: {}", expr);
+                }
+            }
+        }
+
+        // Check if state changed and UI needs rebuild
+        if state_changed && self.reactive_state.has_changed_since(self.last_state_version) {
+            self.last_state_version = self.reactive_state.version();
+            // Rebuild UI to reflect state changes
+            // For now, we just request a redraw - in the future, we'd do partial updates
+            tracing::debug!("State changed, requesting redraw (version {})", self.last_state_version);
+        }
+
+        // Request redraw if any events occurred
+        if !events.is_empty() || state_changed {
+            if let Some(window) = &self.window {
+                window.request_redraw();
+            }
+        }
+    }
+
+    /// Initialize state from a JSON schema
+    ///
+    /// Call this to set up initial state values for the application.
+    pub fn init_state(&mut self, json: &str) -> Result<(), serde_json::Error> {
+        self.reactive_state.init_from_json(json)
+    }
+
+    /// Get a reference to the reactive state
+    pub fn state(&self) -> &ReactiveState {
+        &self.reactive_state
+    }
+
+    /// Get a mutable reference to the reactive state
+    pub fn state_mut(&mut self) -> &mut ReactiveState {
+        &mut self.reactive_state
     }
 }
 

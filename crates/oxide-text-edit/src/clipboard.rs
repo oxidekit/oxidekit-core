@@ -136,6 +136,69 @@ pub struct MemoryClipboard {
     content: std::sync::Mutex<Option<ClipboardContent>>,
 }
 
+/// System clipboard provider using the native OS clipboard
+#[cfg(feature = "system-clipboard")]
+pub struct SystemClipboard {
+    clipboard: std::sync::Mutex<arboard::Clipboard>,
+}
+
+#[cfg(feature = "system-clipboard")]
+impl SystemClipboard {
+    /// Create a new system clipboard provider
+    pub fn new() -> Result<Self, ClipboardError> {
+        let clipboard = arboard::Clipboard::new()
+            .map_err(|e| ClipboardError::Platform(e.to_string()))?;
+        Ok(Self {
+            clipboard: std::sync::Mutex::new(clipboard),
+        })
+    }
+}
+
+#[cfg(feature = "system-clipboard")]
+impl Default for SystemClipboard {
+    fn default() -> Self {
+        Self::new().expect("Failed to initialize system clipboard")
+    }
+}
+
+#[cfg(feature = "system-clipboard")]
+impl std::fmt::Debug for SystemClipboard {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SystemClipboard").finish()
+    }
+}
+
+#[cfg(feature = "system-clipboard")]
+impl ClipboardProvider for SystemClipboard {
+    fn read_text(&self) -> Result<Option<String>, ClipboardError> {
+        let mut clipboard = self.clipboard.lock().map_err(|_| ClipboardError::Locked)?;
+        match clipboard.get_text() {
+            Ok(text) if text.is_empty() => Ok(None),
+            Ok(text) => Ok(Some(text)),
+            Err(arboard::Error::ContentNotAvailable) => Ok(None),
+            Err(e) => Err(ClipboardError::ReadFailed(e.to_string())),
+        }
+    }
+
+    fn write_text(&self, text: &str) -> Result<(), ClipboardError> {
+        let mut clipboard = self.clipboard.lock().map_err(|_| ClipboardError::Locked)?;
+        clipboard
+            .set_text(text.to_string())
+            .map_err(|e| ClipboardError::WriteFailed(e.to_string()))
+    }
+
+    fn has_text(&self) -> bool {
+        self.read_text().map(|opt| opt.is_some()).unwrap_or(false)
+    }
+
+    fn clear(&self) -> Result<(), ClipboardError> {
+        let mut clipboard = self.clipboard.lock().map_err(|_| ClipboardError::Locked)?;
+        clipboard
+            .clear()
+            .map_err(|e| ClipboardError::WriteFailed(e.to_string()))
+    }
+}
+
 impl MemoryClipboard {
     /// Create a new in-memory clipboard
     pub fn new() -> Self {

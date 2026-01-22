@@ -7007,11 +7007,14 @@ dependencies = [
  "anyhow",
  "oxide-compiler",
  "oxide-components",
+ "oxide-file-picker",
  "oxide-layout",
  "oxide-render",
  "oxide-text",
+ "oxide-text-edit",
  "pollster",
  "serde",
+ "serde_json",
  "toml 0.8.23",
  "tracing",
  "wgpu",
@@ -7102,6 +7105,7 @@ dependencies = [
 name = "oxide-text-edit"
 version = "0.1.0"
 dependencies = [
+ "arboard",
  "instant",
  "serde",
  "serde_json",

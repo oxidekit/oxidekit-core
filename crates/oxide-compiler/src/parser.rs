@@ -71,7 +71,15 @@ pub struct Element {
     pub name: String,
     pub properties: Vec<PropertyDecl>,
     pub style: Option<StyleBlock>,
+    pub handlers: Vec<HandlerDecl>,
     pub children: Vec<Element>,
+}
+
+/// An event handler declaration: on click => expression
+#[derive(Debug, Clone)]
+pub struct HandlerDecl {
+    pub event: String,
+    pub handler: String,
 }
 
 /// A property declaration
@@ -266,6 +274,7 @@ impl Parser {
 
         let mut properties = Vec::new();
         let mut style = None;
+        let mut handlers = Vec::new();
         let mut children = Vec::new();
 
         while !self.check(TokenKind::RBrace) && !self.is_at_end() {
@@ -273,6 +282,10 @@ impl Parser {
             if self.check(TokenKind::Style) {
                 self.advance();
                 style = Some(self.parse_style_block()?);
+            }
+            // Check if this is an event handler: on click => ...
+            else if self.check(TokenKind::On) {
+                handlers.push(self.parse_handler()?);
             }
             // Check if this is a child element (capitalized identifier followed by brace)
             else if self.is_element_start() {
@@ -290,8 +303,61 @@ impl Parser {
             name,
             properties,
             style,
+            handlers,
             children,
         })
+    }
+
+    /// Parse an event handler: on click => expression
+    fn parse_handler(&mut self) -> Result<HandlerDecl, ParseError> {
+        self.expect(TokenKind::On)?;
+        let event = self.expect_ident()?;
+        self.expect(TokenKind::Arrow)?;
+
+        // Parse the handler expression (everything until newline or closing brace)
+        // For now, we'll read until we hit a property start, style, on, child element, or }
+        let mut handler = String::new();
+
+        while !self.is_at_end()
+            && !self.check(TokenKind::RBrace)
+            && !self.check(TokenKind::Style)
+            && !self.check(TokenKind::On)
+            && !self.is_element_start()
+            && !self.is_property_start()
+        {
+            let token = self.advance();
+            match &token.kind {
+                TokenKind::Ident(s) => handler.push_str(s),
+                TokenKind::String(s) => {
+                    handler.push('"');
+                    handler.push_str(s);
+                    handler.push('"');
+                }
+                TokenKind::Number(n) => handler.push_str(&n.to_string()),
+                TokenKind::Bool(b) => handler.push_str(&b.to_string()),
+                TokenKind::Dot => handler.push('.'),
+                TokenKind::Equal => handler.push('='),
+                TokenKind::LParen => handler.push('('),
+                TokenKind::RParen => handler.push(')'),
+                TokenKind::Comma => handler.push(','),
+                _ => {}
+            }
+        }
+
+        Ok(HandlerDecl {
+            event,
+            handler: handler.trim().to_string(),
+        })
+    }
+
+    /// Check if the next tokens look like a property: identifier followed by colon
+    fn is_property_start(&self) -> bool {
+        if let TokenKind::Ident(_) = &self.peek().kind {
+            if let Some(next) = self.tokens.get(self.current + 1) {
+                return next.kind == TokenKind::Colon;
+            }
+        }
+        false
     }
 
     fn parse_style_block(&mut self) -> Result<StyleBlock, ParseError> {
