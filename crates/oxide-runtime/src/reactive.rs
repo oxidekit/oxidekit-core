@@ -271,6 +271,11 @@ impl ReactiveState {
         self.values.keys()
     }
 
+    /// Iterate over all key-value pairs
+    pub fn iter(&self) -> impl Iterator<Item = (&String, &StateValue)> {
+        self.values.iter()
+    }
+
     /// Clear all state
     pub fn clear(&mut self) {
         self.values.clear();

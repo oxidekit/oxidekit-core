@@ -341,6 +341,61 @@ struct TextElement {
     binding: Option<String>,
 }
 
+/// Dev overlay log entry
+#[derive(Debug, Clone)]
+struct DevLogEntry {
+    timestamp: std::time::Instant,
+    category: &'static str,
+    message: String,
+}
+
+/// Dev overlay state
+struct DevOverlay {
+    visible: bool,
+    logs: Vec<DevLogEntry>,
+    max_logs: usize,
+}
+
+/// Render data for dev overlay (pre-computed to avoid borrow issues)
+struct DevOverlayRenderData {
+    panel_x: f32,
+    panel_y: f32,
+    panel_width: f32,
+    panel_height: f32,
+    scale: f32,
+    log_entries: Vec<(f32, f32, &'static str)>, // (y, x, category)
+    texts: Vec<(f32, f32, String, f32, [f32; 4])>, // (x, y, content, size, color)
+}
+
+impl DevOverlay {
+    fn new() -> Self {
+        Self {
+            visible: false,
+            logs: Vec::new(),
+            max_logs: 20,
+        }
+    }
+
+    fn toggle(&mut self) {
+        self.visible = !self.visible;
+        if self.visible {
+            self.log("DEV", "Dev overlay enabled (F12 to hide)");
+        }
+    }
+
+    fn log(&mut self, category: &'static str, message: impl Into<String>) {
+        self.logs.push(DevLogEntry {
+            timestamp: std::time::Instant::now(),
+            category,
+            message: message.into(),
+        });
+        // Keep only recent logs
+        if self.logs.len() > self.max_logs {
+            self.logs.remove(0);
+        }
+    }
+}
+
 /// Internal application state
 struct AppState {
     manifest: Manifest,
@@ -377,6 +432,8 @@ struct AppState {
     keyboard_modifiers: KeyboardModifiers,
     /// Application context for UI-backend communication
     app_context: Option<AppContext>,
+    /// Dev overlay for debugging
+    dev_overlay: DevOverlay,
 }
 
 /// Keyboard modifier state
@@ -390,6 +447,13 @@ struct KeyboardModifiers {
 
 impl AppState {
     fn new(manifest: Manifest, ui_ir: Option<ComponentIR>, app_context: Option<AppContext>) -> Self {
+        let mut dev_overlay = DevOverlay::new();
+        // Auto-enable dev overlay in dev mode
+        if manifest.dev.inspector {
+            dev_overlay.visible = true;
+            dev_overlay.log("DEV", "Dev overlay auto-enabled (inspector: true)");
+        }
+
         Self {
             manifest,
             ui_ir,
@@ -414,6 +478,7 @@ impl AppState {
             text_input_manager: TextInputManager::new(),
             keyboard_modifiers: KeyboardModifiers::default(),
             app_context,
+            dev_overlay,
         }
     }
 
@@ -691,6 +756,7 @@ impl AppState {
         let mut needs_rebuild = false;
         for update in updates {
             tracing::debug!("Applying state update: {} = {:?}", update.key, update.value);
+            self.dev_overlay.log("UPDATE", format!("{} = {}", update.key, update.value.to_string_value()));
             self.reactive_state.set(&update.key, update.value);
             needs_rebuild = true;
         }
@@ -731,18 +797,31 @@ impl AppState {
         // Scale factor for converting logical to physical coordinates
         let scale = self.scale_factor as f32;
 
+        // Collect dev overlay data before rendering (to avoid borrow issues)
+        let dev_overlay_visible = self.dev_overlay.visible;
+        let dev_overlay_data = if dev_overlay_visible {
+            Some(self.collect_dev_overlay_render_data())
+        } else {
+            None
+        };
+
         // Begin rendering primitives
         if let Some(renderer) = &mut self.primitive_renderer {
             renderer.begin();
 
             // Render UI from layout tree
             if let (Some(tree), Some(root)) = (&self.layout_tree, self.root_node) {
-                render_layout_tree(tree, root, renderer, scale);
+                render_layout_tree(tree, root, renderer, scale, &self.event_manager);
 
                 // Debug overlay: render bounding boxes
                 if self.manifest.dev.debug_layout {
                     render_debug_overlay(tree, root, renderer, scale);
                 }
+            }
+
+            // Render dev overlay background if visible
+            if let Some(ref data) = dev_overlay_data {
+                render_dev_overlay_background(renderer, data);
             }
         }
 
@@ -809,18 +888,213 @@ impl AppState {
                 );
             }
 
+            // Render dev overlay text if visible
+            if let Some(ref data) = dev_overlay_data {
+                for (x, y, content, size, color) in &data.texts {
+                    text_renderer.draw_text(
+                        content,
+                        *x,
+                        *y,
+                        *size,
+                        *color,
+                        font_system,
+                        swash_cache,
+                    );
+                }
+            }
+
             text_renderer.render(&ctx.device, &ctx.queue, &mut encoder, &view);
         }
 
         ctx.queue.submit(std::iter::once(encoder.finish()));
         output.present();
     }
+
+    /// Collect dev overlay render data (pre-computed to avoid borrow issues)
+    fn collect_dev_overlay_render_data(&self) -> DevOverlayRenderData {
+        let scale = self.scale_factor as f32;
+        let (vw, vh) = self.viewport_size;
+
+        let panel_width = 300.0 * scale;
+        let panel_x = vw as f32 - panel_width - 10.0 * scale;
+        let panel_y = 10.0 * scale;
+        let panel_height = (vh as f32 - 20.0 * scale).min(400.0 * scale);
+
+        // Collect log entry categories for color dots
+        let log_y = panel_y + 120.0 * scale;
+        let log_start_y = log_y + 25.0 * scale;
+        let line_height = 18.0 * scale;
+        let mut log_entries = Vec::new();
+        for (i, entry) in self.dev_overlay.logs.iter().rev().take(12).enumerate() {
+            let y = log_start_y + i as f32 * line_height;
+            if y > panel_y + panel_height - 10.0 * scale {
+                break;
+            }
+            log_entries.push((y, panel_x + 10.0 * scale, entry.category));
+        }
+
+        // Collect texts
+        let mut texts = Vec::new();
+
+        // Header text
+        texts.push((
+            panel_x + 10.0 * scale,
+            panel_y + 7.0 * scale,
+            "DEV OVERLAY (F12)".to_string(),
+            11.0 * scale,
+            [0.9, 0.95, 1.0, 1.0],
+        ));
+
+        // State section
+        let state_y = panel_y + 40.0 * scale;
+        texts.push((
+            panel_x + 10.0 * scale,
+            state_y,
+            "STATE".to_string(),
+            10.0 * scale,
+            [0.6, 0.7, 0.8, 1.0],
+        ));
+
+        // Show reactive state values
+        let mut state_line = 0;
+        for (key, value) in self.reactive_state.iter() {
+            let val_str = value.to_string_value();
+            let display_str = if val_str.len() > 25 {
+                format!("{}...", &val_str[..22])
+            } else {
+                val_str
+            };
+            texts.push((
+                panel_x + 10.0 * scale,
+                state_y + 15.0 * scale + state_line as f32 * 14.0 * scale,
+                format!("{}: {}", key, display_str),
+                9.0 * scale,
+                [0.7, 0.8, 0.9, 1.0],
+            ));
+            state_line += 1;
+            if state_line >= 4 {
+                break;
+            }
+        }
+
+        // Event log section
+        texts.push((
+            panel_x + 10.0 * scale,
+            log_y + 5.0 * scale,
+            "EVENT LOG".to_string(),
+            10.0 * scale,
+            [0.6, 0.7, 0.8, 1.0],
+        ));
+
+        // Recent log entries
+        for (i, entry) in self.dev_overlay.logs.iter().rev().take(12).enumerate() {
+            let y = log_start_y + i as f32 * line_height;
+            if y > panel_y + panel_height - 10.0 * scale {
+                break;
+            }
+            let msg = if entry.message.len() > 30 {
+                format!("{}...", &entry.message[..27])
+            } else {
+                entry.message.clone()
+            };
+            texts.push((
+                panel_x + 22.0 * scale, // After the color dot
+                y,
+                format!("[{}] {}", entry.category, msg),
+                8.0 * scale,
+                [0.75, 0.8, 0.85, 1.0],
+            ));
+        }
+
+        DevOverlayRenderData {
+            panel_x,
+            panel_y,
+            panel_width,
+            panel_height,
+            scale,
+            log_entries,
+            texts,
+        }
+    }
+}
+
+/// Render the dev overlay background (free function to avoid borrow issues)
+fn render_dev_overlay_background(renderer: &mut PrimitiveRenderer, data: &DevOverlayRenderData) {
+    let scale = data.scale;
+
+    // Background panel with transparency
+    renderer.rounded_rect(
+        data.panel_x,
+        data.panel_y,
+        data.panel_width,
+        data.panel_height,
+        8.0 * scale,
+        Color::new(0.05, 0.07, 0.1, 0.92),
+    );
+
+    // Header bar
+    renderer.rounded_rect(
+        data.panel_x,
+        data.panel_y,
+        data.panel_width,
+        28.0 * scale,
+        8.0 * scale,
+        Color::new(0.15, 0.2, 0.3, 1.0),
+    );
+
+    // State section header line
+    let state_y = data.panel_y + 35.0 * scale;
+    renderer.rect(
+        data.panel_x + 8.0 * scale,
+        state_y,
+        data.panel_width - 16.0 * scale,
+        1.0,
+        Color::new(0.3, 0.4, 0.5, 0.5),
+    );
+
+    // Event log section separator
+    let log_y = data.panel_y + 120.0 * scale;
+    renderer.rect(
+        data.panel_x + 8.0 * scale,
+        log_y,
+        data.panel_width - 16.0 * scale,
+        1.0,
+        Color::new(0.3, 0.4, 0.5, 0.5),
+    );
+
+    // Category color indicators for recent logs
+    for (y, x, category) in &data.log_entries {
+        let dot_color = match *category {
+            "EVENT" => Color::new(0.4, 0.8, 1.0, 1.0),   // Cyan for events
+            "NAV" => Color::new(0.4, 1.0, 0.6, 1.0),     // Green for navigation
+            "STATE" => Color::new(1.0, 0.8, 0.4, 1.0),   // Yellow for state
+            "CALL" => Color::new(0.8, 0.6, 1.0, 1.0),    // Purple for calls
+            "HANDLER" => Color::new(1.0, 0.6, 0.4, 1.0), // Orange for handlers
+            "UPDATE" => Color::new(0.6, 1.0, 0.8, 1.0),  // Light green for updates
+            "WARN" => Color::new(1.0, 0.4, 0.4, 1.0),    // Red for warnings
+            _ => Color::new(0.6, 0.6, 0.6, 1.0),         // Gray for others
+        };
+        renderer.rounded_rect(
+            *x,
+            *y + 3.0 * scale,
+            6.0 * scale,
+            6.0 * scale,
+            3.0 * scale,
+            dot_color,
+        );
+    }
 }
 
 /// Render the layout tree to primitives
 /// Coordinates are scaled by scale_factor to convert from logical to physical pixels
-fn render_layout_tree(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveRenderer, scale: f32) {
-    tree.traverse(root, |_node, rect, visual| {
+fn render_layout_tree(
+    tree: &LayoutTree,
+    root: NodeId,
+    renderer: &mut PrimitiveRenderer,
+    scale: f32,
+    event_manager: &EventManager,
+) {
+    tree.traverse(root, |node, rect, visual| {
         if let Some(vis) = visual {
             // Scale coordinates from logical to physical pixels
             let x = rect.x * scale;
@@ -830,9 +1104,35 @@ fn render_layout_tree(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveR
             let radius = vis.corner_radius * scale;
             let border_w = vis.border_width * scale;
 
-            // Draw background
+            // Check interactive state for this node
+            let interactive = event_manager.get_state(node);
+            let has_handlers = event_manager.handlers.contains_key(&node);
+
+            // Draw background with hover/press effects
             if let Some(bg) = vis.background {
-                let color = Color::new(bg[0], bg[1], bg[2], bg[3]);
+                let mut color = Color::new(bg[0], bg[1], bg[2], bg[3]);
+
+                // Apply interactive state visual feedback
+                if has_handlers {
+                    if interactive.pressed {
+                        // Darken when pressed
+                        color = Color::new(
+                            (bg[0] * 0.7).min(1.0),
+                            (bg[1] * 0.7).min(1.0),
+                            (bg[2] * 0.7).min(1.0),
+                            bg[3],
+                        );
+                    } else if interactive.hovered {
+                        // Lighten when hovered
+                        color = Color::new(
+                            (bg[0] * 1.15).min(1.0),
+                            (bg[1] * 1.15).min(1.0),
+                            (bg[2] * 1.15).min(1.0),
+                            bg[3],
+                        );
+                    }
+                }
+
                 if radius > 0.0 {
                     renderer.rounded_rect(x, y, w, h, radius, color);
                 } else {
@@ -840,10 +1140,21 @@ fn render_layout_tree(tree: &LayoutTree, root: NodeId, renderer: &mut PrimitiveR
                 }
             }
 
-            // Draw border
+            // Draw border with optional hover highlight
             if let Some(border) = vis.border_color {
                 if border_w > 0.0 {
-                    let color = Color::new(border[0], border[1], border[2], border[3]);
+                    let mut color = Color::new(border[0], border[1], border[2], border[3]);
+
+                    // Brighten border on hover for interactive elements
+                    if has_handlers && interactive.hovered {
+                        color = Color::new(
+                            (border[0] * 1.3).min(1.0),
+                            (border[1] * 1.3).min(1.0),
+                            (border[2] * 1.3).min(1.0),
+                            border[3],
+                        );
+                    }
+
                     renderer.border(x, y, w, h, border_w, radius, color);
                 }
             }
@@ -1647,6 +1958,17 @@ impl ApplicationHandler for AppState {
                     _ => "Unknown".to_string(),
                 };
 
+                // Check for F12 to toggle dev overlay
+                if event.state == ElementState::Pressed {
+                    if let Key::Named(NamedKey::F12) = &event.logical_key {
+                        self.dev_overlay.toggle();
+                        if let Some(window) = &self.window {
+                            window.request_redraw();
+                        }
+                        return;
+                    }
+                }
+
                 // First, let text input manager handle it
                 if event.state == ElementState::Pressed {
                     let handled = self.text_input_manager.on_key_down(
@@ -1691,15 +2013,57 @@ impl ApplicationHandler for AppState {
 impl AppState {
     /// Process UI events and execute handlers
     fn process_ui_events(&mut self, events: &[(NodeId, UiEvent)]) {
+        // Log events to dev overlay
+        for (node, event) in events {
+            let event_name = match event {
+                UiEvent::Click { x, y, .. } => {
+                    // Check if this node has handlers
+                    let has_handler = self.event_manager.handlers.contains_key(node);
+                    if has_handler {
+                        format!("Click({:.0},{:.0})", x, y)
+                    } else {
+                        format!("Click({:.0},{:.0}) [no handler]", x, y)
+                    }
+                }
+                UiEvent::DoubleClick { .. } => "DoubleClick".to_string(),
+                UiEvent::MouseDown { .. } => "MouseDown".to_string(),
+                UiEvent::MouseUp { .. } => "MouseUp".to_string(),
+                UiEvent::MouseEnter { .. } => "MouseEnter".to_string(),
+                UiEvent::MouseLeave => "MouseLeave".to_string(),
+                UiEvent::MouseMove { .. } => continue, // Skip move events (too noisy)
+                UiEvent::KeyDown { key, .. } => format!("KeyDown({})", key),
+                UiEvent::KeyUp { .. } => "KeyUp".to_string(),
+                UiEvent::TextInput { text } => format!("TextInput({})", text),
+                UiEvent::Focus => "Focus".to_string(),
+                UiEvent::Blur => "Blur".to_string(),
+            };
+            self.dev_overlay.log("EVENT", format!("{} {:?}", event_name, node));
+        }
+
         // Get handlers to execute
         let actions = self.event_manager.dispatch_events(events);
         let mut state_changed = false;
+
+        // Log handler count or lack thereof for click events
+        if !actions.is_empty() {
+            self.dev_overlay.log("HANDLER", format!("{} handler(s) found", actions.len()));
+        } else {
+            // Check if any click events had no handlers
+            for (node, event) in events {
+                if matches!(event, UiEvent::Click { .. }) {
+                    if !self.event_manager.handlers.contains_key(node) {
+                        self.dev_overlay.log("WARN", format!("No click handler on {:?}", node));
+                    }
+                }
+            }
+        }
 
         // Execute each action
         for (_node, handler) in actions {
             match &handler.action {
                 HandlerAction::StateMutation { field, op, value } => {
                     tracing::debug!("State mutation: {} {:?} {:?}", field, op, value);
+                    self.dev_overlay.log("STATE", format!("{} {:?} {:?}", field, op, value));
                     // Execute the mutation on reactive state
                     if self.reactive_state.mutate(field, *op, value) {
                         state_changed = true;
@@ -1714,6 +2078,7 @@ impl AppState {
                 }
                 HandlerAction::FunctionCall { name, args } => {
                     tracing::debug!("Function call: {}({:?})", name, args);
+                    self.dev_overlay.log("CALL", format!("{}({:?})", name, args));
                     // Push command to context for backend to handle
                     if let Some(ctx) = &self.app_context {
                         ctx.push_command(AppCommand::CallFunction {
@@ -1724,6 +2089,7 @@ impl AppState {
                 }
                 HandlerAction::Navigate { path } => {
                     tracing::info!("Navigate to: {}", path);
+                    self.dev_overlay.log("NAV", format!("-> {}", path));
                     // Push navigation command to context
                     if let Some(ctx) = &self.app_context {
                         ctx.push_command(AppCommand::Navigate { path: path.clone() });
@@ -1734,6 +2100,7 @@ impl AppState {
                 }
                 HandlerAction::Raw(expr) => {
                     tracing::debug!("Raw handler: {}", expr);
+                    self.dev_overlay.log("RAW", expr.clone());
                 }
             }
         }
