@@ -20,5 +20,10 @@ Thumbs.db
 .env
 .env.local
 
+# Claude session data (never commit)
+.claude/
+BRIEFING.md
+*.internal.md
+
 # Generated docs
 /site/public/
