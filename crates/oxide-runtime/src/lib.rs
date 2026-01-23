@@ -136,7 +136,7 @@ use winit::{
 };
 
 #[cfg(target_os = "macos")]
-use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
+use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS, WindowAttributesExtMacOS};
 
 /// Application manifest loaded from oxide.toml
 #[derive(Debug, Deserialize)]
@@ -1820,6 +1820,21 @@ impl ApplicationHandler for AppState {
 
         // Create window
         let window_config = &self.manifest.window;
+
+        // On macOS, enable accepts_first_mouse so clicking on an unfocused window
+        // generates MouseInput events instead of just focusing the window
+        #[cfg(target_os = "macos")]
+        let attrs = WindowAttributes::default()
+            .with_title(&window_config.title)
+            .with_inner_size(LogicalSize::new(
+                window_config.width as f64,
+                window_config.height as f64,
+            ))
+            .with_resizable(window_config.resizable)
+            .with_decorations(window_config.decorations)
+            .with_accepts_first_mouse(true);
+
+        #[cfg(not(target_os = "macos"))]
         let attrs = WindowAttributes::default()
             .with_title(&window_config.title)
             .with_inner_size(LogicalSize::new(
