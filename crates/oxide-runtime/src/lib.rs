@@ -1880,6 +1880,12 @@ impl ApplicationHandler for AppState {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
+        // Log all events except high-frequency ones
+        match &event {
+            WindowEvent::CursorMoved { .. } | WindowEvent::RedrawRequested => {}
+            _ => tracing::debug!("WindowEvent: {:?}", event),
+        }
+
         match event {
             WindowEvent::CloseRequested => {
                 tracing::info!("Window close requested");
