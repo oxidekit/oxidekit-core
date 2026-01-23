@@ -135,6 +135,9 @@ use winit::{
     window::{Window, WindowAttributes, WindowId},
 };
 
+#[cfg(target_os = "macos")]
+use winit::platform::macos::{ActivationPolicy, EventLoopBuilderExtMacOS};
+
 /// Application manifest loaded from oxide.toml
 #[derive(Debug, Deserialize)]
 pub struct Manifest {
@@ -287,7 +290,18 @@ impl Application {
 
     /// Run the application
     pub fn run(self) -> Result<()> {
+        // Create event loop with platform-specific configuration
+        #[cfg(target_os = "macos")]
+        let event_loop = {
+            use winit::event_loop::EventLoopBuilder;
+            EventLoopBuilder::default()
+                .with_activation_policy(ActivationPolicy::Regular)
+                .build()?
+        };
+
+        #[cfg(not(target_os = "macos"))]
         let event_loop = EventLoop::new()?;
+
         event_loop.set_control_flow(ControlFlow::Wait);
 
         // Try to compile the UI
@@ -434,6 +448,10 @@ struct AppState {
     app_context: Option<AppContext>,
     /// Dev overlay for debugging
     dev_overlay: DevOverlay,
+    /// Whether the window has focus
+    window_focused: bool,
+    /// Number of focus request attempts
+    focus_attempts: u32,
 }
 
 /// Keyboard modifier state
@@ -479,6 +497,8 @@ impl AppState {
             keyboard_modifiers: KeyboardModifiers::default(),
             app_context,
             dev_overlay,
+            window_focused: false,
+            focus_attempts: 0,
         }
     }
 
@@ -1873,7 +1893,8 @@ impl ApplicationHandler for AppState {
         // On macOS, an unfocused window won't receive MouseInput events
         if let Some(w) = &self.window {
             w.focus_window();
-            tracing::info!("Window focus requested");
+            self.focus_attempts += 1;
+            tracing::info!("Window focus requested (attempt {})", self.focus_attempts);
         }
 
         // Build and compute initial layout
@@ -1897,7 +1918,8 @@ impl ApplicationHandler for AppState {
                 tracing::info!(">>> KeyboardInput received");
             }
             WindowEvent::Focused(focused) => {
-                tracing::info!(">>> Window focused: {}", focused);
+                self.window_focused = *focused;
+                tracing::info!(">>> Window focused: {} (attempts: {})", focused, self.focus_attempts);
             }
             _ => tracing::debug!("WindowEvent: {:?}", event),
         }
@@ -1923,6 +1945,15 @@ impl ApplicationHandler for AppState {
                 self.compute_layout();
             }
             WindowEvent::RedrawRequested => {
+                // Keep trying to focus the window until we have focus (max 5 attempts)
+                // This is necessary on macOS where command-line apps may not get focus automatically
+                if !self.window_focused && self.focus_attempts < 5 {
+                    if let Some(window) = &self.window {
+                        window.focus_window();
+                        self.focus_attempts += 1;
+                        tracing::info!("Window focus requested (attempt {})", self.focus_attempts);
+                    }
+                }
                 // Apply any pending state updates from backend
                 self.apply_state_updates();
                 self.render();
