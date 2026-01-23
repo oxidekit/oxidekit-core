@@ -52,6 +52,9 @@ pub struct ComponentIR {
     pub handlers: Vec<HandlerIR>,
     /// Child components
     pub children: Vec<ComponentIR>,
+    /// Route condition - component only renders when view matches this route
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub route: Option<String>,
 }
 
 /// Event handler IR
@@ -129,6 +132,7 @@ pub fn compile(source: &str) -> Result<ComponentIR, CompilerError> {
             style: vec![],
             handlers: vec![],
             children,
+            route: None,
         })
     }
 }
@@ -138,12 +142,24 @@ fn element_to_ir(element: Element, id_counter: &mut usize) -> ComponentIR {
     *id_counter += 1;
     let id = format!("{}_{}", element.name.to_lowercase(), id_counter);
 
+    // Extract route property if present, filter it from regular props
+    let mut route: Option<String> = None;
     let props: Vec<Property> = element
         .properties
         .into_iter()
-        .map(|p| Property {
-            name: p.name,
-            value: value_to_property_value(p.value),
+        .filter_map(|p| {
+            if p.name == "route" {
+                // Extract route value
+                if let Value::String(s) = &p.value {
+                    route = Some(s.clone());
+                }
+                None // Don't include in props
+            } else {
+                Some(Property {
+                    name: p.name,
+                    value: value_to_property_value(p.value),
+                })
+            }
         })
         .collect();
 
@@ -182,6 +198,7 @@ fn element_to_ir(element: Element, id_counter: &mut usize) -> ComponentIR {
         style,
         handlers,
         children,
+        route,
     }
 }
 

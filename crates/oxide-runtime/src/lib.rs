@@ -515,12 +515,27 @@ impl AppState {
             let mut text_elements = Vec::new();
             let mut event_manager = EventManager::new();
 
+            // Get current view from reactive state
+            let current_view = self.reactive_state.get("view")
+                .and_then(|v| v.as_string())
+                .map(|s| s.to_string());
+            let view_ref = current_view.as_deref();
+
             // Use text_system for measurement if available
             let root = if let Some(text_system) = &mut self.text_system {
-                build_from_ir_with_measurement(&ir, &mut tree, &mut text_elements, text_system, &mut event_manager)
+                build_from_ir_with_measurement(&ir, &mut tree, &mut text_elements, text_system, &mut event_manager, view_ref)
             } else {
                 // Fallback without measurement (will use estimates)
-                build_from_ir(&ir, &mut tree, &mut text_elements, &mut event_manager)
+                build_from_ir(&ir, &mut tree, &mut text_elements, &mut event_manager, view_ref)
+            };
+
+            // Handle None case (root was filtered out - shouldn't happen normally)
+            let root = match root {
+                Some(node) => node,
+                None => {
+                    tracing::warn!("Root node was filtered by route condition - this shouldn't happen");
+                    return;
+                }
             };
 
             // Count nodes
@@ -1298,7 +1313,16 @@ fn build_from_ir_with_measurement(
     text_elements: &mut Vec<TextElement>,
     text_system: &mut TextSystem,
     event_manager: &mut EventManager,
-) -> NodeId {
+    current_view: Option<&str>,
+) -> Option<NodeId> {
+    // Check route condition - skip if route doesn't match current view
+    if let Some(route) = &ir.route {
+        let view = current_view.unwrap_or("/wallet");
+        if route != view {
+            return None; // Skip this component - route doesn't match
+        }
+    }
+
     let visual = ir_to_visual(ir);
 
     // Check if this is a Text component
@@ -1360,17 +1384,17 @@ fn build_from_ir_with_measurement(
         // Register handlers for this node
         register_handlers(node, ir, event_manager);
 
-        return node;
+        return Some(node);
     }
 
     // For non-Text nodes, use normal style conversion
     let style = ir_to_style(ir);
 
-    // Build children recursively
+    // Build children recursively, filtering out None (route-excluded) children
     let children: Vec<NodeId> = ir
         .children
         .iter()
-        .map(|child| build_from_ir_with_measurement(child, tree, text_elements, text_system, event_manager))
+        .filter_map(|child| build_from_ir_with_measurement(child, tree, text_elements, text_system, event_manager, current_view))
         .collect();
 
     let node = if children.is_empty() {
@@ -1382,7 +1406,7 @@ fn build_from_ir_with_measurement(
     // Register handlers for this node
     register_handlers(node, ir, event_manager);
 
-    node
+    Some(node)
 }
 
 /// Register event handlers for a node from IR
@@ -1518,7 +1542,16 @@ fn build_from_ir(
     tree: &mut LayoutTree,
     text_elements: &mut Vec<TextElement>,
     event_manager: &mut EventManager,
-) -> NodeId {
+    current_view: Option<&str>,
+) -> Option<NodeId> {
+    // Check route condition - skip if route doesn't match current view
+    if let Some(route) = &ir.route {
+        let view = current_view.unwrap_or("/wallet");
+        if route != view {
+            return None; // Skip this component - route doesn't match
+        }
+    }
+
     let visual = ir_to_visual(ir);
 
     // Check if this is a Text component
@@ -1580,17 +1613,17 @@ fn build_from_ir(
         // Register handlers
         register_handlers(node, ir, event_manager);
 
-        return node;
+        return Some(node);
     }
 
     // For non-Text nodes, use normal style conversion
     let style = ir_to_style(ir);
 
-    // Build children recursively
+    // Build children recursively, filtering out None (route-excluded) children
     let children: Vec<NodeId> = ir
         .children
         .iter()
-        .map(|child| build_from_ir(child, tree, text_elements, event_manager))
+        .filter_map(|child| build_from_ir(child, tree, text_elements, event_manager, current_view))
         .collect();
 
     let node = if children.is_empty() {
@@ -1602,7 +1635,7 @@ fn build_from_ir(
     // Register handlers
     register_handlers(node, ir, event_manager);
 
-    node
+    Some(node)
 }
 
 /// Convert IR to layout style (standalone function)
