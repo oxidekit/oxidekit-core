@@ -1869,6 +1869,13 @@ impl ApplicationHandler for AppState {
         self.text_renderer = Some(text_renderer);
         self.text_system = Some(text_system);
 
+        // Request window focus so we receive mouse events immediately
+        // On macOS, an unfocused window won't receive MouseInput events
+        if let Some(w) = &self.window {
+            w.focus_window();
+            tracing::info!("Window focus requested");
+        }
+
         // Build and compute initial layout
         self.build_ui();
         self.compute_layout();
@@ -1880,9 +1887,18 @@ impl ApplicationHandler for AppState {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
-        // Log all events except high-frequency ones
+        // Log mouse/keyboard events at info level for debugging
         match &event {
+            WindowEvent::MouseInput { state, button, .. } => {
+                tracing::info!(">>> MouseInput received: {:?} {:?}", state, button);
+            }
             WindowEvent::CursorMoved { .. } | WindowEvent::RedrawRequested => {}
+            WindowEvent::KeyboardInput { .. } => {
+                tracing::info!(">>> KeyboardInput received");
+            }
+            WindowEvent::Focused(focused) => {
+                tracing::info!(">>> Window focused: {}", focused);
+            }
             _ => tracing::debug!("WindowEvent: {:?}", event),
         }
 
