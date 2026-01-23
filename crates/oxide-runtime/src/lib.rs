@@ -1406,6 +1406,11 @@ fn build_from_ir_with_measurement(
     // Register handlers for this node
     register_handlers(node, ir, event_manager);
 
+    // Debug: log node creation if it has handlers
+    if !ir.handlers.is_empty() {
+        tracing::debug!("Created node {:?} ({}) with {} handlers", node, ir.kind, ir.handlers.len());
+    }
+
     Some(node)
 }
 
@@ -2220,9 +2225,10 @@ impl AppState {
         // Check if state changed and UI needs rebuild
         if state_changed && self.reactive_state.has_changed_since(self.last_state_version) {
             self.last_state_version = self.reactive_state.version();
-            // Rebuild UI to reflect state changes
-            // For now, we just request a redraw - in the future, we'd do partial updates
-            tracing::debug!("State changed, requesting redraw (version {})", self.last_state_version);
+            // Rebuild UI to reflect state changes (especially for route changes)
+            tracing::info!("State changed, rebuilding UI (version {})", self.last_state_version);
+            self.build_ui();
+            self.compute_layout();
         }
 
         // Request redraw if any events occurred
