@@ -1920,6 +1920,7 @@ impl ApplicationHandler for AppState {
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 let (x, y) = self.event_manager.mouse_position;
+                tracing::info!("MouseInput: {:?} at ({:.0}, {:.0})", state, x, y);
                 let btn = match button {
                     WinitMouseButton::Left => MouseButton::Left,
                     WinitMouseButton::Right => MouseButton::Right,
@@ -1932,6 +1933,7 @@ impl ApplicationHandler for AppState {
                         ElementState::Pressed => self.event_manager.on_mouse_down(x, y, btn, tree, root),
                         ElementState::Released => self.event_manager.on_mouse_up(x, y, btn, tree, root),
                     };
+                    tracing::info!("Generated {} events from mouse input", events.len());
                     self.process_ui_events(&events);
                 }
             }

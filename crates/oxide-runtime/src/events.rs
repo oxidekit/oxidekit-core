@@ -177,6 +177,7 @@ impl EventManager {
 
     /// Register an event handler for a node
     pub fn register_handler(&mut self, node: NodeId, handler: EventHandler) {
+        tracing::info!("Registering {:?} handler for node {:?}", handler.event_type, node);
         self.handlers.entry(node).or_default().push(handler);
     }
 
@@ -332,21 +333,32 @@ impl EventManager {
     pub fn hit_test(&self, x: f32, y: f32, tree: &LayoutTree, root: NodeId) -> Option<NodeId> {
         let mut hit_node: Option<NodeId> = None;
         let mut hit_node_with_handler: Option<NodeId> = None;
+        let mut nodes_hit = Vec::new();
 
         // Traverse tree to find all nodes containing the point
         // Track both any hit node and specifically nodes with handlers
         tree.traverse(root, |node, rect, _visual| {
             if self.point_in_rect(x, y, &rect) {
+                let has_handler = self.handlers.contains_key(&node);
+                nodes_hit.push((node, has_handler));
                 hit_node = Some(node);
                 // Prefer nodes that have handlers (event bubbling simulation)
-                if self.handlers.contains_key(&node) {
+                if has_handler {
                     hit_node_with_handler = Some(node);
                 }
             }
         });
 
-        // Return the node with a handler if one exists, otherwise any hit node
-        hit_node_with_handler.or(hit_node)
+        let result = hit_node_with_handler.or(hit_node);
+        tracing::debug!(
+            "hit_test({:.0},{:.0}): {} nodes hit, result={:?}, nodes_with_handlers={}",
+            x, y,
+            nodes_hit.len(),
+            result,
+            nodes_hit.iter().filter(|(_, h)| *h).count()
+        );
+
+        result
     }
 
     /// Check if a point is inside a rectangle

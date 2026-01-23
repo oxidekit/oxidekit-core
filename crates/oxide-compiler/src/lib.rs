@@ -348,4 +348,29 @@ mod tests {
         assert_eq!(result.kind, "Column");
         assert_eq!(result.children.len(), 3); // Two Text + Row
     }
+
+    #[test]
+    fn test_compile_with_handlers() {
+        let source = r##"
+            app TestApp {
+                Container {
+                    padding: 16
+                    background: "#6366F1"
+                    on click => navigate("/send")
+
+                    Text {
+                        content: "Send"
+                    }
+                }
+            }
+        "##;
+        let result = compile(source).unwrap();
+
+        assert_eq!(result.kind, "Container");
+        assert_eq!(result.handlers.len(), 1, "Container should have 1 handler");
+        assert_eq!(result.handlers[0].event, "click");
+        assert!(result.handlers[0].handler.contains("navigate"), "Handler should contain navigate");
+        assert!(result.handlers[0].handler.contains("/send"), "Handler should contain /send");
+        println!("Handler: {}", result.handlers[0].handler);
+    }
 }
