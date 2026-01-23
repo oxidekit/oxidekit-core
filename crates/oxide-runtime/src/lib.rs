@@ -1920,7 +1920,13 @@ impl ApplicationHandler for AppState {
             }
             WindowEvent::MouseInput { state, button, .. } => {
                 let (x, y) = self.event_manager.mouse_position;
-                tracing::info!("MouseInput: {:?} at ({:.0}, {:.0})", state, x, y);
+                tracing::info!(
+                    "MouseInput: {:?} at ({:.0}, {:.0}), handlers_count={}, tree_exists={}, root_exists={}",
+                    state, x, y,
+                    self.event_manager.handlers.len(),
+                    self.layout_tree.is_some(),
+                    self.root_node.is_some()
+                );
                 let btn = match button {
                     WinitMouseButton::Left => MouseButton::Left,
                     WinitMouseButton::Right => MouseButton::Right,
@@ -1935,6 +1941,8 @@ impl ApplicationHandler for AppState {
                     };
                     tracing::info!("Generated {} events from mouse input", events.len());
                     self.process_ui_events(&events);
+                } else {
+                    tracing::warn!("MouseInput ignored: no layout tree or root node!");
                 }
             }
             WindowEvent::ModifiersChanged(modifiers) => {

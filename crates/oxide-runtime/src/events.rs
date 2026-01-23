@@ -350,8 +350,8 @@ impl EventManager {
         });
 
         let result = hit_node_with_handler.or(hit_node);
-        tracing::debug!(
-            "hit_test({:.0},{:.0}): {} nodes hit, result={:?}, nodes_with_handlers={}",
+        tracing::info!(
+            "hit_test({:.0},{:.0}): {} nodes hit, result={:?}, with_handlers={}",
             x, y,
             nodes_hit.len(),
             result,
